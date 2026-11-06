@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   CircleMarker,
   GeoJSON,
@@ -23,11 +24,6 @@ import { CompanyPanel } from "./CompanyPanel";
 import { Recenter } from "./Recenter";
 import { useCheckIn } from "./useCheckIn";
 import { useAuth } from "../lib/AuthContext";
-import {
-  isAdminUnlocked,
-  lockAdmin,
-  unlockAdmin,
-} from "./adminStorage";
 import {
   fileToAvatarDataUrl,
   loadAvatarChoice,
@@ -247,7 +243,6 @@ export function CanalMap({ toggles }: Props) {
   const [pickOnMap, setPickOnMap] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
-  const [isAdmin, setIsAdmin] = useState(() => isAdminUnlocked());
   const [avatarChoice, setAvatarChoice] = useState<AvatarChoice>(() =>
     loadAvatarChoice(),
   );
@@ -335,14 +330,19 @@ export function CanalMap({ toggles }: Props) {
   );
 
   const selected = spots.find((f) => spotId(f) === selectedId) || null;
-  const editable = isAdmin && editMode !== "off";
 
   const auth = useAuth();
+  const mapAdmin = auth.isAdmin;
+  const editable = mapAdmin && editMode !== "off";
   const checkIn = useCheckIn(ready ? spotsData : null, ready ? zonesData : null, {
     userId: auth.user?.id,
     displayName: auth.displayName,
     avatarId: avatarChoice.id === "custom" ? "veteran" : avatarChoice.id,
   });
+
+  useEffect(() => {
+    if (!mapAdmin && editMode !== "off") setEditMode("off");
+  }, [mapAdmin, editMode]);
 
   function goToCanal() {
     void checkIn.enterSpectator();
@@ -365,24 +365,6 @@ export function CanalMap({ toggles }: Props) {
       setUploadError(null);
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : "Uppladdning misslyckades");
-    }
-  }
-
-  function toggleAdmin() {
-    if (isAdmin) {
-      lockAdmin();
-      setIsAdmin(false);
-      setEditMode("off");
-      setStatus("Admin av");
-      return;
-    }
-    const pin = window.prompt("Admin-PIN");
-    if (pin === null) return;
-    if (unlockAdmin(pin)) {
-      setIsAdmin(true);
-      setStatus("Admin på · du kan redigera platser");
-    } else {
-      setStatus("Fel PIN");
     }
   }
 
@@ -488,7 +470,7 @@ export function CanalMap({ toggles }: Props) {
   return (
     <div className={`map-stage${sheetOpen ? " sheet-open" : ""}`}>
       <div
-        className={`map-shell${editable ? " editing" : ""}${isAdmin ? " admin" : ""}`}
+        className={`map-shell${editable ? " editing" : ""}${mapAdmin ? " admin" : ""}`}
       >
       {error && <div className="map-banner error">{error}</div>}
       {!ready && !error && <div className="map-banner">Laddar kanalkarta…</div>}
@@ -517,16 +499,11 @@ export function CanalMap({ toggles }: Props) {
             Soff-check-in
           </button>
         )}
-        <button
-          type="button"
-          className={isAdmin ? "chip on admin-chip" : "chip admin-chip"}
-          aria-pressed={isAdmin}
-          onClick={toggleAdmin}
-        >
-          {isAdmin ? "Admin på" : "Admin"}
-        </button>
-        {isAdmin && (
+        {mapAdmin && (
           <>
+            <Link className="chip admin-chip on" to="/admin">
+              Admin
+            </Link>
             <button
               type="button"
               className={editMode === "move" ? "chip on" : "chip"}
