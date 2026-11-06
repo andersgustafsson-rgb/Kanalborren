@@ -305,6 +305,9 @@ export function ProfilePage() {
         <Link className="cta profile-map-cta" to="/karta">
           Till kartan
         </Link>
+        <Link className="chip" to="/hjalp" style={{ alignSelf: "center" }}>
+          Så funkar det
+        </Link>
       </div>
     </div>
   );

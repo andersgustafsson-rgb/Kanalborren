@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { AuthBar } from "../components/AuthBar";
 import { CatchForm } from "../components/CatchForm";
+import { ChallengeBoard } from "../components/ChallengeBoard";
+import { WaterLevelWidget } from "../components/WaterLevelWidget";
 import {
   fetchHighscores,
   type HighscorePeriod,
@@ -55,9 +57,14 @@ export function HomePage() {
             height={150}
             decoding="async"
           />
-          <Link className="home-cta" to="/karta">
-            Öppna kartan
-          </Link>
+          <div className="home-cta-row">
+            <Link className="home-cta" to="/karta">
+              Öppna kartan
+            </Link>
+            <Link className="home-cta ghost" to="/hjalp">
+              Så funkar det
+            </Link>
+          </div>
         </header>
 
         <AuthBar />
@@ -120,7 +127,13 @@ export function HomePage() {
           </ol>
         </section>
 
-        <CatchForm onSubmitted={() => setReloadToken((n) => n + 1)} />
+        <div id="catch">
+          <CatchForm onSubmitted={() => setReloadToken((n) => n + 1)} />
+        </div>
+
+        <ChallengeBoard />
+
+        <WaterLevelWidget />
       </div>
     </div>
   );

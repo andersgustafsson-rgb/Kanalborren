@@ -8,7 +8,7 @@ const INITIAL: LayerToggles = {
   spots: true,
   zones: false,
   bridges: false,
-  rules: false,
+  rules: true,
 };
 
 export function MapPage() {
@@ -35,6 +35,9 @@ export function MapPage() {
       <div className="hud-actions">
         <Link className="fab" to="/">
           Hem
+        </Link>
+        <Link className="fab" to="/hjalp">
+          Hjälp
         </Link>
         <Link className="fab" to="/profil">
           Profil

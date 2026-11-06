@@ -1,0 +1,184 @@
+import { isSupabaseConfigured, supabase } from "./supabase";
+
+export type ChallengeMetric = "length_cm" | "weight_kg";
+export type ChallengeStatus =
+  | "pending"
+  | "active"
+  | "declined"
+  | "completed"
+  | "expired"
+  | "cancelled";
+
+export type Challenge = {
+  id: string;
+  fromUserId: string;
+  toUserId: string;
+  species: string;
+  metric: ChallengeMetric;
+  message: string;
+  status: ChallengeStatus;
+  startsAt: string | null;
+  endsAt: string;
+  winnerUserId: string | null;
+  createdAt: string;
+  fromName?: string;
+  toName?: string;
+  winnerName?: string;
+};
+
+function mapRow(
+  row: Record<string, unknown>,
+  names: Map<string, string>,
+): Challenge {
+  const fromUserId = String(row.from_user_id);
+  const toUserId = String(row.to_user_id);
+  const winnerUserId = row.winner_user_id
+    ? String(row.winner_user_id)
+    : null;
+  return {
+    id: String(row.id),
+    fromUserId,
+    toUserId,
+    species: String(row.species || "Abborre"),
+    metric: (row.metric as ChallengeMetric) || "length_cm",
+    message: String(row.message || ""),
+    status: row.status as ChallengeStatus,
+    startsAt: row.starts_at ? String(row.starts_at) : null,
+    endsAt: String(row.ends_at),
+    winnerUserId,
+    createdAt: String(row.created_at),
+    fromName: names.get(fromUserId),
+    toName: names.get(toUserId),
+    winnerName: winnerUserId ? names.get(winnerUserId) : undefined,
+  };
+}
+
+async function nameMap(ids: string[]): Promise<Map<string, string>> {
+  if (!supabase || ids.length === 0) return new Map();
+  const { data } = await supabase
+    .from("profiles")
+    .select("id,display_name")
+    .in("id", [...new Set(ids)]);
+  return new Map(
+    (data || []).map((p) => [p.id as string, p.display_name as string]),
+  );
+}
+
+export async function listMyChallenges(): Promise<Challenge[]> {
+  if (!isSupabaseConfigured() || !supabase) return [];
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const { data, error } = await supabase
+    .from("challenges")
+    .select(
+      "id,from_user_id,to_user_id,species,metric,message,status,starts_at,ends_at,winner_user_id,created_at",
+    )
+    .or(`from_user_id.eq.${user.id},to_user_id.eq.${user.id}`)
+    .order("created_at", { ascending: false })
+    .limit(40);
+
+  if (error || !data) {
+    console.warn("listMyChallenges", error);
+    return [];
+  }
+
+  const ids = data.flatMap((r) =>
+    [r.from_user_id, r.to_user_id, r.winner_user_id].filter(Boolean),
+  ) as string[];
+  const names = await nameMap(ids);
+  return data.map((r) => mapRow(r as unknown as Record<string, unknown>, names));
+}
+
+export async function sendChallenge(input: {
+  toUserId: string;
+  species: string;
+  metric: ChallengeMetric;
+  hours: number;
+  message?: string;
+}): Promise<{ error: string | null; id?: string }> {
+  if (!isSupabaseConfigured() || !supabase) {
+    return { error: "Molnet är inte inkopplat" };
+  }
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Logga in först" };
+  if (user.id === input.toUserId) {
+    return { error: "Du kan inte utmana dig själv" };
+  }
+
+  const hours = Math.min(Math.max(input.hours, 2), 48);
+  const endsAt = new Date(Date.now() + hours * 60 * 60 * 1000).toISOString();
+
+  const { data, error } = await supabase
+    .from("challenges")
+    .insert({
+      from_user_id: user.id,
+      to_user_id: input.toUserId,
+      species: input.species.trim() || "Abborre",
+      metric: input.metric,
+      message: (input.message || "").trim() || null,
+      ends_at: endsAt,
+      status: "pending",
+    })
+    .select("id")
+    .single();
+
+  if (error) return { error: error.message };
+  return { error: null, id: data.id as string };
+}
+
+export async function respondChallenge(
+  challengeId: string,
+  accept: boolean,
+): Promise<{ error: string | null }> {
+  if (!supabase) return { error: "Molnet är inte inkopplat" };
+  if (accept) {
+    const { error } = await supabase.rpc("accept_challenge", {
+      challenge_id: challengeId,
+    });
+    return { error: error?.message ?? null };
+  }
+  const { error } = await supabase
+    .from("challenges")
+    .update({ status: "declined" })
+    .eq("id", challengeId)
+    .eq("status", "pending");
+  return { error: error?.message ?? null };
+}
+
+export async function resolveChallenge(
+  challengeId: string,
+): Promise<{ error: string | null; winnerId?: string | null }> {
+  if (!supabase) return { error: "Molnet är inte inkopplat" };
+  const { data, error } = await supabase.rpc("resolve_challenge", {
+    challenge_id: challengeId,
+  });
+  if (error) return { error: error.message };
+  return { error: null, winnerId: (data as string | null) ?? null };
+}
+
+export async function listChallengeTargets(): Promise<
+  { id: string; displayName: string }[]
+> {
+  if (!supabase) return [];
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return [];
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id,display_name")
+    .is("banned_at", null)
+    .neq("id", user.id)
+    .order("display_name")
+    .limit(50);
+  if (error || !data) return [];
+  return data.map((p) => ({
+    id: p.id as string,
+    displayName: (p.display_name as string) || "Fiskare",
+  }));
+}

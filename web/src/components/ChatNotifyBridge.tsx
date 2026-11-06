@@ -73,6 +73,26 @@ export function ChatNotifyBridge() {
           });
         },
       )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "challenges" },
+        (payload) => {
+          if (!readyRef.current) return;
+          const row = payload.new as {
+            to_user_id?: string;
+            from_user_id?: string;
+            species?: string;
+          };
+          if (!row?.to_user_id || row.to_user_id !== userId) return;
+          if (row.from_user_id === userId) return;
+          void showAppNotification({
+            title: "KanalHugget · utmaning",
+            body: `Du är utmanad${row.species ? ` · ${row.species}` : ""}`,
+            url: "/",
+            tag: "challenge",
+          });
+        },
+      )
       .subscribe();
 
     return () => {

@@ -4,6 +4,7 @@ import { HomePage } from "./pages/HomePage";
 import { MapPage } from "./pages/MapPage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { AdminPage } from "./pages/AdminPage";
+import { HelpPage } from "./pages/HelpPage";
 import "./App.css";
 
 export default function App() {
@@ -14,6 +15,7 @@ export default function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/karta" element={<MapPage />} />
         <Route path="/profil" element={<ProfilePage />} />
+        <Route path="/hjalp" element={<HelpPage />} />
         <Route path="/admin" element={<AdminPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

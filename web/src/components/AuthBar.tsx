@@ -38,6 +38,9 @@ export function AuthBar() {
       {cloud && loggedIn && (
         <p className="auth-hint">Inloggad · redo för live-karta</p>
       )}
+      <Link className="chip" to="/hjalp">
+        Hjälp
+      </Link>
       {loggedIn && (
         <button
           type="button"

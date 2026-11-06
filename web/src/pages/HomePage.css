@@ -64,6 +64,13 @@
   filter: drop-shadow(0 12px 28px rgba(0, 0, 0, 0.7));
 }
 
+.home-cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
 .home-cta {
   display: inline-flex;
   align-items: center;
@@ -77,6 +84,14 @@
   background: linear-gradient(100deg, #b8e014 0%, #d4f03a 55%, #ff6a00 140%);
   box-shadow: 0 10px 28px rgba(184, 224, 20, 0.28);
   transition: transform 0.15s ease;
+}
+
+.home-cta.ghost {
+  color: #e8f5e9;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: none;
+  font-weight: 700;
 }
 
 .home-cta:active {

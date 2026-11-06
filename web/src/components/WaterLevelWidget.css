@@ -1,0 +1,17 @@
+.water-widget .water-value {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.water-widget .water-value strong {
+  font-size: 1.45rem;
+  color: #3ec7d6;
+}
+
+.water-widget .water-value span,
+.water-muted {
+  font-size: 0.8rem;
+  color: #9bb0a4;
+}
