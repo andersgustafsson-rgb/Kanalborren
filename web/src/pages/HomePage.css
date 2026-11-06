@@ -101,12 +101,13 @@
 .auth-bar {
   padding: 0.85rem 1rem;
   border-radius: 18px;
-  background: rgba(8, 14, 22, 0.38);
+  background: rgba(8, 14, 22, 0.92);
   border: 1px solid rgba(255, 255, 255, 0.14);
-  backdrop-filter: blur(8px);
   display: flex;
   flex-direction: column;
   gap: 0.55rem;
+  position: relative;
+  isolation: isolate;
 }
 
 .auth-profile-link {
@@ -174,13 +175,21 @@
 }
 
 .home-board {
-  margin-top: 0.25rem;
+  margin-top: 0;
   padding: 0.95rem 1rem 1.05rem;
   border-radius: 18px;
-  background: rgba(8, 14, 22, 0.36);
+  /* Opaque enough to avoid backdrop-filter “ghosting” of the next card */
+  background: rgba(8, 14, 22, 0.92);
   border: 1px solid rgba(255, 255, 255, 0.14);
-  backdrop-filter: blur(8px);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
+  position: relative;
+  isolation: isolate;
+}
+
+#catch {
+  display: flex;
+  flex-direction: column;
+  gap: inherit;
 }
 
 .home-board-head h1 {

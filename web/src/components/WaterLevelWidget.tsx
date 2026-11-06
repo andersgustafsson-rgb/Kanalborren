@@ -8,21 +8,27 @@ type Reading = {
   error: string | null;
 };
 
-/** SMHI Öresund proxy — Malmö Hamn (35152). */
+/** SMHI Öresund proxy — Malmö Hamn, parameter 6 (havsvattenstånd). */
 async function fetchMalmoLevel(): Promise<Reading> {
   const station = "Malmö Hamn (SMHI)";
   try {
     const url =
-      "https://opendata-download-ocobs.smhi.se/api/version/latest/parameter/4/station/35152/period/latest-hour/data.json";
+      "https://opendata-download-ocobs.smhi.se/api/version/1.0/parameter/6/station/35152/period/latest-hour/data.json";
     const res = await fetch(url);
     if (!res.ok) throw new Error("Kunde inte hämta SMHI");
     const json = (await res.json()) as {
-      value?: { value: number; date: string }[];
+      value?: { value: number; date: number | string }[];
     };
     const last = json.value?.[json.value.length - 1];
+    const time =
+      last?.date == null
+        ? null
+        : typeof last.date === "number"
+          ? new Date(last.date).toISOString()
+          : String(last.date);
     return {
       value: typeof last?.value === "number" ? last.value : null,
-      time: last?.date || null,
+      time,
       station,
       error: null,
     };
