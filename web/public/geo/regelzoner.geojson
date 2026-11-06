@@ -1,0 +1,91 @@
+{
+  "type": "FeatureCollection",
+  "metadata": {
+    "verified_at": "2026-11-06",
+    "source": "Allmänna lokala ordningsföreskrifter för Malmö kommun 18 §, Bilaga 4",
+    "source_decision": "KF § 105, 2026-05-28",
+    "disclaimer": "Polygonerna är ungefärliga för MVP-planering. Digitalisera Bilaga 4 innan produktion. Inte juridisk rådgivning."
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "allowed_canal_inner",
+        "rule_ids": ["R1"],
+        "name": "Tillåten kanal (innanför Turbinbron, Neptunibron, Suellsbron)",
+        "kind": "allowed_fishing",
+        "approximation": true,
+        "source": "18 § ordningsföreskrifter; Bilaga 4",
+        "source_date": "2026-05-28",
+        "notes": "Handredskap max 10 krokar. Exkludera vallgraven (R2)."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[12.9850, 55.6010], [13.0120, 55.6010], [13.0120, 55.6125], [12.9850, 55.6125], [12.9850, 55.6010]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "forbidden_malmohus_moat",
+        "rule_ids": ["R2"],
+        "name": "Förbud – Malmöhus vallgrav",
+        "kind": "forbidden",
+        "approximation": true,
+        "source": "18 § ordningsföreskrifter; Bilaga 4",
+        "source_date": "2026-05-28"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[12.9855, 55.6038], [12.9905, 55.6038], [12.9905, 55.6068], [12.9855, 55.6068], [12.9855, 55.6038]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "forbidden_dockan_inlet",
+        "rule_ids": ["R4"],
+        "name": "Förbud – Dockans hamninlopp",
+        "kind": "forbidden",
+        "approximation": true,
+        "source": "18 § ordningsföreskrifter",
+        "source_date": "2026-05-28",
+        "notes": "Exakt gräns ska spåras från Bilaga 4 / lokal kännedom."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[12.9900, 55.6135], [12.9975, 55.6135], [12.9975, 55.6175], [12.9900, 55.6175], [12.9900, 55.6135]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "seasonal_bathing_note",
+        "rule_ids": ["R5"],
+        "name": "Säsongsförbud badbryggor/stränder (15 maj–30 sep)",
+        "kind": "seasonal_forbidden",
+        "approximation": true,
+        "source": "18 § ordningsföreskrifter",
+        "source_date": "2026-05-28",
+        "season": { "start": "05-15", "end": "09-30" },
+        "notes": "Kanal-MVP visar som regeltext. Detaljpolygoner för Ribersborg m.fl. i senare etapp."
+      },
+      "geometry": null
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "bridge_fishing_ban",
+        "rule_ids": ["R3"],
+        "name": "Förbud – fiske från broar",
+        "kind": "forbidden_activity",
+        "approximation": false,
+        "source": "18 § ordningsföreskrifter",
+        "source_date": "2026-05-28",
+        "geometry_type": "rule_overlay",
+        "notes": "Gäller broar; ingen enskild bötesuppgift i appen."
+      },
+      "geometry": null
+    }
+  ]
+}

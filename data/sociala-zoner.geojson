@@ -1,0 +1,306 @@
+{
+  "type": "FeatureCollection",
+  "metadata": {
+    "purpose": "Social visibility zones for Kanalborren",
+    "approximation": true,
+    "updated_at": "2026-11-06"
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "slottsparken",
+        "name": "Slottsparken",
+        "kind": "social_zone",
+        "approximation": true,
+        "note": "Zone for social visibility – not an exact fishing spot"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              12.9865,
+              55.603
+            ],
+            [
+              12.9945,
+              55.603
+            ],
+            [
+              12.9945,
+              55.6078
+            ],
+            [
+              12.9865,
+              55.6078
+            ],
+            [
+              12.9865,
+              55.603
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "kungsparken",
+        "name": "Kungsparken",
+        "kind": "social_zone",
+        "approximation": true,
+        "note": "Zone for social visibility – not an exact fishing spot"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              12.9935,
+              55.6025
+            ],
+            [
+              13.0005,
+              55.6025
+            ],
+            [
+              13.0005,
+              55.6068
+            ],
+            [
+              12.9935,
+              55.6068
+            ],
+            [
+              12.9935,
+              55.6025
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "malmohus",
+        "name": "Malmöhus (utanför vallgrav)",
+        "kind": "social_zone",
+        "approximation": true,
+        "note": "Zone for social visibility – not an exact fishing spot"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              12.984,
+              55.6032
+            ],
+            [
+              12.9908,
+              55.6032
+            ],
+            [
+              12.9908,
+              55.6072
+            ],
+            [
+              12.984,
+              55.6072
+            ],
+            [
+              12.984,
+              55.6032
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "centralen",
+        "name": "Centralen / station",
+        "kind": "social_zone",
+        "approximation": true,
+        "note": "Zone for social visibility – not an exact fishing spot"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              12.9965,
+              55.607
+            ],
+            [
+              13.006,
+              55.607
+            ],
+            [
+              13.006,
+              55.612
+            ],
+            [
+              12.9965,
+              55.612
+            ],
+            [
+              12.9965,
+              55.607
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "davidshall",
+        "name": "Davidshall",
+        "kind": "social_zone",
+        "approximation": true,
+        "note": "Zone for social visibility – not an exact fishing spot"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              12.9945,
+              55.5998
+            ],
+            [
+              13.003,
+              55.5998
+            ],
+            [
+              13.003,
+              55.6042
+            ],
+            [
+              12.9945,
+              55.6042
+            ],
+            [
+              12.9945,
+              55.5998
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "triangeln_soder",
+        "name": "Södra kanalen",
+        "kind": "social_zone",
+        "approximation": true,
+        "note": "Zone for social visibility – not an exact fishing spot"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              12.998,
+              55.5978
+            ],
+            [
+              13.01,
+              55.5978
+            ],
+            [
+              13.01,
+              55.6032
+            ],
+            [
+              12.998,
+              55.6032
+            ],
+            [
+              12.998,
+              55.5978
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "neptuni",
+        "name": "Neptuni / inre hamnkant",
+        "kind": "social_zone",
+        "approximation": true,
+        "note": "Zone for social visibility – not an exact fishing spot"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              12.994,
+              55.609
+            ],
+            [
+              13.0035,
+              55.609
+            ],
+            [
+              13.0035,
+              55.6135
+            ],
+            [
+              12.994,
+              55.6135
+            ],
+            [
+              12.994,
+              55.609
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "suell",
+        "name": "Suell / östra inner",
+        "kind": "social_zone",
+        "approximation": true,
+        "note": "Zone for social visibility – not an exact fishing spot"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              13.001,
+              55.6055
+            ],
+            [
+              13.011,
+              55.6055
+            ],
+            [
+              13.011,
+              55.6115
+            ],
+            [
+              13.001,
+              55.6115
+            ],
+            [
+              13.001,
+              55.6055
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}

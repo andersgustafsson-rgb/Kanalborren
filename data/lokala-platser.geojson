@@ -1,0 +1,359 @@
+{
+  "type": "FeatureCollection",
+  "metadata": {
+    "purpose": "Lokala smeknamn / landmärken längs Malmö kanal",
+    "exported_at": "2026-11-06T08:42:57.622Z",
+    "disclaimer": "Ungefärliga positioner. Community-namn – ingen garanti för fisk."
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "poliskurvan",
+        "name": "Poliskurvan",
+        "kind": "local_spot",
+        "note": "Kurvan där Rörsjökanalen möter Södra förstads kanalen (Östra Promenaden / Exercisgatan). Korrigerad enligt lokal kännedom 2026-11-06.",
+        "confidence": "high",
+        "sources": [
+          "Användarkorrigering",
+          "OSM-kanalgeometri"
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          13.014657497406006,
+          55.60542065542826
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "anna_lindhs_plats",
+        "name": "Anna Lindhs plats",
+        "kind": "local_spot",
+        "note": "Platsen vid kanalen / stationsområdet (Anna Lindhs plats).",
+        "confidence": "high",
+        "sources": [
+          "OpenStreetMap"
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.996751070022585,
+          55.60937196811503
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "kyrkogarden",
+        "name": "Kyrkogården",
+        "kind": "local_spot",
+        "note": "Kajen utanför Sankt Pauli kyrkogård längs Södra förstads kanalen.",
+        "confidence": "high",
+        "sources": [
+          "Användarönskemål",
+          "OSM-kanalgeometri"
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.997475266456604,
+          55.600944646360766
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "roddklubben",
+        "name": "Roddklubben",
+        "kind": "local_spot",
+        "note": "Malmö Roddklubb vid Slussplan – landmärke och omnämnd fiskezon i lokal snack.",
+        "confidence": "high",
+        "sources": [
+          "OpenStreetMap",
+          "malmoroddklubb.se"
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          13.01234006881714,
+          55.60952346757884
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "slussen",
+        "name": "Slussen / Slussplan",
+        "kind": "local_spot",
+        "note": "Området kring Slussbron mellan polishuset och roddklubben. Fiske från bron är förbjudet.",
+        "confidence": "high",
+        "sources": [
+          "OpenStreetMap",
+          "Fiskesnack-forum"
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          13.01275,
+          55.60919
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "schougens",
+        "name": "Schougens",
+        "kind": "local_spot",
+        "note": "Kajer kring Schougens bro (inte från bron).",
+        "confidence": "high",
+        "sources": [
+          "OpenStreetMap"
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          13.01325,
+          55.6081
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "gondolen",
+        "name": "Gondolen",
+        "kind": "local_spot",
+        "note": "Sportfiskarnas streetfiske-mötesplats vid Slottsparken/Gondolen.",
+        "confidence": "high",
+        "sources": [
+          "Sportfiskarna streetfiske (Eniro-länk)"
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.98827,
+          55.60398
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "trampbatar",
+        "name": "Trampbåtsbryggan",
+        "kind": "local_spot",
+        "note": "Raul Wallenbergs park – vanlig samlingsplats (KM, Abborrens dag, streetfiske).",
+        "confidence": "high",
+        "sources": [
+          "OpenStreetMap Trampbåtarna",
+          "Sportfiskarna",
+          "SFK Spinnaren"
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          13.00434,
+          55.60221
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "slottsparken",
+        "name": "Slottsparken",
+        "kind": "local_spot",
+        "note": "Parkkajer längs kanalen – ofta omnämnd i reportage.",
+        "confidence": "approx",
+        "sources": [
+          "Fiskejournalen",
+          "OpenStreetMap"
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.99,
+          55.6035
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "kungsparken",
+        "name": "Kungsparken",
+        "kind": "local_spot",
+        "note": "Kajsträcka vid Kungsparken.",
+        "confidence": "high",
+        "sources": [
+          "lokal kännedom"
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.990034818649294,
+          55.602305382905584
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "hovratten",
+        "name": "Hovrätten",
+        "kind": "local_spot",
+        "note": "Kajerna kring Hovrättsbron (inte från bron).",
+        "confidence": "high",
+        "sources": [
+          "Fiskesnack-forum",
+          "OpenStreetMap"
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.990700006484987,
+          55.60677517632064
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "sodertull",
+        "name": "Södertull",
+        "kind": "local_spot",
+        "note": "Där kanalen böjer sig vid Södertull / södra sträckan.",
+        "confidence": "approx",
+        "sources": [
+          "Fiskesnack-forum"
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.9985,
+          55.6012
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "davidshall",
+        "name": "Davidshall",
+        "kind": "local_spot",
+        "note": "Området kring Davidshallsbron.",
+        "confidence": "approx",
+        "sources": [
+          "OpenStreetMap"
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          13.0009,
+          55.6011
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "fersens",
+        "name": "Fersens",
+        "kind": "local_spot",
+        "note": "Kajerna kring Fersens bro.",
+        "confidence": "approx",
+        "sources": [
+          "OpenStreetMap"
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.9952,
+          55.6016
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "turbinen",
+        "name": "Turbinen",
+        "kind": "local_spot",
+        "note": "Västra ytterområdet vid Turbinbron / Turbinkanalen.",
+        "confidence": "high",
+        "sources": [
+          "OpenStreetMap",
+          "SFK Spinnaren (yttre gräns omnämnd)"
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.9821,
+          55.6039
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "citadell",
+        "name": "Citadell",
+        "kind": "local_spot",
+        "note": "Kajerna kring Citadellsbron / västra kanalarmen.",
+        "confidence": "approx",
+        "sources": [
+          "OpenStreetMap"
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.9858,
+          55.6064
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "centralen",
+        "name": "Centralen",
+        "kind": "local_spot",
+        "note": "Kanalsträckan närmast Centralstationen / Norra Vallgatan.",
+        "confidence": "high",
+        "sources": [
+          "lokal kännedom"
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          13.000999689102175,
+          55.60852962042298
+        ]
+      }
+    }
+  ]
+}
