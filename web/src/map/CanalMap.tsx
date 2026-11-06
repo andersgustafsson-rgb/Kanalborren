@@ -6,6 +6,7 @@ import {
   TileLayer,
   Tooltip,
   useMap,
+  useMapEvents,
   ZoomControl,
 } from "react-leaflet";
 import type { Feature, FeatureCollection, Geometry, Point } from "geojson";
@@ -47,6 +48,25 @@ import {
 const CENTER: [number, number] = [55.6055, 12.997];
 /** No maxBounds — tight bounds lock panning when the viewport is larger than the box. */
 const MIN_ZOOM = 11;
+
+/** Collapse check-in sheet when the user pans/zooms the map. */
+function CollapseSheetOnMapMove({
+  enabled,
+  onCollapse,
+}: {
+  enabled: boolean;
+  onCollapse: () => void;
+}) {
+  useMapEvents({
+    dragstart() {
+      if (enabled) onCollapse();
+    },
+    zoomstart() {
+      if (enabled) onCollapse();
+    },
+  });
+  return null;
+}
 
 const EMPTY: FeatureCollection = { type: "FeatureCollection", features: [] };
 
@@ -570,6 +590,10 @@ export function CanalMap({ toggles }: Props) {
         className={`canal-map${editMode === "add" || pickOnMap ? " add-cursor" : ""}`}
       >
         <ZoomControl position="bottomright" />
+        <CollapseSheetOnMapMove
+          enabled={sheetOpen}
+          onCollapse={() => setSheetOpen(false)}
+        />
         <TileLayer
           attribution="Tiles &copy; Esri &mdash; Source: Esri, OpenStreetMap"
           url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}"
