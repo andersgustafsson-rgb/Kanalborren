@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import type { Session, User } from "@supabase/supabase-js";
+import { fetchIsAdmin } from "./adminApi";
 import { isSupabaseConfigured, supabase } from "./supabase";
 import { localDisplayName, setLocalDisplayName } from "./localPresence";
 
@@ -17,6 +18,7 @@ type AuthState = {
   user: User | null;
   session: Session | null;
   displayName: string;
+  isAdmin: boolean;
   setDisplayName: (name: string) => void;
   signUp: (
     email: string,
@@ -54,6 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(!configured);
   const [session, setSession] = useState<Session | null>(null);
   const [displayName, setDisplayNameState] = useState(() => localDisplayName());
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     if (!configured || !supabase) {
@@ -61,32 +64,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
     let mounted = true;
-    supabase.auth.getSession().then(({ data }) => {
-      if (!mounted) return;
-      setSession(data.session);
-      const meta = data.session?.user?.user_metadata?.display_name;
+
+    async function applySession(s: Session | null) {
+      setSession(s);
+      if (!s?.user) {
+        setIsAdmin(false);
+        return;
+      }
+      const meta = s.user.user_metadata?.display_name;
       if (typeof meta === "string" && meta) {
         setDisplayNameState(meta);
         setLocalDisplayName(meta);
       }
-      if (data.session?.user) {
-        void upsertProfile(
-          data.session.user,
-          (typeof meta === "string" && meta) || localDisplayName(),
-        );
-      }
-      setReady(true);
+      void upsertProfile(
+        s.user,
+        (typeof meta === "string" && meta) || localDisplayName(),
+      );
+      const admin = await fetchIsAdmin(s.user.id);
+      if (mounted) setIsAdmin(admin);
+    }
+
+    supabase.auth.getSession().then(({ data }) => {
+      if (!mounted) return;
+      void applySession(data.session).finally(() => {
+        if (mounted) setReady(true);
+      });
     });
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
-      setSession(s);
-      if (s?.user) {
-        const meta = s.user.user_metadata?.display_name;
-        if (typeof meta === "string" && meta) {
-          setDisplayNameState(meta);
-          setLocalDisplayName(meta);
-        }
-        void upsertProfile(s.user, localDisplayName());
-      }
+      void applySession(s);
     });
     return () => {
       mounted = false;
@@ -146,6 +151,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = useCallback(async () => {
     if (supabase) await supabase.auth.signOut();
     setSession(null);
+    setIsAdmin(false);
   }, []);
 
   const value = useMemo<AuthState>(
@@ -155,6 +161,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user: session?.user ?? null,
       session,
       displayName,
+      isAdmin,
       setDisplayName,
       signUp,
       signIn,
@@ -165,6 +172,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       configured,
       session,
       displayName,
+      isAdmin,
       setDisplayName,
       signUp,
       signIn,

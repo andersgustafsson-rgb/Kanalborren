@@ -231,6 +231,11 @@ export function ProfilePage() {
           ) : auth.user ? (
             <div className="profile-account-row">
               <p className="profile-muted">Inloggad · {auth.user.email}</p>
+              {auth.isAdmin && (
+                <Link className="chip on" to="/admin">
+                  Admin-dashboard
+                </Link>
+              )}
               <button
                 type="button"
                 className="chip"

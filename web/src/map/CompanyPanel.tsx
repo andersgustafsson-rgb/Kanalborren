@@ -12,6 +12,10 @@ import {
   type CompanyRequest,
 } from "../lib/company";
 import { subscribePublicSessions } from "../lib/fishingSessions";
+import {
+  ensureNotifyPermission,
+  notificationPermission,
+} from "../lib/notifications";
 import type { PublicFishingSession } from "../lib/types";
 import "./CompanyPanel.css";
 
@@ -28,6 +32,9 @@ export function CompanyPanel() {
   const [activeName, setActiveName] = useState("Fiskare");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [chatDraft, setChatDraft] = useState("");
+  const [notifyState, setNotifyState] = useState(() =>
+    notificationPermission(),
+  );
 
   const refreshRequests = useCallback(async () => {
     if (!auth.user) {
@@ -224,6 +231,28 @@ export function CompanyPanel() {
           ) : (
             <>
               <p className="company-lead">Allt sällskap i samma ruta</p>
+
+              {notifyState !== "granted" && notifyState !== "unsupported" && (
+                <button
+                  type="button"
+                  className="company-btn ghost"
+                  onClick={() => {
+                    void ensureNotifyPermission().then((ok) => {
+                      setNotifyState(notificationPermission());
+                      setMsg(
+                        ok
+                          ? "Notiser på · du får push vid chatt"
+                          : "Notiser nekades i webbläsaren",
+                      );
+                    });
+                  }}
+                >
+                  Slå på chatt-notiser
+                </button>
+              )}
+              {notifyState === "granted" && (
+                <p className="company-status">Chatt-notiser är på</p>
+              )}
 
               {pendingIn.length > 0 && (
                 <section className="company-section">

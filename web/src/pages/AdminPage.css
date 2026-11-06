@@ -1,0 +1,143 @@
+.admin-page {
+  min-height: 100dvh;
+  background:
+    radial-gradient(ellipse at top left, rgba(45, 106, 79, 0.25), transparent 50%),
+    linear-gradient(160deg, #07110c 0%, #0c1612 45%, #101820 100%);
+  color: #eef5f0;
+  padding: 1rem 1rem 2.5rem;
+}
+
+.admin-stack {
+  max-width: 960px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.admin-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.admin-eyebrow {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #b8f06e;
+}
+
+.admin-top h1 {
+  margin: 0.15rem 0;
+  font-size: 1.8rem;
+}
+
+.admin-top-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.admin-muted {
+  color: #9bb0a4;
+  margin: 0.2rem 0;
+}
+
+.admin-error {
+  margin: 0;
+  padding: 0.55rem 0.75rem;
+  border-radius: 10px;
+  background: #3a1518;
+  color: #ffd0d4;
+}
+
+.admin-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
+  gap: 0.55rem;
+}
+
+.admin-stats article {
+  background: rgba(12, 22, 17, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 0.75rem 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.admin-stats strong {
+  font-size: 1.45rem;
+  color: #f4c430;
+}
+
+.admin-stats span {
+  font-size: 0.75rem;
+  color: #9bb0a4;
+}
+
+.admin-card {
+  background: rgba(12, 22, 17, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 0.85rem;
+}
+
+.admin-card h2 {
+  margin: 0 0 0.65rem;
+  font-size: 1rem;
+}
+
+.admin-table-wrap {
+  overflow: auto;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.admin-table th,
+.admin-table td {
+  text-align: left;
+  padding: 0.45rem 0.4rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  vertical-align: top;
+}
+
+.admin-table th {
+  color: #9bb0a4;
+  font-weight: 700;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.admin-table tr.dim td {
+  opacity: 0.55;
+}
+
+.admin-page .chip {
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  color: #eef5f0;
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem;
+  font: inherit;
+  font-size: 0.78rem;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.admin-page .chip:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
