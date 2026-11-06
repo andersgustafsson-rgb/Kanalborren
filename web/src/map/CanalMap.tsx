@@ -79,6 +79,15 @@ function CollapseSheetOnMapMove({
   return null;
 }
 
+/** Keep map credit tiny (required by tile provider, but not shouty). */
+function CompactAttribution() {
+  const map = useMap();
+  useEffect(() => {
+    map.attributionControl?.setPrefix(false);
+  }, [map]);
+  return null;
+}
+
 const EMPTY: FeatureCollection = { type: "FeatureCollection", features: [] };
 
 function styleFor(props: CanalProperties): PathOptions {
@@ -582,12 +591,13 @@ export function CanalMap({ toggles }: Props) {
         className={`canal-map${editMode === "add" || pickOnMap ? " add-cursor" : ""}`}
       >
         <ZoomControl position="bottomright" />
+        <CompactAttribution />
         <CollapseSheetOnMapMove
           enabled={sheetOpen}
           onCollapse={() => setSheetOpen(false)}
         />
         <TileLayer
-          attribution="Tiles &copy; Esri &mdash; Source: Esri, OpenStreetMap"
+          attribution="© Esri"
           url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}"
           maxZoom={19}
         />
