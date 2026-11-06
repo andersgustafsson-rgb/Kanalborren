@@ -45,15 +45,18 @@ const SECTIONS = [
     title: "Utmana fiskare",
     body: [
       "På Hem: välj person, art, längd eller vikt, och tid (6–24 tim).",
-      "Mottagaren antar → båda fiskar och rapporterar fångst.",
-      "Tryck Avgör nu när tiden är slut (eller tidigare) — störst vinner.",
-      "Ingen fångst hos någon = oavgjort.",
+      "Mottagaren antar → båda fiskar och rapporterar fångst (rätt art under tiden).",
+      "Poängen syns i utmaningsrutan (Du / motståndare).",
+      "Tryck Avgör nu när ni är klara — eller vänta: efter sluttid avgörs den automatiskt.",
+      "Ingen fångst hos någon = oavgjort. Obesvarade utmaningar blir ogiltiga efter tiden.",
+      "Klara / nekade / utgångna utmaningar syns max ca 24 timmar — sen städas listan.",
     ],
   },
   {
     id: "tips",
     title: "Tips",
     body: [
+      "Den här sidan: Hem → Så funkar det, eller Hjälp på kartan / i profilen.",
       "Lägg till på hemskärmen för app-känsla (Safari/Chrome).",
       "Egen domän kan kopplas senare via Cloudflare + Render.",
       "Admin-dashboard finns för dig som ägare under Profil.",

@@ -204,6 +204,13 @@
   font-size: 0.86rem;
 }
 
+.home-board-head a {
+  color: #b8e014;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .period-tabs {
   display: flex;
   gap: 0.4rem;

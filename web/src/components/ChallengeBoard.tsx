@@ -101,10 +101,16 @@ export function ChallengeBoard({ reloadToken = 0 }: Props) {
 
   const recent = useMemo(
     () =>
-      rows.filter((r) =>
-        ["completed", "declined", "pending"].includes(r.status),
+      rows.filter(
+        (r) =>
+          ["completed", "declined", "expired", "pending"].includes(r.status) &&
+          !(
+            r.status === "pending" &&
+            auth.user &&
+            r.toUserId === auth.user.id
+          ),
       ),
-    [rows],
+    [rows, auth.user],
   );
 
   async function createChallenge(e: React.FormEvent) {
@@ -187,7 +193,9 @@ export function ChallengeBoard({ reloadToken = 0 }: Props) {
         <h2 id="challenge-title">Utmana fiskare</h2>
         <p>
           Skicka en duell · båda rapporterar fångst · störst {metricLabel(metric)}{" "}
-          vinner
+          vinner. Efter sluttid avgörs den automatiskt och försvinner inom ett
+          dygn.{" "}
+          <Link to="/hjalp#utmana">Så funkar det</Link>
         </p>
       </header>
 

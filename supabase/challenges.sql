@@ -17,3 +17,42 @@ create table if not exists public.challenges (
 
 alter table public.challenges enable row level security;
 -- policies + RPCs: see production / prior migration apply
+
+-- Auto-expire unanswered challenges and resolve timed-out active ones
+create or replace function public.sweep_my_challenges()
+returns integer
+language plpgsql
+security definer
+set search_path to 'public'
+as $$
+declare
+  r record;
+  n integer := 0;
+begin
+  if auth.uid() is null then
+    return 0;
+  end if;
+
+  update public.challenges
+  set status = 'expired'
+  where status = 'pending'
+    and ends_at <= now()
+    and (from_user_id = auth.uid() or to_user_id = auth.uid());
+  get diagnostics n = row_count;
+
+  for r in
+    select id
+    from public.challenges
+    where status = 'active'
+      and ends_at <= now()
+      and (from_user_id = auth.uid() or to_user_id = auth.uid())
+  loop
+    perform public.resolve_challenge(r.id);
+    n := n + 1;
+  end loop;
+
+  return n;
+end;
+$$;
+
+grant execute on function public.sweep_my_challenges() to authenticated;

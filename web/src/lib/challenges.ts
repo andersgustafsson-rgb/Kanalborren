@@ -64,12 +64,31 @@ async function nameMap(ids: string[]): Promise<Map<string, string>> {
   );
 }
 
+/** How long finished challenges stay visible after ends_at. */
+export const CHALLENGE_HISTORY_MS = 24 * 60 * 60 * 1000;
+
+export function isChallengeVisible(c: Challenge, now = Date.now()): boolean {
+  const ends = new Date(c.endsAt).getTime();
+  if (c.status === "active" || c.status === "pending") {
+    return ends > now; // past-due ones are swept then reclassified
+  }
+  // completed / declined / expired / cancelled — keep 24h after end
+  return now - ends < CHALLENGE_HISTORY_MS;
+}
+
+export async function sweepMyChallenges(): Promise<void> {
+  if (!supabase) return;
+  await supabase.rpc("sweep_my_challenges");
+}
+
 export async function listMyChallenges(): Promise<Challenge[]> {
   if (!isSupabaseConfigured() || !supabase) return [];
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return [];
+
+  await sweepMyChallenges();
 
   const { data, error } = await supabase
     .from("challenges")
@@ -89,7 +108,9 @@ export async function listMyChallenges(): Promise<Challenge[]> {
     [r.from_user_id, r.to_user_id, r.winner_user_id].filter(Boolean),
   ) as string[];
   const names = await nameMap(ids);
-  return data.map((r) => mapRow(r as unknown as Record<string, unknown>, names));
+  return data
+    .map((r) => mapRow(r as unknown as Record<string, unknown>, names))
+    .filter((c) => isChallengeVisible(c));
 }
 
 export async function sendChallenge(input: {

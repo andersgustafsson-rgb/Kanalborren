@@ -62,7 +62,7 @@ export function HomePage() {
               Öppna kartan
             </Link>
             <Link className="home-cta ghost" to="/hjalp">
-              Så funkar det
+              Bruksanvisning
             </Link>
           </div>
         </header>
