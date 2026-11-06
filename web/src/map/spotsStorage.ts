@@ -1,7 +1,7 @@
 import type { Feature, FeatureCollection, Point } from "geojson";
 import type { CanalProperties } from "./types";
 
-export const SPOTS_STORAGE_KEY = "kanalborren.spots.v1";
+export const SPOTS_STORAGE_KEY = "kanalhugget.spots.v1";
 
 export type SpotFeature = Feature<Point, CanalProperties>;
 

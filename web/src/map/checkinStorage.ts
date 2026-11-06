@@ -19,7 +19,7 @@ export type CheckInSession = {
   remoteId?: string | null;
 };
 
-export const CHECKIN_STORAGE_KEY = "kanalborren.checkin.v1";
+export const CHECKIN_STORAGE_KEY = "kanalhugget.checkin.v1";
 export const DEFAULT_DURATION_MS = 120 * 60 * 1000;
 
 export function loadSession(): CheckInSession | null {

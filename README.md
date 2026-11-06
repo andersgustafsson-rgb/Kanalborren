@@ -1,4 +1,4 @@
-# Kanalborren
+# KanalHugget
 
 Lokal fiskekarta och community för sportfiskare i **Malmö kanal**.  
 Status: **Etapp 0 klar** (verifiering, integritet, MVP-lås). Ingen appkod ännu.

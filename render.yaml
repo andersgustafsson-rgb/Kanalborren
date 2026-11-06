@@ -2,7 +2,7 @@
 # Skapa tjänsten via Render Dashboard → New → Blueprint, eller Static Site från GitHub.
 services:
   - type: web
-    name: kanalborren
+    name: kanalhugget
     runtime: static
     rootDir: web
     buildCommand: npm ci && npm run build

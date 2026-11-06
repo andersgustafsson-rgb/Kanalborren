@@ -1,4 +1,4 @@
-# Integritetspolicy – utkast (Kanalborren)
+# Integritetspolicy – utkast (KanalHugget)
 
 **Status:** Utkast för Etapp 0. Inte juridisk granskning. Uppdatera innan publik lansering.  
 **Senast uppdaterad:** 2026-11-06

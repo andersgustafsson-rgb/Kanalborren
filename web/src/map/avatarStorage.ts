@@ -5,8 +5,8 @@ import {
   type PresetAvatarId,
 } from "./avatars";
 
-export const AVATAR_STORAGE_KEY = "kanalborren.avatar.v1";
-export const CUSTOM_AVATAR_KEY = "kanalborren.avatar.custom.v1";
+export const AVATAR_STORAGE_KEY = "kanalhugget.avatar.v1";
+export const CUSTOM_AVATAR_KEY = "kanalhugget.avatar.custom.v1";
 
 const MAX_CUSTOM_BYTES = 180_000; // ~ data-URL after resize
 

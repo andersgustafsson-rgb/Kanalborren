@@ -1,7 +1,7 @@
 import type { PublishSessionInput, PublicFishingSession } from "./types";
 
-const KEY = "kanalborren.localPresence.v1";
-const CHANNEL = "kanalborren-presence";
+const KEY = "kanalhugget.localPresence.v1";
+const CHANNEL = "kanalhugget-presence";
 
 type Store = {
   sessions: PublicFishingSession[];
@@ -36,7 +36,7 @@ function write(store: Store) {
 
 /** Per-tab id so two browser tabs can see each other in local demo. */
 function deviceId(): string {
-  const k = "kanalborren.deviceId";
+  const k = "kanalhugget.deviceId";
   let id = sessionStorage.getItem(k);
   if (!id) {
     id = crypto.randomUUID();
@@ -121,7 +121,7 @@ export function subscribeLocalPresence(
 }
 
 export function localDisplayName(): string {
-  const k = "kanalborren.displayName.tab";
+  const k = "kanalhugget.displayName.tab";
   const existing = sessionStorage.getItem(k);
   if (existing && existing.trim()) return existing.trim();
   const id = deviceId();
@@ -132,7 +132,7 @@ export function localDisplayName(): string {
 
 export function setLocalDisplayName(name: string) {
   const v = name.trim() || localDisplayName();
-  sessionStorage.setItem("kanalborren.displayName.tab", v);
+  sessionStorage.setItem("kanalhugget.displayName.tab", v);
 }
 
 /** Spread stacked zone pins so two people in same zone are visible. */

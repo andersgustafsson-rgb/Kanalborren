@@ -18,6 +18,7 @@ import { CheckInPanel } from "./CheckInPanel";
 import { SessionMarkers } from "./SessionMarkers";
 import { OthersMarkers } from "./OthersMarkers";
 import { PresenceList } from "./PresenceList";
+import { CompanyPanel } from "./CompanyPanel";
 import { Recenter } from "./Recenter";
 import { useCheckIn } from "./useCheckIn";
 import { useAuth } from "../lib/AuthContext";
@@ -695,6 +696,8 @@ export function CanalMap({ toggles }: Props) {
         myName={auth.displayName}
         iAmCheckedIn={Boolean(checkIn.session && !checkIn.spectator)}
       />
+
+      <CompanyPanel />
 
       <CheckInPanel
         open={sheetOpen}

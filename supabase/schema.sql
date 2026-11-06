@@ -1,4 +1,4 @@
--- KanalBorren Etapp 1 — run in Supabase SQL editor
+-- KanalHugget Etapp 1 — run in Supabase SQL editor
 -- Enable Realtime for fishing_sessions after create (Database → Replication)
 
 create extension if not exists "pgcrypto";

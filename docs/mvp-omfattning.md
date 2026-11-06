@@ -1,7 +1,7 @@
 # MVP-omfattning – bekräftad riktning
 
 **Bekräftat:** 2026-11-06  
-**Grund:** Genomförbarhetsplanen *Kanalborren – genomförbarhet och MVP* + Etapp 0-leverabler i detta repo.  
+**Grund:** Genomförbarhetsplanen *KanalHugget – genomförbarhet och MVP* + Etapp 0-leverabler i detta repo.  
 **Tolkningsregel:** Att planen genomförs enligt specifikationen utgör klartecken för denna avgränsade MVP. Appkod startar först i **Etapp 1** efter att Etapp 0-filerna finns (detta dokument).
 
 ## Fyra kärnfunktioner (MVP)

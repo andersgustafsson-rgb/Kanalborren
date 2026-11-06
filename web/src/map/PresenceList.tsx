@@ -32,7 +32,10 @@ export function PresenceList({
         {rows.map((r) => (
           <li key={r.id}>
             <strong>{r.displayName}</strong>
-            <span>{r.zoneName || r.visibility}</span>
+            <span>
+              {r.zoneName || r.visibility}
+              {r.openForCompany ? " · sällskap" : ""}
+            </span>
           </li>
         ))}
         {!iAmCheckedIn && rows.length === 0 && (

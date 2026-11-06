@@ -1,6 +1,6 @@
 # Kontakt Malmö stad / Sensit – kanalsensorer
 
-**Syfte:** Begära öppet eller licensierat API för vattenstånd i Malmö kanal (LoRa/Yggio), så Kanalborren kan visa lokal nivå istället för enbart Öresunds-proxy.
+**Syfte:** Begära öppet eller licensierat API för vattenstånd i Malmö kanal (LoRa/Yggio), så KanalHugget kan visa lokal nivå istället för enbart Öresunds-proxy.
 
 **Status 2026-11-06:** Utkast och sändlista klara. Meddelandet ska skickas från din egen adress (kommunen behöver avsändaridentitet). Kopiera texten nedan och skicka; logga svar i tabellen längst ner.
 
@@ -24,11 +24,11 @@ Telefon växel: 040-34 10 00 (vardagar 08–17).
 
 ## E-postutkast (svenska)
 
-**Ämne:** Förfrågan om öppna/licensierade data – vattenstånd i Malmö kanal (Kanalborren)
+**Ämne:** Förfrågan om öppna/licensierade data – vattenstånd i Malmö kanal (KanalHugget)
 
 Hej,
 
-Jag utvecklar en lokal, icke-kommersiell (i första steget) PWA för sportfiskare kring Malmö kanal, arbetsnamn **Kanalborren**. Appen ska bland annat hjälpa användare att förstå vattenförhållanden och fiska säkert enligt gällande regler.
+Jag utvecklar en lokal, icke-kommersiell (i första steget) PWA för sportfiskare kring Malmö kanal, arbetsnamn **KanalHugget**. Appen ska bland annat hjälpa användare att förstå vattenförhållanden och fiska säkert enligt gällande regler.
 
 Jag har sett att Malmö stad mäter vattenstånd i kanalerna och Öresund via LoRa-sensorer och IoT-plattformen Yggio (beskrivet bland annat i kommunens IoT-arbete och öppna data-exempel).
 
@@ -48,7 +48,7 @@ Med vänlig hälsning
 [Ditt namn]  
 [E-post]  
 [Telefon, valfritt]  
-Projekt: Kanalborren
+Projekt: KanalHugget
 
 ## Checklista innan du skickar
 

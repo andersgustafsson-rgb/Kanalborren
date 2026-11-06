@@ -1,0 +1,196 @@
+.company-panel {
+  position: absolute;
+  top: 5.5rem;
+  left: 0.75rem;
+  z-index: 1000;
+  width: min(18rem, calc(100vw - 1.5rem));
+  pointer-events: none;
+}
+
+.company-toggle,
+.company-body,
+.company-btn,
+.company-input,
+.company-tabs button {
+  pointer-events: auto;
+}
+
+.company-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.45rem 0.85rem;
+  background: #0e1a14;
+  color: #e8f5e9;
+  font: inherit;
+  font-weight: 700;
+  font-size: 0.85rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+}
+
+.company-badge {
+  min-width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 999px;
+  background: #f4c430;
+  color: #1a1a1a;
+  font-size: 0.75rem;
+  display: inline-grid;
+  place-items: center;
+  padding: 0 0.3rem;
+}
+
+.company-body {
+  margin-top: 0.45rem;
+  background: rgba(8, 14, 12, 0.94);
+  color: #eef5f0;
+  border-radius: 12px;
+  padding: 0.65rem;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+  max-height: min(55vh, 26rem);
+  overflow: auto;
+}
+
+.company-hint,
+.company-empty,
+.company-status,
+.company-msg {
+  margin: 0.35rem 0;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  color: #c5d5cb;
+}
+
+.company-hint a {
+  color: #f4c430;
+}
+
+.company-tabs {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.company-tabs button {
+  flex: 1;
+  border: 0;
+  border-radius: 8px;
+  padding: 0.35rem 0.25rem;
+  background: transparent;
+  color: #a8bdb0;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.company-tabs button.on {
+  background: #1f3a2c;
+  color: #fff;
+}
+
+.company-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.company-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  align-items: baseline;
+}
+
+.company-row strong {
+  font-size: 0.85rem;
+}
+
+.company-row span {
+  font-size: 0.7rem;
+  color: #9bb0a4;
+}
+
+.company-input {
+  width: 100%;
+  margin-top: 0.35rem;
+  border: 1px solid #2a4034;
+  border-radius: 8px;
+  background: #0c1611;
+  color: #eef5f0;
+  padding: 0.4rem 0.5rem;
+  font: inherit;
+  font-size: 0.8rem;
+  box-sizing: border-box;
+}
+
+.company-btn {
+  margin-top: 0.35rem;
+  border: 0;
+  border-radius: 8px;
+  padding: 0.4rem 0.65rem;
+  background: #f4c430;
+  color: #142018;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.company-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.company-btn.ghost {
+  background: transparent;
+  color: #d7e6dc;
+  border: 1px solid #3a5345;
+}
+
+.company-actions {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.company-chat-log {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0.5rem 0;
+  max-height: 12rem;
+  overflow: auto;
+}
+
+.company-chat-log p {
+  margin: 0;
+  padding: 0.4rem 0.5rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  max-width: 90%;
+}
+
+.company-chat-log .mine {
+  justify-self: end;
+  background: #1f3a2c;
+}
+
+.company-chat-log .theirs {
+  justify-self: start;
+  background: #16241c;
+}
+
+.company-chat-form {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.company-chat-form .company-btn {
+  margin-top: 0;
+}

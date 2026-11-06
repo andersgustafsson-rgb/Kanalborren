@@ -1,38 +1,27 @@
-# Deploy KanalBorren (samma som mx-fantasy)
+# Deploy KanalHugget (samma som mx-fantasy)
 
 **Appar ni redan använder:**
 1. **GitHub** – sparar koden  
 2. **Render** – visar hemsidan på nätet (som mx-fantasy.se)  
-3. **Supabase** – inloggning + databas (KanalBorren)  
+3. **Supabase** – inloggning + databas  
 4. **Cloudflare** – egen domän senare (som mx-fantasy.se)
 
-Skippa Vercel.
+Live nu: https://kanalborren.onrender.com (Render-namnet kan bytas senare)
 
-## Steg för steg
+## Efter kodändring
+Push till GitHub-repot `Kanalborren` → Render bygger om automatiskt.
 
-### 1. Lägg koden på GitHub
-Skapa ett nytt repo (t.ex. `Kanalborren`) under samma GitHub-konto som mx-fantasy  
-(`andersgustafsson-rgb`). Pusha projektet dit.
+**Viktigt:** Vite läser `VITE_SUPABASE_URL` och `VITE_SUPABASE_ANON_KEY` *vid bygget*.
+Om de ändras: **Manual Deploy → Clear build cache & deploy**.
 
-### 2. Publicera på Render
-1. Gå till [dashboard.render.com](https://dashboard.render.com) (samma inloggning som mx-fantasy)
-2. **New** → **Static Site**
-3. Koppla GitHub-repot `Kanalborren`
-4. Inställningar:
-   - **Root Directory:** `web`
-   - **Build Command:** `npm ci && npm run build`
-   - **Publish Directory:** `dist`
-5. Under **Environment** lägg till (kopiera från `web/.env.local`):
-   - `VITE_SUPABASE_URL`
-   - `VITE_SUPABASE_ANON_KEY`
-6. Deploy → kopiera den publika URL:en (`https://kanalborren.onrender.com` el. liknande)
-
-**Viktigt:** Vite läser nycklarna *vid bygget*. Om du lägger till Environment efter första deployn måste du köra **Manual Deploy → Clear build cache & deploy**, annars syns “Lokal demo” / ingen inloggning.
-
-### 3. Supabase (så inloggning funkar)
+## Supabase URL
 Authentication → URL Configuration:
-- **Site URL** = Render-URL:en
-- **Redirect URLs** = `https://DIN-RENDER-URL/**`
+- Site URL = `https://kanalborren.onrender.com`
+- Redirect URLs = `https://kanalborren.onrender.com/**`
 
-### 4. Egen domän (senare)
-Köp t.ex. `kanalborren.se` → peka via Cloudflare mot Render, samma sätt som `mx-fantasy.se`.
+## Fiskesällskap
+Kör `supabase/company.sql` i SQL Editor, aktivera Realtime för
+`company_requests` och `chat_messages`.
+
+## Egen domän (senare)
+Köp t.ex. `kanalhugget.se` → Cloudflare → Render.

@@ -21,11 +21,11 @@ export function MapPage() {
 
   return (
     <div className="app map-app">
-      <Link className="brand-logo-link" to="/" aria-label="KanalBorren hem">
+      <Link className="brand-logo-link" to="/" aria-label="KanalHugget hem">
         <img
           className="brand-logo"
-          src="/brand/kanalborren-logo.png"
-          alt="KanalBorren"
+          src="/brand/kanalhugget-logo.png"
+          alt="KanalHugget"
           width={280}
           height={100}
           decoding="async"

@@ -1,4 +1,4 @@
-# Användarvillkor – utkast (Kanalborren)
+# Användarvillkor – utkast (KanalHugget)
 
 **Status:** Utkast 2026-11-06. Inte juridiskt granskat.
 

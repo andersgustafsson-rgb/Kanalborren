@@ -49,8 +49,8 @@ export function HomePage() {
         <header className="home-top">
           <img
             className="home-logo"
-            src="/brand/kanalborren-logo.png"
-            alt="KanalBorren"
+            src="/brand/kanalhugget-logo.png"
+            alt="KanalHugget"
             width={420}
             height={150}
             decoding="async"

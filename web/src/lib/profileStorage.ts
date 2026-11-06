@@ -9,10 +9,10 @@ import {
 import type { PresetAvatarId } from "../map/avatars";
 
 /** Display name is per browser tab (sessionStorage) so local two-tab demo works. */
-const NAME_KEY = "kanalborren.displayName.tab";
-const BIO_KEY = "kanalborren.profile.bio.v1";
-const CITY_KEY = "kanalborren.profile.city.v1";
-const STYLE_KEY = "kanalborren.profile.style.v1";
+const NAME_KEY = "kanalhugget.displayName.tab";
+const BIO_KEY = "kanalhugget.profile.bio.v1";
+const CITY_KEY = "kanalhugget.profile.city.v1";
+const STYLE_KEY = "kanalhugget.profile.style.v1";
 
 export type Profile = {
   displayName: string;
@@ -24,7 +24,7 @@ export type Profile = {
 };
 
 function tabDefaultName(): string {
-  const idKey = "kanalborren.deviceId";
+  const idKey = "kanalhugget.deviceId";
   let id = sessionStorage.getItem(idKey);
   if (!id) {
     id = crypto.randomUUID();
