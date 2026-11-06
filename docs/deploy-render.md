@@ -8,6 +8,14 @@
 
 Live nu: https://kanalborren.onrender.com (Render-namnet kan bytas senare)
 
+## SPA-rewrite (måste finnas — annars svart sida vid uppdatering på /karta)
+I Render → din static site → **Redirects/Rewrites** → Add:
+- Source: `/*`
+- Destination: `/index.html`
+- Action: **Rewrite**
+
+Utan den regeln funkar kartan när du klickar dig dit, men **uppdatering/refresh** ger svart/404.
+
 ## Efter kodändring
 Push till GitHub-repot `Kanalborren` → Render bygger om automatiskt.
 
