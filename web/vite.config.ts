@@ -7,7 +7,16 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.svg", "brand/kanalhugget-logo.png"],
+      includeAssets: [
+        "favicon.ico",
+        "favicon-16.png",
+        "favicon-32.png",
+        "favicon-48.png",
+        "apple-touch-icon.png",
+        "icon-192.png",
+        "icon-512.png",
+        "brand/kanalhugget-logo.png",
+      ],
       manifest: {
         name: "KanalHugget",
         short_name: "KanalHugget",
@@ -19,10 +28,22 @@ export default defineConfig({
         lang: "sv",
         icons: [
           {
-            src: "/brand/kanalhugget-logo.png",
+            src: "/icon-192.png",
+            sizes: "192x192",
+            type: "image/png",
+            purpose: "any",
+          },
+          {
+            src: "/icon-512.png",
             sizes: "512x512",
             type: "image/png",
-            purpose: "any maskable",
+            purpose: "any",
+          },
+          {
+            src: "/icon-512.png",
+            sizes: "512x512",
+            type: "image/png",
+            purpose: "maskable",
           },
         ],
       },
