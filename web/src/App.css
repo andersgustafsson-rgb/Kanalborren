@@ -314,8 +314,8 @@
   transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.checkin-sheet:not(.open) {
-  /* peek only */
+.checkin-sheet:not(.open) .sheet-body {
+  display: none;
 }
 
 .sheet-handle {
@@ -384,11 +384,15 @@
 
 .sheet-body {
   padding: 0 0.9rem 0.95rem;
-  display: flex;
+  display: none;
   flex-direction: column;
   gap: 0.7rem;
   overflow: auto;
   overscroll-behavior: contain;
+}
+
+.checkin-sheet.open .sheet-body {
+  display: flex;
 }
 
 .avatar-picker {

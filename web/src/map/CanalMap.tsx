@@ -49,7 +49,7 @@ const CENTER: [number, number] = [55.6055, 12.997];
 /** No maxBounds — tight bounds lock panning when the viewport is larger than the box. */
 const MIN_ZOOM = 11;
 
-/** Collapse check-in sheet when the user pans/zooms the map. */
+/** Collapse check-in sheet when the user pans/zooms/taps the map. */
 function CollapseSheetOnMapMove({
   enabled,
   onCollapse,
@@ -63,6 +63,23 @@ function CollapseSheetOnMapMove({
     },
     zoomstart() {
       if (enabled) onCollapse();
+    },
+    mousedown(e) {
+      // Ignore clicks that Leaflet marks as not on the map canvas
+      if (enabled && e.originalEvent.target instanceof Element) {
+        const t = e.originalEvent.target;
+        if (t.closest(".leaflet-container") && !t.closest(".leaflet-control")) {
+          onCollapse();
+        }
+      }
+    },
+    touchstart(e) {
+      if (enabled && e.originalEvent.target instanceof Element) {
+        const t = e.originalEvent.target as Element;
+        if (t.closest(".leaflet-container") && !t.closest(".leaflet-control")) {
+          onCollapse();
+        }
+      }
     },
   });
   return null;
