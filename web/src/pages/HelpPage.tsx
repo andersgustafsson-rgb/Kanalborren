@@ -96,6 +96,11 @@ export function HelpPage() {
         <Link className="cta help-cta" to="/karta">
           Öppna kartan
         </Link>
+
+        <nav className="help-nav" style={{ justifyContent: "center" }}>
+          <Link to="/integritet">Integritetspolicy</Link>
+          <Link to="/villkor">Användarvillkor</Link>
+        </nav>
       </div>
     </div>
   );

@@ -247,3 +247,38 @@
   text-align: center;
   text-decoration: none;
 }
+
+.profile-legal {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 0.35rem 0 0.15rem;
+}
+
+.profile-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.84rem;
+  line-height: 1.35;
+  color: rgba(244, 247, 250, 0.85);
+  cursor: pointer;
+}
+
+.profile-check input {
+  margin-top: 0.15rem;
+  flex: 0 0 auto;
+}
+
+.profile-check a {
+  color: #b8e014;
+  font-weight: 700;
+}
+
+.profile-legal-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  justify-content: center;
+  margin-top: 0.35rem;
+}

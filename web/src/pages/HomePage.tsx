@@ -134,6 +134,12 @@ export function HomePage() {
         <ChallengeBoard reloadToken={reloadToken} />
 
         <WaterLevelWidget />
+
+        <footer className="home-legal">
+          <Link to="/hjalp">Bruksanvisning</Link>
+          <Link to="/integritet">Integritet</Link>
+          <Link to="/villkor">Villkor</Link>
+        </footer>
       </div>
     </div>
   );

@@ -23,6 +23,7 @@ type AuthState = {
   signUp: (
     email: string,
     password: string,
+    opts: { ageAttested: boolean; acceptedTerms: boolean },
   ) => Promise<{ error: string | null; needsEmailConfirm?: boolean }>;
   signIn: (
     email: string,
@@ -35,6 +36,7 @@ const AuthContext = createContext<AuthState | null>(null);
 
 async function upsertProfile(user: User, displayName: string) {
   if (!supabase) return;
+  const ageAttested = user.user_metadata?.age_attested_16_plus === true;
   await supabase.from("profiles").upsert(
     {
       id: user.id,
@@ -45,7 +47,7 @@ async function upsertProfile(user: User, displayName: string) {
           : null) ||
         user.email?.split("@")[0] ||
         "Fiskare",
-      age_attested_16_plus: true,
+      ...(ageAttested ? { age_attested_16_plus: true } : {}),
     },
     { onConflict: "id" },
   );
@@ -114,8 +116,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [session?.user]);
 
   const signUp = useCallback(
-    async (email: string, password: string) => {
+    async (
+      email: string,
+      password: string,
+      opts: { ageAttested: boolean; acceptedTerms: boolean },
+    ) => {
       if (!supabase) return { error: "Supabase är inte konfigurerat" };
+      if (!opts.ageAttested) {
+        return { error: "Du måste bekräfta att du är 16 år eller äldre" };
+      }
+      if (!opts.acceptedTerms) {
+        return { error: "Du måste godkänna villkor och integritetspolicy" };
+      }
       const { data, error } = await supabase.auth.signUp({
         email: email.trim(),
         password,
@@ -123,6 +135,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           data: {
             display_name: displayName,
             age_attested_16_plus: true,
+            accepted_terms_at: new Date().toISOString(),
           },
           emailRedirectTo: window.location.origin,
         },

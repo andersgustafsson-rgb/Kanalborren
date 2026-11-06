@@ -32,6 +32,8 @@ export function ProfilePage() {
   const [authMode, setAuthMode] = useState<"login" | "signup">("login");
   const [authMsg, setAuthMsg] = useState<string | null>(null);
   const [authBusy, setAuthBusy] = useState(false);
+  const [ageOk, setAgeOk] = useState(false);
+  const [termsOk, setTermsOk] = useState(false);
 
   const avatarSrc = resolveAvatarSrc(avatar);
 
@@ -71,7 +73,10 @@ export function ProfilePage() {
     setAuthMsg(null);
     auth.setDisplayName(displayName);
     if (authMode === "signup") {
-      const res = await auth.signUp(email, password);
+      const res = await auth.signUp(email, password, {
+        ageAttested: ageOk,
+        acceptedTerms: termsOk,
+      });
       setAuthBusy(false);
       if (res.error) setAuthMsg(res.error);
       else if (res.needsEmailConfirm)
@@ -287,7 +292,41 @@ export function ProfilePage() {
                   }
                 />
               </label>
-              <button type="submit" className="cta" disabled={authBusy}>
+              {authMode === "signup" && (
+                <div className="profile-legal">
+                  <label className="profile-check">
+                    <input
+                      type="checkbox"
+                      checked={ageOk}
+                      onChange={(e) => setAgeOk(e.target.checked)}
+                    />
+                    Jag är 16 år eller äldre
+                  </label>
+                  <label className="profile-check">
+                    <input
+                      type="checkbox"
+                      checked={termsOk}
+                      onChange={(e) => setTermsOk(e.target.checked)}
+                    />
+                    Jag godkänner{" "}
+                    <Link to="/villkor" target="_blank">
+                      användarvillkor
+                    </Link>{" "}
+                    och{" "}
+                    <Link to="/integritet" target="_blank">
+                      integritetspolicy
+                    </Link>
+                  </label>
+                </div>
+              )}
+              <button
+                type="submit"
+                className="cta"
+                disabled={
+                  authBusy ||
+                  (authMode === "signup" && (!ageOk || !termsOk))
+                }
+              >
                 {authBusy
                   ? "Vänta…"
                   : authMode === "signup"
@@ -308,6 +347,14 @@ export function ProfilePage() {
         <Link className="chip" to="/hjalp" style={{ alignSelf: "center" }}>
           Så funkar det
         </Link>
+        <div className="profile-legal-links">
+          <Link className="chip" to="/integritet">
+            Integritet
+          </Link>
+          <Link className="chip" to="/villkor">
+            Villkor
+          </Link>
+        </div>
       </div>
     </div>
   );
