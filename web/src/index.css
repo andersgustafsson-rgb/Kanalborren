@@ -103,6 +103,21 @@ a {
 
 .session-pin.open .session-dot {
   background: #2d6a4f;
+  box-shadow: 0 0 0 3px rgba(184, 240, 110, 0.55);
+}
+
+.session-company {
+  display: block;
+  margin-top: 0.1rem;
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #1f5c2e;
+  letter-spacing: 0.01em;
+}
+
+.session-pin.open .session-name {
+  border-color: rgba(45, 106, 79, 0.55);
+  background: rgba(232, 255, 220, 0.97);
 }
 
 .session-name {

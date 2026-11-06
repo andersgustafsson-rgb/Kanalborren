@@ -92,6 +92,22 @@ export function localEnd(sessionId?: string | null) {
   write(store);
 }
 
+export function localSetOpenForCompany(
+  sessionId: string | null | undefined,
+  open: boolean,
+) {
+  const me = deviceId();
+  const store = read();
+  let changed = false;
+  store.sessions = store.sessions.map((s) => {
+    const mine = s.userId === me || (sessionId && s.id === sessionId);
+    if (!mine) return s;
+    changed = true;
+    return { ...s, openForCompany: open };
+  });
+  if (changed) write(store);
+}
+
 export function subscribeLocalPresence(
   onChange: (rows: PublicFishingSession[]) => void,
 ): () => void {

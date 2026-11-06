@@ -234,7 +234,7 @@
   z-index: 530;
   top: 4.6rem;
   right: 0.65rem;
-  width: min(11.5rem, 42vw);
+  width: min(13.5rem, 48vw);
   padding: 0.55rem 0.65rem;
   border-radius: 14px;
   background: rgba(8, 14, 22, 0.88);
@@ -242,6 +242,12 @@
   backdrop-filter: blur(12px);
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
   pointer-events: none;
+}
+
+.presence-company {
+  color: #b8f06e !important;
+  font-weight: 700 !important;
+  font-size: 0.68rem !important;
 }
 
 .presence-title {

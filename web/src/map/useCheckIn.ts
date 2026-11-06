@@ -10,7 +10,11 @@ import {
   type Visibility,
 } from "./checkinStorage";
 import { resolveZone, roundForPrivacy, type ResolvedZone } from "./geo";
-import { endSession, publishSession } from "../lib/fishingSessions";
+import {
+  endSession,
+  publishSession,
+  setSessionOpenForCompany,
+} from "../lib/fishingSessions";
 
 type Fix = { lat: number; lng: number; accuracy: number | null };
 
@@ -301,11 +305,17 @@ export function useCheckIn(
   const setOpenForCompanyAndSync = useCallback(
     (value: boolean) => {
       setOpenForCompany(value);
-      if (session) {
-        void republishActive({ openForCompany: value });
-      }
+      if (!session) return;
+      const next = { ...session, openForCompany: value };
+      saveSession(next);
+      setSession(next);
+      void setSessionOpenForCompany(value, {
+        remoteId: session.remoteId,
+        userId: identity.userId,
+        displayName: identity.displayName,
+      });
     },
-    [session, republishActive],
+    [session, identity],
   );
 
   const extend = useCallback(async () => {

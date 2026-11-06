@@ -10,11 +10,6 @@ type Props = {
   myOpenForCompany?: boolean;
 };
 
-function placeLabel(zoneName: string | null | undefined, open: boolean) {
-  const place = zoneName || "Kanalen";
-  return open ? `${place} · öppen för sällskap` : place;
-}
-
 export function PresenceList({
   excludeUserId,
   myName,
@@ -35,13 +30,19 @@ export function PresenceList({
         {iAmCheckedIn && (
           <li className="presence-me">
             <strong>{myName}</strong>
-            <span>{placeLabel(myZoneName, myOpenForCompany)} · du</span>
+            <span>{myZoneName || "Kanalen"} · du</span>
+            {myOpenForCompany && (
+              <span className="presence-company">Vill ha sällskap</span>
+            )}
           </li>
         )}
         {rows.map((r) => (
           <li key={r.id}>
             <strong>{r.displayName}</strong>
-            <span>{placeLabel(r.zoneName, r.openForCompany)}</span>
+            <span>{r.zoneName || r.visibility}</span>
+            {r.openForCompany && (
+              <span className="presence-company">Vill ha sällskap</span>
+            )}
           </li>
         ))}
         {!iAmCheckedIn && rows.length === 0 && (

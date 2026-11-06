@@ -10,9 +10,12 @@ import { escapeHtml } from "./spotsStorage";
 function zoneIcon(name: string, open: boolean, label: string) {
   const safe = escapeHtml(name);
   const who = escapeHtml(label);
+  const company = open
+    ? `<span class="session-company">Vill ha sällskap</span>`
+    : "";
   return L.divIcon({
     className: "session-marker other-session",
-    html: `<div class="session-pin other${open ? " open" : ""}"><span class="session-dot"></span><span class="session-name"><em>${who}</em>${safe}</span></div>`,
+    html: `<div class="session-pin other${open ? " open" : ""}"><span class="session-dot"></span><span class="session-name"><em>${who}</em>${safe}${company}</span></div>`,
     iconSize: [0, 0],
     iconAnchor: [0, 0],
   });

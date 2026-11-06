@@ -4,6 +4,7 @@ import {
   localListPublic,
   localPublish,
   localDisplayName,
+  localSetOpenForCompany,
   subscribeLocalPresence,
 } from "./localPresence";
 import type { PublishSessionInput, PublicFishingSession } from "./types";
@@ -18,7 +19,10 @@ function mapRow(row: Record<string, unknown>, displayName?: string): PublicFishi
     zoneName: (row.zone_name as string) || null,
     lat: typeof row.lat === "number" ? row.lat : null,
     lng: typeof row.lng === "number" ? row.lng : null,
-    openForCompany: Boolean(row.open_for_company),
+    openForCompany:
+      row.open_for_company === true ||
+      row.open_for_company === "true" ||
+      row.open_for_company === 1,
     note: String(row.note || ""),
     avatarId: (row.avatar_id as string) || null,
     expiresAt: String(row.expires_at),
@@ -125,6 +129,37 @@ export async function endSession(
   if (remoteId) q.eq("id", remoteId);
   await q;
   localEnd(remoteId);
+}
+
+/** Toggle sällskap on an active session without ending/recreating it. */
+export async function setSessionOpenForCompany(
+  open: boolean,
+  opts: {
+    remoteId?: string | null;
+    userId?: string | null;
+    displayName?: string;
+  } = {},
+): Promise<void> {
+  if (!isSupabaseConfigured() || !supabase || !opts.userId) {
+    localSetOpenForCompany(opts.remoteId, open);
+    return;
+  }
+
+  let q = supabase
+    .from("fishing_sessions")
+    .update({ open_for_company: open })
+    .eq("user_id", opts.userId)
+    .is("ended_at", null);
+  if (opts.remoteId) q = q.eq("id", opts.remoteId);
+  const { data, error } = await q.select("id");
+  if (error) {
+    console.warn("setSessionOpenForCompany", error);
+    localSetOpenForCompany(opts.remoteId, open);
+    return;
+  }
+  if (!data?.length) {
+    localSetOpenForCompany(opts.remoteId, open);
+  }
 }
 
 type PresenceListener = {
