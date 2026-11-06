@@ -78,122 +78,27 @@ function lastValue(json: {
   };
 }
 
-function WeatherIcon({ kind }: { kind: SkyKind }) {
-  const common = {
-    viewBox: "0 0 48 48",
-    className: `wx-icon wx-${kind}`,
-    "aria-hidden": true as const,
-  };
-  switch (kind) {
-    case "sun":
-      return (
-        <svg {...common}>
-          <circle cx="24" cy="24" r="9" fill="currentColor" />
-          {[0, 45, 90, 135, 180, 225, 270, 315].map((a) => {
-            const r = ((a * Math.PI) / 180);
-            const x1 = 24 + Math.cos(r) * 13;
-            const y1 = 24 + Math.sin(r) * 13;
-            const x2 = 24 + Math.cos(r) * 18;
-            const y2 = 24 + Math.sin(r) * 18;
-            return (
-              <line
-                key={a}
-                x1={x1}
-                y1={y1}
-                x2={x2}
-                y2={y2}
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-              />
-            );
-          })}
-        </svg>
-      );
-    case "partly":
-      return (
-        <svg {...common}>
-          <circle cx="18" cy="18" r="7" fill="currentColor" opacity="0.9" />
-          <path
-            d="M16 34h18a8 8 0 0 0 0-16 10 10 0 0 0-19 3 7 7 0 0 0 1 13z"
-            fill="currentColor"
-            opacity="0.85"
-          />
-        </svg>
-      );
-    case "cloud":
-      return (
-        <svg {...common}>
-          <path
-            d="M14 34h20a9 9 0 0 0 0-18 11 11 0 0 0-21 4 8 8 0 0 0 1 14z"
-            fill="currentColor"
-          />
-        </svg>
-      );
-    case "fog":
-      return (
-        <svg {...common}>
-          <path
-            d="M14 22h20a7 7 0 0 0 0-14 9 9 0 0 0-17 3 6 6 0 0 0-3 11z"
-            fill="currentColor"
-            opacity="0.55"
-          />
-          <path d="M10 30h28" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-          <path d="M12 36h24" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" opacity="0.7" />
-        </svg>
-      );
-    case "drizzle":
-      return (
-        <svg {...common}>
-          <path
-            d="M14 22h20a8 8 0 0 0 0-16 10 10 0 0 0-19 3 7 7 0 0 0-1 13z"
-            fill="currentColor"
-          />
-          <path d="M18 28v6M24 29v6M30 28v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" opacity="0.75" />
-        </svg>
-      );
-    case "rain":
-      return (
-        <svg {...common}>
-          <path
-            d="M14 20h20a8 8 0 0 0 0-16 10 10 0 0 0-19 3 7 7 0 0 0-1 13z"
-            fill="currentColor"
-          />
-          <path d="M17 26l-2 8M24 27l-2 9M31 26l-2 8" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
-        </svg>
-      );
-    case "snow":
-      return (
-        <svg {...common}>
-          <path
-            d="M14 20h20a8 8 0 0 0 0-16 10 10 0 0 0-19 3 7 7 0 0 0-1 13z"
-            fill="currentColor"
-          />
-          <circle cx="18" cy="30" r="1.8" fill="currentColor" />
-          <circle cx="24" cy="34" r="1.8" fill="currentColor" />
-          <circle cx="30" cy="30" r="1.8" fill="currentColor" />
-        </svg>
-      );
-    case "thunder":
-      return (
-        <svg {...common}>
-          <path
-            d="M14 20h20a8 8 0 0 0 0-16 10 10 0 0 0-19 3 7 7 0 0 0-1 13z"
-            fill="currentColor"
-          />
-          <path d="M26 22l-6 10h5l-2 8 9-12h-5l4-6z" fill="#f4c430" />
-        </svg>
-      );
-    case "wind":
-    default:
-      return (
-        <svg {...common}>
-          <path d="M8 18h24a5 5 0 1 0-5-5" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" />
-          <path d="M8 26h28a5 5 0 1 1-5 5" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" />
-          <path d="M8 34h16" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" />
-        </svg>
-      );
-  }
+const SKY_EMOJI: Record<SkyKind, string> = {
+  sun: "☀️",
+  partly: "⛅",
+  cloud: "☁️",
+  fog: "🌫️",
+  drizzle: "🌦️",
+  rain: "🌧️",
+  snow: "🌨️",
+  thunder: "⛈️",
+  wind: "💨",
+};
+
+function WeatherIcon({ kind, large = false }: { kind: SkyKind; large?: boolean }) {
+  return (
+    <span
+      className={large ? "wx-emoji wx-emoji-lg" : "wx-emoji"}
+      aria-hidden
+    >
+      {SKY_EMOJI[kind]}
+    </span>
+  );
 }
 
 async function fetchCanalConditions(): Promise<Conditions> {
@@ -295,7 +200,7 @@ export function WaterLevelWidget() {
         </div>
         {data && !data.error && (
           <div className="conditions-sky" title={data.skyLabel}>
-            <WeatherIcon kind={data.sky} />
+            <WeatherIcon kind={data.sky} large />
             <span>{data.skyLabel}</span>
           </div>
         )}

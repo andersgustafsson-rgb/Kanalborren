@@ -25,35 +25,15 @@
   color: #cfe0d4;
 }
 
-.wx-icon {
-  width: 1.35rem;
-  height: 1.35rem;
+.wx-emoji {
+  display: inline-block;
+  font-size: 1.15rem;
+  line-height: 1;
   flex: 0 0 auto;
-  color: #b8e014;
 }
 
-.conditions-sky .wx-icon {
-  width: 2.4rem;
-  height: 2.4rem;
-}
-
-.wx-sun {
-  color: #f4c430;
-}
-
-.wx-rain,
-.wx-drizzle,
-.wx-thunder {
-  color: #3ec7d6;
-}
-
-.wx-snow,
-.wx-fog {
-  color: #c5d4e0;
-}
-
-.wx-wind {
-  color: #9ad0ff;
+.wx-emoji-lg {
+  font-size: 2.35rem;
 }
 
 .conditions-grid {
@@ -92,9 +72,8 @@
   color: #9bb0a4;
 }
 
-.conditions-label .wx-icon {
-  width: 1.05rem;
-  height: 1.05rem;
+.conditions-label .wx-emoji {
+  font-size: 1rem;
 }
 
 .conditions-grid strong {
