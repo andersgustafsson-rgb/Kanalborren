@@ -23,15 +23,21 @@ function parseNum(raw: string): number | null {
   return Number.isFinite(n) ? n : NaN;
 }
 
-/** Local wall-clock for <input type="datetime-local"> */
-function toLocalInputValue(d = new Date()): string {
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+function pad(n: number) {
+  return String(n).padStart(2, "0");
 }
 
-function localInputToIso(local: string): string | null {
-  if (!local) return null;
-  const d = new Date(local);
+function toLocalDate(d = new Date()): string {
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+function toLocalTime(d = new Date()): string {
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function dateTimeToIso(date: string, time: string): string | null {
+  if (!date || !time) return null;
+  const d = new Date(`${date}T${time}`);
   if (Number.isNaN(d.getTime())) return null;
   return d.toISOString();
 }
@@ -48,10 +54,16 @@ export function CatchForm({ onSubmitted }: Props) {
   const [zoneId, setZoneId] = useState(ZONES[0].id);
   const [bait, setBait] = useState("");
   const [note, setNote] = useState("");
-  const [useNow, setUseNow] = useState(true);
-  const [caughtLocal, setCaughtLocal] = useState(() => toLocalInputValue());
+  const [caughtDate, setCaughtDate] = useState(() => toLocalDate());
+  const [caughtTime, setCaughtTime] = useState(() => toLocalTime());
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+
+  function setCaughtToNow() {
+    const now = new Date();
+    setCaughtDate(toLocalDate(now));
+    setCaughtTime(toLocalTime(now));
+  }
 
   useEffect(() => {
     function applyPref() {
@@ -103,9 +115,7 @@ export function CatchForm({ onSubmitted }: Props) {
       return;
     }
 
-    const caughtAt = useNow
-      ? new Date().toISOString()
-      : localInputToIso(caughtLocal);
+    const caughtAt = dateTimeToIso(caughtDate, caughtTime);
     if (!caughtAt) {
       setMsg("Välj giltigt datum och tid");
       return;
@@ -141,8 +151,7 @@ export function CatchForm({ onSubmitted }: Props) {
     setLengthCm("");
     setWeightKg("");
     setNote("");
-    setUseNow(true);
-    setCaughtLocal(toLocalInputValue());
+    setCaughtToNow();
     onSubmitted?.();
   }
 
@@ -215,42 +224,34 @@ export function CatchForm({ onSubmitted }: Props) {
 
         <fieldset className="catch-when">
           <legend>När fångades den?</legend>
-          <label className="catch-check">
-            <input
-              type="radio"
-              name="when"
-              checked={useNow}
-              onChange={() => {
-                setUseNow(true);
-                setCaughtLocal(toLocalInputValue());
-              }}
-            />
-            Nu (aktuell tid)
-          </label>
-          <label className="catch-check">
-            <input
-              type="radio"
-              name="when"
-              checked={!useNow}
-              onChange={() => {
-                setUseNow(false);
-                setCaughtLocal(toLocalInputValue());
-              }}
-            />
-            Välj datum & tid
-          </label>
-          {!useNow && (
+          <div className="catch-when-row">
             <label className="profile-field">
-              Datum och tid
+              Datum
               <input
-                type="datetime-local"
-                required={!useNow}
-                value={caughtLocal}
-                max={toLocalInputValue()}
-                onChange={(e) => setCaughtLocal(e.target.value)}
+                type="date"
+                required
+                value={caughtDate}
+                max={toLocalDate()}
+                onChange={(e) => setCaughtDate(e.target.value)}
               />
             </label>
-          )}
+            <label className="profile-field">
+              Tid
+              <input
+                type="time"
+                required
+                value={caughtTime}
+                onChange={(e) => setCaughtTime(e.target.value)}
+              />
+            </label>
+          </div>
+          <button
+            type="button"
+            className="chip"
+            onClick={setCaughtToNow}
+          >
+            Sätt till nu
+          </button>
         </fieldset>
 
         <label className="profile-field">
