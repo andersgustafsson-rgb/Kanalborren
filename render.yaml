@@ -1,0 +1,19 @@
+# Samma host som mx-fantasy.se (Render).
+# Skapa tjänsten via Render Dashboard → New → Blueprint, eller Static Site från GitHub.
+services:
+  - type: web
+    name: kanalborren
+    runtime: static
+    rootDir: web
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      # Sätt värdena i Render Dashboard (Environment) — samma som i web/.env.local
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_ANON_KEY
+        sync: false
