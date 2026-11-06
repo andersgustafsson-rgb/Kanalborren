@@ -182,3 +182,50 @@ export async function listChallengeTargets(): Promise<
     displayName: (p.display_name as string) || "Fiskare",
   }));
 }
+
+export type ChallengeScores = {
+  fromScore: number | null;
+  toScore: number | null;
+};
+
+/** Best matching catch per participant (same rules as resolve_challenge). */
+export async function loadChallengeScores(
+  challenges: Challenge[],
+): Promise<Map<string, ChallengeScores>> {
+  const out = new Map<string, ChallengeScores>();
+  if (!supabase || challenges.length === 0) return out;
+
+  await Promise.all(
+    challenges.map(async (c) => {
+      const windowStart = c.startsAt || c.createdAt;
+      const col = c.metric === "weight_kg" ? "weight_kg" : "length_cm";
+
+      const best = async (userId: string): Promise<number | null> => {
+        const { data, error } = await supabase!
+          .from("catch_reports")
+          .select(col)
+          .eq("user_id", userId)
+          .eq("species", c.species)
+          .gte("caught_at", windowStart)
+          .lte("caught_at", c.endsAt)
+          .not(col, "is", null)
+          .order(col, { ascending: false })
+          .limit(1);
+        if (error || !data?.[0]) return null;
+        const raw = (data[0] as Record<string, unknown>)[col];
+        return typeof raw === "number" ? raw : Number(raw);
+      };
+
+      const [fromScore, toScore] = await Promise.all([
+        best(c.fromUserId),
+        best(c.toUserId),
+      ]);
+      out.set(c.id, {
+        fromScore: fromScore != null && Number.isFinite(fromScore) ? fromScore : null,
+        toScore: toScore != null && Number.isFinite(toScore) ? toScore : null,
+      });
+    }),
+  );
+
+  return out;
+}

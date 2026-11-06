@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../lib/AuthContext";
 import { submitCatchReport } from "../lib/catchReports";
@@ -52,6 +52,27 @@ export function CatchForm({ onSubmitted }: Props) {
   const [caughtLocal, setCaughtLocal] = useState(() => toLocalInputValue());
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    function applyPref() {
+      try {
+        const pref = sessionStorage.getItem("kanalhugget.catchSpecies");
+        if (pref && SPECIES.includes(pref)) {
+          setSpecies(pref);
+          sessionStorage.removeItem("kanalhugget.catchSpecies");
+        }
+      } catch {
+        /* ignore */
+      }
+    }
+    applyPref();
+    window.addEventListener("hashchange", applyPref);
+    window.addEventListener("kanalhugget-catch-species", applyPref);
+    return () => {
+      window.removeEventListener("hashchange", applyPref);
+      window.removeEventListener("kanalhugget-catch-species", applyPref);
+    };
+  }, []);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -116,7 +137,7 @@ export function CatchForm({ onSubmitted }: Props) {
       );
       return;
     }
-    setMsg("Fångst sparad · syns i Kanal-toppen");
+    setMsg("Fångst sparad · syns i Kanal-toppen och pågående utmaningar");
     setLengthCm("");
     setWeightKg("");
     setNote("");

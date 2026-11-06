@@ -69,3 +69,18 @@
   font-size: 0.85rem;
   color: #f4c430;
 }
+
+.challenge-score {
+  margin: 0.15rem 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: baseline;
+  font-size: 0.86rem;
+  color: #cfe0d4;
+}
+
+.challenge-score strong {
+  color: #b8e014;
+  font-size: 0.95rem;
+}

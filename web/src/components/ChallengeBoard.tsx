@@ -4,11 +4,13 @@ import { useAuth } from "../lib/AuthContext";
 import {
   listChallengeTargets,
   listMyChallenges,
+  loadChallengeScores,
   resolveChallenge,
   respondChallenge,
   sendChallenge,
   type Challenge,
   type ChallengeMetric,
+  type ChallengeScores,
 } from "../lib/challenges";
 import "./ChallengeBoard.css";
 
@@ -30,9 +32,20 @@ function metricLabel(m: ChallengeMetric) {
   return m === "weight_kg" ? "vikt" : "längd";
 }
 
-export function ChallengeBoard() {
+function fmtScore(n: number | null, m: ChallengeMetric) {
+  if (n == null) return "–";
+  return m === "weight_kg" ? `${n.toFixed(2)} kg` : `${n.toFixed(1)} cm`;
+}
+
+type Props = {
+  /** Bump after a catch is saved so scoreboards refresh. */
+  reloadToken?: number;
+};
+
+export function ChallengeBoard({ reloadToken = 0 }: Props) {
   const auth = useAuth();
   const [rows, setRows] = useState<Challenge[]>([]);
+  const [scores, setScores] = useState<Map<string, ChallengeScores>>(new Map());
   const [targets, setTargets] = useState<{ id: string; displayName: string }[]>(
     [],
   );
@@ -46,6 +59,7 @@ export function ChallengeBoard() {
   const reload = useCallback(async () => {
     if (!auth.user) {
       setRows([]);
+      setScores(new Map());
       setTargets([]);
       return;
     }
@@ -55,11 +69,15 @@ export function ChallengeBoard() {
     ]);
     setRows(ch);
     setTargets(tg);
+    const needScores = ch.filter((c) =>
+      ["active", "completed"].includes(c.status),
+    );
+    setScores(await loadChallengeScores(needScores));
   }, [auth.user]);
 
   useEffect(() => {
     void reload();
-  }, [reload]);
+  }, [reload, reloadToken]);
 
   useEffect(() => {
     if (!toUserId && targets[0]) setToUserId(targets[0].id);
@@ -274,16 +292,45 @@ export function ChallengeBoard() {
           <h3>Pågår</h3>
           <ul>
             {active.map((c) => {
-              const other =
-                c.fromUserId === auth.user!.id ? c.toName : c.fromName;
+              const iAmFrom = c.fromUserId === auth.user!.id;
+              const other = iAmFrom ? c.toName : c.fromName;
+              const s = scores.get(c.id);
+              const myScore = iAmFrom ? s?.fromScore ?? null : s?.toScore ?? null;
+              const theirScore = iAmFrom ? s?.toScore ?? null : s?.fromScore ?? null;
               return (
                 <li key={c.id}>
                   <strong>vs {other || "Fiskare"}</strong>
                   <span>
                     {c.species} · {metricLabel(c.metric)} · till {fmt(c.endsAt)}
                   </span>
+                  <p className="challenge-score">
+                    <span>
+                      Du <strong>{fmtScore(myScore, c.metric)}</strong>
+                    </span>
+                    <span aria-hidden>·</span>
+                    <span>
+                      {other || "Motståndare"}{" "}
+                      <strong>{fmtScore(theirScore, c.metric)}</strong>
+                    </span>
+                  </p>
                   <div className="challenge-actions">
-                    <Link className="chip" to="/#catch">
+                    <Link
+                      className="chip"
+                      to="/#catch"
+                      onClick={() => {
+                        try {
+                          sessionStorage.setItem(
+                            "kanalhugget.catchSpecies",
+                            c.species,
+                          );
+                          window.dispatchEvent(
+                            new Event("kanalhugget-catch-species"),
+                          );
+                        } catch {
+                          /* ignore */
+                        }
+                      }}
+                    >
                       Rapportera fångst
                     </Link>
                     <button
@@ -307,19 +354,25 @@ export function ChallengeBoard() {
           <h3>Senaste</h3>
           <ul>
             {recent.slice(0, 8).map((c) => {
-              const other =
-                c.fromUserId === auth.user!.id ? c.toName : c.fromName;
+              const iAmFrom = c.fromUserId === auth.user!.id;
+              const other = iAmFrom ? c.toName : c.fromName;
               let result: string = c.status;
               if (c.status === "completed") {
                 if (!c.winnerUserId) result = "oavgjort";
                 else if (c.winnerUserId === auth.user!.id) result = "du vann";
                 else result = `${c.winnerName || other} vann`;
               }
+              const s = scores.get(c.id);
+              const myScore = iAmFrom ? s?.fromScore ?? null : s?.toScore ?? null;
+              const theirScore = iAmFrom ? s?.toScore ?? null : s?.fromScore ?? null;
               return (
                 <li key={c.id}>
                   <strong>vs {other || "Fiskare"}</strong>
                   <span>
                     {c.species} · {result}
+                    {c.status === "completed"
+                      ? ` · du ${fmtScore(myScore, c.metric)} / ${other || "motståndare"} ${fmtScore(theirScore, c.metric)}`
+                      : ""}
                   </span>
                 </li>
               );
