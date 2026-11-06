@@ -41,8 +41,8 @@ export async function showAppNotification(input: {
   const opts: NotificationOptions = {
     body: input.body,
     tag: input.tag || "kanalhugget",
-    icon: "/icon-192.png",
-    badge: "/icon-192.png",
+    icon: "/icon-192-v2.png",
+    badge: "/icon-192-v2.png",
     data: { url: input.url || "/karta" },
   };
 
