@@ -98,6 +98,47 @@
   transform: scale(0.98);
 }
 
+.home-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.35rem;
+  padding: 0.25rem;
+  border-radius: 16px;
+  background: rgba(8, 14, 22, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.home-tab {
+  appearance: none;
+  border: 0;
+  border-radius: 12px;
+  padding: 0.55rem 0.35rem;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: rgba(244, 247, 250, 0.78);
+  background: transparent;
+  cursor: pointer;
+}
+
+.home-tab.on {
+  background: linear-gradient(100deg, #b8e014 0%, #d4f03a 70%);
+  color: #0a1220;
+  box-shadow: 0 6px 16px rgba(184, 224, 20, 0.22);
+}
+
+.home-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.home-profile-more {
+  margin: 0;
+  display: flex;
+  justify-content: center;
+}
+
 .auth-bar {
   padding: 0.85rem 1rem;
   border-radius: 18px;

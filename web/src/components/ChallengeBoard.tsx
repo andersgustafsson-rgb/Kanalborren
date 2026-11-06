@@ -339,7 +339,7 @@ export function ChallengeBoard({ reloadToken = 0 }: Props) {
                         }
                       }}
                     >
-                      Rapportera fångst
+                      Till fliken Fångst
                     </Link>
                     <button
                       type="button"

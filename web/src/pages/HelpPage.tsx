@@ -35,7 +35,7 @@ const SECTIONS = [
     id: "fangst",
     title: "Fångster & Kanal-toppen",
     body: [
-      "På Hem: rapportera art + längd och/eller vikt (+ zon).",
+      "På Hem: väder + Kanal-toppen. Rapportera via fliken Fångst.",
       "Topplistan visar största fångster per vecka, månad och år.",
       "Fångster sparas i molnet och syns för andra inloggade.",
     ],
@@ -44,7 +44,7 @@ const SECTIONS = [
     id: "utmana",
     title: "Utmana fiskare",
     body: [
-      "På Hem: välj person, art, längd eller vikt, och tid (6–24 tim).",
+      "På Hem → fliken Utmana: välj person, art, längd eller vikt, och tid (6–24 tim).",
       "Mottagaren antar → båda fiskar och rapporterar fångst (rätt art under tiden).",
       "Poängen syns i utmaningsrutan (Du / motståndare).",
       "Tryck Avgör nu när ni är klara — eller vänta: efter sluttid avgörs den automatiskt.",
