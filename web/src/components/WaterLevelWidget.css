@@ -1,19 +1,59 @@
-.water-widget .water-value {
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-}
-
-.water-widget .water-value strong {
-  font-size: 1.45rem;
-  color: #3ec7d6;
-}
-
-.water-widget .water-value span,
 .water-muted {
   font-size: 0.8rem;
   color: #9bb0a4;
+}
+
+.conditions-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.conditions-sky {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  min-width: 3.5rem;
+  color: #d4f03a;
+}
+
+.conditions-sky span {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #cfe0d4;
+}
+
+.wx-icon {
+  width: 1.35rem;
+  height: 1.35rem;
+  flex: 0 0 auto;
+  color: #b8e014;
+}
+
+.conditions-sky .wx-icon {
+  width: 2.4rem;
+  height: 2.4rem;
+}
+
+.wx-sun {
+  color: #f4c430;
+}
+
+.wx-rain,
+.wx-drizzle,
+.wx-thunder {
+  color: #3ec7d6;
+}
+
+.wx-snow,
+.wx-fog {
+  color: #c5d4e0;
+}
+
+.wx-wind {
+  color: #9ad0ff;
 }
 
 .conditions-grid {
@@ -21,13 +61,13 @@
   margin: 0.55rem 0 0;
   padding: 0;
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: 1fr 1fr;
   gap: 0.55rem;
 }
 
-@media (min-width: 420px) {
+@media (min-width: 520px) {
   .conditions-grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
   }
 }
 
@@ -42,11 +82,19 @@
 }
 
 .conditions-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: #9bb0a4;
+}
+
+.conditions-label .wx-icon {
+  width: 1.05rem;
+  height: 1.05rem;
 }
 
 .conditions-grid strong {
