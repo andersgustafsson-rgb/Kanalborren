@@ -19,6 +19,7 @@ import { MapClickAdd } from "./MapClickAdd";
 import { CheckInPanel } from "./CheckInPanel";
 import { SessionMarkers } from "./SessionMarkers";
 import { OthersMarkers } from "./OthersMarkers";
+import { CatchMarkers } from "./CatchMarkers";
 import { PresenceList } from "./PresenceList";
 import { CompanyPanel } from "./CompanyPanel";
 import { Recenter } from "./Recenter";
@@ -714,6 +715,12 @@ export function CanalMap({ toggles }: Props) {
               />
             );
           })}
+
+        <CatchMarkers
+          enabled={toggles.catches}
+          spots={spotsData}
+          zones={zonesData}
+        />
       </MapContainer>
       </div>
 

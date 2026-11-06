@@ -44,9 +44,35 @@ a {
   color: rgba(255, 255, 255, 0.65) !important;
 }
 
-.spot-marker {
+.spot-marker,
+.catch-marker {
   background: transparent;
   border: none;
+}
+
+.catch-pin {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  transform: translate(-50%, calc(-100% + 4px));
+  white-space: nowrap;
+  pointer-events: auto;
+  filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.4));
+}
+
+.catch-fish {
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.catch-species {
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #0a1220;
+  background: linear-gradient(100deg, #b8e014, #d4f03a);
+  border-radius: 8px;
+  padding: 0.12rem 0.4rem;
 }
 
 .spot-pin {

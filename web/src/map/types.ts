@@ -29,6 +29,7 @@ export type LayerToggles = {
   zones: boolean;
   bridges: boolean;
   rules: boolean;
+  catches: boolean;
 };
 
 export type EditMode = "off" | "move" | "add";

@@ -9,6 +9,7 @@ const INITIAL: LayerToggles = {
   zones: false,
   bridges: false,
   rules: false,
+  catches: false,
 };
 
 export function MapPage() {
@@ -65,6 +66,7 @@ export function MapPage() {
               ["canal", "Kanal"],
               ["spots", "Platser"],
               ["zones", "Zoner"],
+              ["catches", "Fångster (7d)"],
               ["bridges", "Broar"],
               ["rules", "Regler"],
             ] as const
