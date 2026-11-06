@@ -8,7 +8,7 @@ const INITIAL: LayerToggles = {
   spots: true,
   zones: false,
   bridges: false,
-  rules: true,
+  rules: false,
 };
 
 export function MapPage() {
