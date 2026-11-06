@@ -3,6 +3,7 @@ import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "../lib/AuthContext";
 import {
   deleteAdminCatch,
+  deleteAdminUser,
   endAdminSession,
   fetchAdminCatches,
   fetchAdminRequests,
@@ -170,21 +171,40 @@ export function AdminPage() {
                     <td>{fmt(u.createdAt)}</td>
                     <td>
                       {!u.isAdmin && (
-                        <button
-                          type="button"
-                          className="chip"
-                          disabled={busy}
-                          onClick={() => {
-                            void setUserBanned(u.id, !u.bannedAt).then(
-                              (err) => {
+                        <div className="admin-row-actions">
+                          <button
+                            type="button"
+                            className="chip"
+                            disabled={busy}
+                            onClick={() => {
+                              void setUserBanned(u.id, !u.bannedAt).then(
+                                (err) => {
+                                  if (err) setMsg(err);
+                                  else void reload();
+                                },
+                              );
+                            }}
+                          >
+                            {u.bannedAt ? "Avbanna" : "Banna"}
+                          </button>
+                          <button
+                            type="button"
+                            className="chip danger"
+                            disabled={busy}
+                            onClick={() => {
+                              const ok = window.confirm(
+                                `Radera ${u.displayName} (${u.email || "utan e-post"}) permanent?\n\nKonto, fångster, chattar och sessioner tas bort.`,
+                              );
+                              if (!ok) return;
+                              void deleteAdminUser(u.id).then((err) => {
                                 if (err) setMsg(err);
                                 else void reload();
-                              },
-                            );
-                          }}
-                        >
-                          {u.bannedAt ? "Avbanna" : "Banna"}
-                        </button>
+                              });
+                            }}
+                          >
+                            Radera
+                          </button>
+                        </div>
                       )}
                     </td>
                   </tr>

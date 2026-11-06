@@ -120,3 +120,35 @@ $$;
 
 revoke all on function public.admin_set_banned(uuid, boolean) from public;
 grant execute on function public.admin_set_banned(uuid, boolean) to authenticated;
+
+create or replace function public.admin_delete_user(target uuid)
+returns void
+language plpgsql
+security definer
+set search_path to 'public'
+as $$
+declare
+  target_is_admin boolean;
+begin
+  if not public.is_admin() then
+    raise exception 'Ej admin';
+  end if;
+  if target = auth.uid() then
+    raise exception 'Du kan inte radera dig själv';
+  end if;
+  select p.is_admin into target_is_admin
+  from public.profiles p
+  where p.id = target;
+  if not found then
+    raise exception 'Användaren finns inte';
+  end if;
+  if coalesce(target_is_admin, false) then
+    raise exception 'Kan inte radera en admin';
+  end if;
+  -- Cascades to profiles + related public data
+  delete from auth.users where id = target;
+end;
+$$;
+
+revoke all on function public.admin_delete_user(uuid) from public;
+grant execute on function public.admin_delete_user(uuid) to authenticated;

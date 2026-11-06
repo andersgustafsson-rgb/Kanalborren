@@ -129,6 +129,14 @@ export async function setUserBanned(
   return error?.message ?? null;
 }
 
+export async function deleteAdminUser(userId: string): Promise<string | null> {
+  if (!supabase) return "Ej konfigurerat";
+  const { error } = await supabase.rpc("admin_delete_user", {
+    target: userId,
+  });
+  return error?.message ?? null;
+}
+
 export async function fetchAdminSessions(): Promise<AdminSession[]> {
   if (!supabase) return [];
   const { data, error } = await supabase

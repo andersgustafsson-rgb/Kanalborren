@@ -141,3 +141,15 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+.admin-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.admin-page .chip.danger {
+  border-color: rgba(255, 120, 130, 0.45);
+  color: #ffd0d4;
+  background: rgba(90, 24, 30, 0.55);
+}
