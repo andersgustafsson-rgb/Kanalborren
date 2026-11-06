@@ -183,11 +183,12 @@
   position: absolute;
   z-index: 510;
   left: 0.65rem;
-  top: 4.6rem;
+  /* Sit below brand logo (logo height ≈ width * 0.36) */
+  top: calc(0.55rem + min(52vw, 220px) * 0.38 + 0.55rem);
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem;
-  max-width: calc(100% - 1.3rem);
+  max-width: min(28rem, calc(100% - 1.3rem));
 }
 
 .canal-map {
@@ -557,7 +558,13 @@
 
 @media (min-width: 900px) {
   .brand-logo-link {
-    width: 260px;
+    width: 200px;
+  }
+
+  .top-bar {
+    top: calc(0.55rem + 200px * 0.38 + 0.65rem);
+    left: 0.75rem;
+    max-width: min(36rem, calc(100% - 12rem));
   }
 
   .checkin-sheet {
