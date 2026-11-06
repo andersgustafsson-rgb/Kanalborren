@@ -230,19 +230,71 @@
   color: #c9f0f5;
 }
 
-.presence-list {
+.presence-panel {
   position: absolute;
   z-index: 530;
   top: 4.6rem;
   right: 0.65rem;
-  width: min(13.5rem, 48vw);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.4rem;
+  max-width: min(14rem, calc(100vw - 5.5rem));
+  pointer-events: none;
+}
+
+.presence-toggle,
+.presence-body {
+  pointer-events: auto;
+}
+
+.presence-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  padding: 0.42rem 0.75rem;
+  background: rgba(8, 14, 22, 0.92);
+  color: var(--kb-lime);
+  font: inherit;
+  font-weight: 800;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+}
+
+.presence-toggle.on {
+  border-color: rgba(184, 240, 110, 0.45);
+}
+
+.presence-count {
+  min-width: 1.2rem;
+  height: 1.2rem;
+  border-radius: 999px;
+  background: var(--kb-lime);
+  color: #0c1410;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: none;
+  display: inline-grid;
+  place-items: center;
+  padding: 0 0.28rem;
+}
+
+.presence-body {
+  width: 100%;
   padding: 0.55rem 0.65rem;
   border-radius: 14px;
-  background: rgba(8, 14, 22, 0.88);
+  background: rgba(8, 14, 22, 0.94);
   border: 1px solid rgba(255, 255, 255, 0.12);
   backdrop-filter: blur(12px);
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
-  pointer-events: none;
+  max-height: min(42vh, 16rem);
+  overflow: auto;
 }
 
 .presence-company {
@@ -251,16 +303,7 @@
   font-size: 0.68rem !important;
 }
 
-.presence-title {
-  margin: 0 0 0.35rem;
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--kb-lime);
-}
-
-.presence-list ul {
+.presence-body ul {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -269,7 +312,7 @@
   gap: 0.35rem;
 }
 
-.presence-list li {
+.presence-body li {
   display: flex;
   flex-direction: column;
   gap: 0.05rem;
@@ -277,11 +320,11 @@
   line-height: 1.2;
 }
 
-.presence-list li strong {
+.presence-body li strong {
   color: #f4f7fa;
 }
 
-.presence-list li span {
+.presence-body li span {
   color: var(--kb-muted);
   font-size: 0.7rem;
 }
