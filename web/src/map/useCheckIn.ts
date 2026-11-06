@@ -136,7 +136,7 @@ export function useCheckIn(
         zoneName: zone.name,
         lat: zone.lat,
         lng: zone.lng,
-        openForCompany: false,
+        openForCompany,
         note: "Test från soffan",
         avatarId: identity.avatarId,
         expiresAt,
@@ -150,7 +150,7 @@ export function useCheckIn(
 
     const next: CheckInSession = {
       visibility: "zone",
-      openForCompany: false,
+      openForCompany,
       note: "Test från soffan",
       zoneId: zone.id,
       zoneName: zone.name,
@@ -167,7 +167,7 @@ export function useCheckIn(
     setSession(next);
     setNote("Test från soffan");
     setSyncing(false);
-  }, [spots, zones, identity, session?.remoteId]);
+  }, [spots, zones, identity, session?.remoteId, openForCompany]);
 
   const setFixFromMapClick = useCallback((lat: number, lng: number) => {
     setLocateError(null);
@@ -264,6 +264,50 @@ export function useCheckIn(
     await endSession(remoteId, identity.userId);
   }, [session?.remoteId, identity.userId]);
 
+  const republishActive = useCallback(
+    async (patch: Partial<CheckInSession>) => {
+      if (!session) return;
+      const next: CheckInSession = { ...session, ...patch };
+      saveSession(next);
+      setSession(next);
+      if (next.visibility === "ghost") return;
+      const remoteId = await publishSession(
+        {
+          visibility: next.visibility,
+          zoneId: next.zoneId,
+          zoneName: next.zoneName,
+          lat: next.publicLat,
+          lng: next.publicLng,
+          openForCompany: next.openForCompany,
+          note: next.note,
+          avatarId: identity.avatarId,
+          expiresAt: next.expiresAt,
+        },
+        {
+          remoteId: next.remoteId,
+          userId: identity.userId,
+          displayName: identity.displayName,
+        },
+      );
+      if (remoteId && remoteId !== next.remoteId) {
+        const withId = { ...next, remoteId };
+        saveSession(withId);
+        setSession(withId);
+      }
+    },
+    [session, identity],
+  );
+
+  const setOpenForCompanyAndSync = useCallback(
+    (value: boolean) => {
+      setOpenForCompany(value);
+      if (session) {
+        void republishActive({ openForCompany: value });
+      }
+    },
+    [session, republishActive],
+  );
+
   const extend = useCallback(async () => {
     if (!session) return;
     const started = Date.parse(session.startedAt);
@@ -273,30 +317,8 @@ export function useCheckIn(
       maxEnd,
     );
     const expiresAt = new Date(nextEnd).toISOString();
-    const next = { ...session, expiresAt };
-    saveSession(next);
-    setSession(next);
-    if (session.visibility !== "ghost") {
-      await publishSession(
-        {
-          visibility: session.visibility,
-          zoneId: session.zoneId,
-          zoneName: session.zoneName,
-          lat: session.publicLat,
-          lng: session.publicLng,
-          openForCompany: session.openForCompany,
-          note: session.note,
-          avatarId: identity.avatarId,
-          expiresAt,
-        },
-        {
-          remoteId: session.remoteId,
-          userId: identity.userId,
-          displayName: identity.displayName,
-        },
-      );
-    }
-  }, [session, identity]);
+    await republishActive({ expiresAt });
+  }, [session, republishActive]);
 
   useEffect(() => {
     if (session && !fix && !spectator) {
@@ -320,7 +342,7 @@ export function useCheckIn(
     visibility,
     setVisibility,
     openForCompany,
-    setOpenForCompany,
+    setOpenForCompany: setOpenForCompanyAndSync,
     note,
     setNote,
     suggestedZone,

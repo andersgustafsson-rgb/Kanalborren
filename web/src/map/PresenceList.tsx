@@ -6,12 +6,21 @@ type Props = {
   excludeUserId?: string | null;
   myName: string;
   iAmCheckedIn: boolean;
+  myZoneName?: string | null;
+  myOpenForCompany?: boolean;
 };
+
+function placeLabel(zoneName: string | null | undefined, open: boolean) {
+  const place = zoneName || "Kanalen";
+  return open ? `${place} · öppen för sällskap` : place;
+}
 
 export function PresenceList({
   excludeUserId,
   myName,
   iAmCheckedIn,
+  myZoneName,
+  myOpenForCompany = false,
 }: Props) {
   const [rows, setRows] = useState<PublicFishingSession[]>([]);
 
@@ -26,16 +35,13 @@ export function PresenceList({
         {iAmCheckedIn && (
           <li className="presence-me">
             <strong>{myName}</strong>
-            <span>du</span>
+            <span>{placeLabel(myZoneName, myOpenForCompany)} · du</span>
           </li>
         )}
         {rows.map((r) => (
           <li key={r.id}>
             <strong>{r.displayName}</strong>
-            <span>
-              {r.zoneName || r.visibility}
-              {r.openForCompany ? " · sällskap" : ""}
-            </span>
+            <span>{placeLabel(r.zoneName, r.openForCompany)}</span>
           </li>
         ))}
         {!iAmCheckedIn && rows.length === 0 && (

@@ -57,29 +57,27 @@ function CollapseSheetOnMapMove({
   enabled: boolean;
   onCollapse: () => void;
 }) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!enabled) return;
+    const el = map.getContainer();
+    const onPointer = (ev: Event) => {
+      const t = ev.target;
+      if (!(t instanceof Element)) return;
+      if (t.closest(".leaflet-control")) return;
+      onCollapse();
+    };
+    el.addEventListener("pointerdown", onPointer, { passive: true });
+    return () => el.removeEventListener("pointerdown", onPointer);
+  }, [enabled, map, onCollapse]);
+
   useMapEvents({
     dragstart() {
       if (enabled) onCollapse();
     },
     zoomstart() {
       if (enabled) onCollapse();
-    },
-    mousedown(e) {
-      // Ignore clicks that Leaflet marks as not on the map canvas
-      if (enabled && e.originalEvent.target instanceof Element) {
-        const t = e.originalEvent.target;
-        if (t.closest(".leaflet-container") && !t.closest(".leaflet-control")) {
-          onCollapse();
-        }
-      }
-    },
-    touchstart(e) {
-      if (enabled && e.originalEvent.target instanceof Element) {
-        const t = e.originalEvent.target as Element;
-        if (t.closest(".leaflet-container") && !t.closest(".leaflet-control")) {
-          onCollapse();
-        }
-      }
     },
   });
   return null;
@@ -736,6 +734,8 @@ export function CanalMap({ toggles }: Props) {
         excludeUserId={auth.user?.id}
         myName={auth.displayName}
         iAmCheckedIn={Boolean(checkIn.session && !checkIn.spectator)}
+        myZoneName={checkIn.session?.zoneName}
+        myOpenForCompany={Boolean(checkIn.session?.openForCompany)}
       />
 
       <CompanyPanel />
