@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { CanalMap } from "../map/CanalMap";
+import { PresenceList } from "../map/PresenceList";
 import type { LayerToggles } from "../map/types";
 
 const INITIAL: LayerToggles = {
@@ -15,9 +16,20 @@ const INITIAL: LayerToggles = {
 export function MapPage() {
   const [toggles, setToggles] = useState<LayerToggles>(INITIAL);
   const [layersOpen, setLayersOpen] = useState(false);
+  const [uteOpen, setUteOpen] = useState(false);
 
   function toggle(key: keyof LayerToggles) {
     setToggles((prev) => ({ ...prev, [key]: !prev[key] }));
+  }
+
+  function openLayers() {
+    setUteOpen(false);
+    setLayersOpen((v) => !v);
+  }
+
+  function openUte(open: boolean) {
+    if (open) setLayersOpen(false);
+    setUteOpen(open);
   }
 
   return (
@@ -43,12 +55,13 @@ export function MapPage() {
         <Link className="fab" to="/profil">
           Profil
         </Link>
+        <PresenceList open={uteOpen} onOpenChange={openUte} />
         <button
           type="button"
           className={layersOpen ? "fab on" : "fab"}
           aria-expanded={layersOpen}
           aria-controls="layer-panel"
-          onClick={() => setLayersOpen((v) => !v)}
+          onClick={openLayers}
         >
           Lager
         </button>

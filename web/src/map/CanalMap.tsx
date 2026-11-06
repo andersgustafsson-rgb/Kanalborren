@@ -20,7 +20,6 @@ import { CheckInPanel } from "./CheckInPanel";
 import { SessionMarkers } from "./SessionMarkers";
 import { OthersMarkers } from "./OthersMarkers";
 import { CatchMarkers } from "./CatchMarkers";
-import { PresenceList } from "./PresenceList";
 import { CompanyPanel } from "./CompanyPanel";
 import { Recenter } from "./Recenter";
 import { useCheckIn } from "./useCheckIn";
@@ -723,14 +722,6 @@ export function CanalMap({ toggles }: Props) {
         />
       </MapContainer>
       </div>
-
-      <PresenceList
-        excludeUserId={auth.user?.id}
-        myName={auth.displayName}
-        iAmCheckedIn={Boolean(checkIn.session && !checkIn.spectator)}
-        myZoneName={checkIn.session?.zoneName}
-        myOpenForCompany={Boolean(checkIn.session?.openForCompany)}
-      />
 
       <CompanyPanel />
 
