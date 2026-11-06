@@ -17,7 +17,19 @@ import {
   type AdminStats,
   type AdminUser,
 } from "../lib/adminApi";
+import {
+  deleteFeedback,
+  fetchAdminFeedback,
+  setFeedbackStatus,
+  type FeedbackRow,
+} from "../lib/feedback";
 import "./AdminPage.css";
+
+const KIND_LABEL: Record<string, string> = {
+  tip: "Tips",
+  bug: "Bugg",
+  idea: "Förbättring",
+};
 
 function fmt(iso: string) {
   try {
@@ -37,6 +49,7 @@ export function AdminPage() {
   const [sessions, setSessions] = useState<AdminSession[]>([]);
   const [catches, setCatches] = useState<AdminCatch[]>([]);
   const [requests, setRequests] = useState<AdminRequest[]>([]);
+  const [feedback, setFeedback] = useState<FeedbackRow[]>([]);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
 
@@ -44,18 +57,20 @@ export function AdminPage() {
     setBusy(true);
     setMsg(null);
     try {
-      const [s, u, sess, c, r] = await Promise.all([
+      const [s, u, sess, c, r, f] = await Promise.all([
         fetchAdminStats(),
         fetchAdminUsers(),
         fetchAdminSessions(),
         fetchAdminCatches(),
         fetchAdminRequests(),
+        fetchAdminFeedback(),
       ]);
       setStats(s);
       setUsers(u);
       setSessions(sess);
       setCatches(c);
       setRequests(r);
+      setFeedback(f);
     } catch (e) {
       setMsg(e instanceof Error ? e.message : "Kunde inte ladda admin");
     } finally {
@@ -143,6 +158,91 @@ export function AdminPage() {
             <strong>{stats?.openChats ?? "–"}</strong>
             <span>Chattar</span>
           </article>
+          <article>
+            <strong>
+              {feedback.filter((f) => f.status === "new").length || "–"}
+            </strong>
+            <span>Nya tips</span>
+          </article>
+        </section>
+
+        <section className="admin-card">
+          <h2>Tips & buggar</h2>
+          <div className="admin-table-wrap">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Typ</th>
+                  <th>Från</th>
+                  <th>Meddelande</th>
+                  <th>När</th>
+                  <th />
+                </tr>
+              </thead>
+              <tbody>
+                {feedback.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="admin-muted">
+                      Inga tips ännu
+                    </td>
+                  </tr>
+                )}
+                {feedback.map((f) => (
+                  <tr key={f.id} className={f.status !== "new" ? "dim" : undefined}>
+                    <td>
+                      {KIND_LABEL[f.kind] || f.kind}
+                      {f.status !== "new" ? ` · ${f.status}` : ""}
+                    </td>
+                    <td>{f.displayName}</td>
+                    <td>
+                      {f.message}
+                      {f.page ? (
+                        <>
+                          <br />
+                          <span className="admin-muted">{f.page}</span>
+                        </>
+                      ) : null}
+                    </td>
+                    <td>{fmt(f.createdAt)}</td>
+                    <td>
+                      <div className="admin-row-actions">
+                        {f.status === "new" && (
+                          <button
+                            type="button"
+                            className="chip"
+                            disabled={busy}
+                            onClick={() => {
+                              void setFeedbackStatus(f.id, "done").then(
+                                (err) => {
+                                  if (err) setMsg(err);
+                                  else void reload();
+                                },
+                              );
+                            }}
+                          >
+                            Klar
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          className="chip danger"
+                          disabled={busy}
+                          onClick={() => {
+                            void deleteFeedback(f.id).then((err) => {
+                              if (err) setMsg(err);
+                              else void reload();
+                            });
+                          }}
+                        >
+                          Ta bort
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </section>
 
         <section className="admin-card">

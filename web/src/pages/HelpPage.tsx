@@ -57,8 +57,8 @@ const SECTIONS = [
     title: "Tips",
     body: [
       "Den här sidan: Hem → Så funkar det, eller Hjälp på kartan / i profilen.",
+      "Fliken Tips: skicka buggar, förbättringar och tips till admin.",
       "Lägg till på hemskärmen för app-känsla (Safari/Chrome).",
-      "Egen domän kan kopplas senare via Cloudflare + Render.",
       "Admin-dashboard finns för dig som ägare under Profil.",
     ],
   },

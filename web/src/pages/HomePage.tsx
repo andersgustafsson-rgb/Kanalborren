@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AuthBar } from "../components/AuthBar";
 import { CatchForm } from "../components/CatchForm";
 import { ChallengeBoard } from "../components/ChallengeBoard";
+import { FeedbackForm } from "../components/FeedbackForm";
 import { WaterLevelWidget } from "../components/WaterLevelWidget";
 import {
   fetchHighscores,
@@ -17,12 +18,13 @@ const PERIODS: { id: HighscorePeriod; label: string }[] = [
   { id: "year", label: "År" },
 ];
 
-type HomeTab = "hem" | "fangst" | "utmana" | "profil";
+type HomeTab = "hem" | "fangst" | "utmana" | "tips" | "profil";
 
 const TABS: { id: HomeTab; label: string; hash?: string }[] = [
   { id: "hem", label: "Hem" },
   { id: "fangst", label: "Fångst", hash: "catch" },
   { id: "utmana", label: "Utmana" },
+  { id: "tips", label: "Tips" },
   { id: "profil", label: "Profil" },
 ];
 
@@ -30,6 +32,7 @@ function tabFromHash(hash: string): HomeTab {
   const h = hash.replace(/^#/, "").toLowerCase();
   if (h === "catch" || h === "fangst") return "fangst";
   if (h === "utmana" || h === "challenge") return "utmana";
+  if (h === "tips" || h === "feedback") return "tips";
   if (h === "profil" || h === "konto") return "profil";
   return "hem";
 }
@@ -193,6 +196,12 @@ export function HomePage() {
         {tab === "utmana" && (
           <div className="home-panel" role="tabpanel">
             <ChallengeBoard reloadToken={reloadToken} />
+          </div>
+        )}
+
+        {tab === "tips" && (
+          <div className="home-panel" role="tabpanel">
+            <FeedbackForm />
           </div>
         )}
 
