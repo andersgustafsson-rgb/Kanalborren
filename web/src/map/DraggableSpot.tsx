@@ -15,7 +15,7 @@ function spotIcon(name: string, selected: boolean, editable: boolean) {
     .join(" ");
   return L.divIcon({
     className: "spot-marker",
-    html: `<div class="${cls}"><span class="spot-dot"></span><span class="spot-name">${safe}</span></div>`,
+    html: `<div class="${cls}"><span class="spot-label">${safe}</span><span class="spot-beacon" aria-hidden="true"></span></div>`,
     iconSize: [0, 0],
     iconAnchor: [0, 0],
   });

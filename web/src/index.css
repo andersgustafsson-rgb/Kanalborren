@@ -51,33 +51,61 @@ a {
 
 .spot-pin {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.35rem;
-  transform: translate(-6px, -6px);
+  gap: 0;
+  transform: translate(-50%, calc(-100% + 5px));
   white-space: nowrap;
   pointer-events: auto;
+  filter: drop-shadow(0 4px 10px rgba(5, 10, 16, 0.35));
 }
 
-.spot-dot {
-  width: 12px;
-  height: 12px;
+.spot-label {
+  position: relative;
+  z-index: 1;
+  max-width: 11.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.015em;
+  line-height: 1.2;
+  color: #f4f7fa;
+  background:
+    linear-gradient(120deg, rgba(184, 224, 20, 0.18), transparent 42%),
+    rgba(8, 14, 22, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-left: 3px solid #b8e014;
+  border-radius: 10px;
+  padding: 0.32rem 0.55rem 0.34rem 0.48rem;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 2px 8px rgba(0, 0, 0, 0.22);
+}
+
+.spot-label::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: rgba(8, 14, 22, 0.9);
+}
+
+.spot-beacon {
+  position: relative;
+  z-index: 0;
+  width: 11px;
+  height: 11px;
+  margin-top: 7px;
   border-radius: 50%;
-  background: #c45c26;
-  border: 2px solid #fff8f0;
-  box-shadow: 0 1px 4px rgba(20, 33, 43, 0.35);
+  background: linear-gradient(145deg, #d4f03a 0%, #b8e014 45%, #ff6a00 120%);
+  border: 2px solid #fffef8;
+  box-shadow:
+    0 0 0 3px rgba(184, 224, 20, 0.22),
+    0 2px 5px rgba(0, 0, 0, 0.35);
   flex: 0 0 auto;
-}
-
-.spot-name {
-  font-size: 0.72rem;
-  font-weight: 650;
-  letter-spacing: 0.01em;
-  color: #1a242c;
-  background: rgba(255, 248, 240, 0.92);
-  border: 1px solid rgba(196, 92, 38, 0.35);
-  border-radius: 6px;
-  padding: 0.12rem 0.4rem;
-  box-shadow: 0 1px 3px rgba(20, 33, 43, 0.12);
 }
 
 .spot-pin.editable {
@@ -88,14 +116,23 @@ a {
   cursor: grabbing;
 }
 
-.spot-pin.selected .spot-dot {
-  background: #0b4f6c;
-  transform: scale(1.25);
+.spot-pin.selected {
+  z-index: 600;
+  filter: drop-shadow(0 6px 14px rgba(184, 224, 20, 0.35));
 }
 
-.spot-pin.selected .spot-name {
-  border-color: #0b4f6c;
-  background: #e8f2f6;
+.spot-pin.selected .spot-beacon {
+  transform: scale(1.2);
+  box-shadow:
+    0 0 0 4px rgba(184, 224, 20, 0.35),
+    0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.spot-pin.selected .spot-label {
+  border-color: rgba(184, 224, 20, 0.55);
+  background:
+    linear-gradient(120deg, rgba(184, 224, 20, 0.28), transparent 48%),
+    rgba(10, 18, 28, 0.95);
 }
 
 .session-marker {
