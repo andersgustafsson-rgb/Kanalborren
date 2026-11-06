@@ -11,12 +11,22 @@ export type RecentCatch = {
   caughtAt: string;
 };
 
+function asNum(v: unknown): number | null {
+  if (typeof v === "number" && Number.isFinite(v)) return v;
+  if (typeof v === "string" && v.trim() !== "") {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+  }
+  return null;
+}
+
 export async function fetchRecentCatches(
   days = 7,
 ): Promise<RecentCatch[]> {
   if (!isSupabaseConfigured() || !supabase) return [];
   const since = new Date();
   since.setDate(since.getDate() - days);
+  since.setHours(0, 0, 0, 0);
 
   const { data, error } = await supabase
     .from("catch_reports")
@@ -38,8 +48,8 @@ export async function fetchRecentCatches(
       id: String(r.id),
       displayName: profile?.display_name || "Fiskare",
       species: String(r.species),
-      lengthCm: typeof r.length_cm === "number" ? r.length_cm : null,
-      weightKg: typeof r.weight_kg === "number" ? r.weight_kg : null,
+      lengthCm: asNum(r.length_cm),
+      weightKg: asNum(r.weight_kg),
       zoneId: r.zone_id ? String(r.zone_id) : null,
       zoneName: r.zone_name ? String(r.zone_name) : null,
       caughtAt: String(r.caught_at),

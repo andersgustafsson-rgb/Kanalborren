@@ -17,7 +17,18 @@ function periodStart(period: HighscorePeriod): string {
   if (period === "week") d.setDate(d.getDate() - 7);
   else if (period === "month") d.setMonth(d.getMonth() - 1);
   else d.setFullYear(d.getFullYear() - 1);
+  // Inclusive: start of that calendar day (local), so “7 days ago morning” still counts
+  d.setHours(0, 0, 0, 0);
   return d.toISOString();
+}
+
+function asNum(v: unknown): number | null {
+  if (typeof v === "number" && Number.isFinite(v)) return v;
+  if (typeof v === "string" && v.trim() !== "") {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+  }
+  return null;
 }
 
 function sortKey(r: HighscoreRow): number {
@@ -51,8 +62,8 @@ export async function fetchHighscores(
         id: String(r.id),
         displayName: profile?.display_name || "Fiskare",
         species: String(r.species),
-        lengthCm: typeof r.length_cm === "number" ? r.length_cm : null,
-        weightKg: typeof r.weight_kg === "number" ? r.weight_kg : null,
+        lengthCm: asNum(r.length_cm),
+        weightKg: asNum(r.weight_kg),
         zoneName: (r.zone_name as string) || null,
         caughtAt: String(r.caught_at),
       };
