@@ -125,13 +125,29 @@ export function CatchForm({ onSubmitted }: Props) {
     onSubmitted?.();
   }
 
+  if (!auth.configured) {
+    return (
+      <section className="home-board catch-board">
+        <header className="home-board-head">
+          <h2>Rapportera fångst</h2>
+          <p>
+            Molnet är inte inkopplat ännu — fångster kan inte sparas. Kolla att
+            miljövariablerna finns på Render och gör en ny deploy.
+          </p>
+        </header>
+      </section>
+    );
+  }
+
   if (!auth.user) {
     return (
       <section className="home-board catch-board">
         <header className="home-board-head">
           <h2>Rapportera fångst</h2>
           <p>
-            <Link to="/profil">Logga in</Link> för att skicka till topplistan.
+            <Link to="/profil#konto">Logga in med e-post</Link> under Profil →
+            Konto. Visningsnamnet ovan räcker inte — det är bara en lokal
+            profil.
           </p>
         </header>
       </section>

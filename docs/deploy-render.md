@@ -27,6 +27,8 @@ Skapa ett nytt repo (t.ex. `Kanalborren`) under samma GitHub-konto som mx-fantas
    - `VITE_SUPABASE_ANON_KEY`
 6. Deploy → kopiera den publika URL:en (`https://kanalborren.onrender.com` el. liknande)
 
+**Viktigt:** Vite läser nycklarna *vid bygget*. Om du lägger till Environment efter första deployn måste du köra **Manual Deploy → Clear build cache & deploy**, annars syns “Lokal demo” / ingen inloggning.
+
 ### 3. Supabase (så inloggning funkar)
 Authentication → URL Configuration:
 - **Site URL** = Render-URL:en

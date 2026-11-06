@@ -6,6 +6,8 @@ import { loadProfile } from "../lib/profileStorage";
 export function AuthBar() {
   const auth = useAuth();
   const profile = loadProfile();
+  const cloud = isSupabaseConfigured();
+  const loggedIn = Boolean(auth.user);
 
   return (
     <div className="auth-bar auth-bar-profile">
@@ -14,27 +16,29 @@ export function AuthBar() {
         <span>
           <strong>{auth.displayName || profile.displayName}</strong>
           <small>
-            {profile.bio
-              ? profile.bio.slice(0, 48) + (profile.bio.length > 48 ? "…" : "")
-              : "Redigera profil · bild · intro"}
+            {loggedIn
+              ? `Inloggad · ${auth.user?.email ?? ""}`
+              : profile.bio
+                ? profile.bio.slice(0, 48) + (profile.bio.length > 48 ? "…" : "")
+                : "Profil i telefonen · logga in för topplistan"}
           </small>
         </span>
       </Link>
-      {!isSupabaseConfigured() && (
+      {!cloud && (
         <p className="auth-hint">
-          Lokal demo · två flikar kan se varandra. Supabase senare för riktig
-          sync.
+          Molnet är inte inkopplat (saknas nycklar i bygget). Profilen här är
+          bara lokal.
         </p>
       )}
-      {isSupabaseConfigured() && !auth.user && (
-        <Link className="chip on" to="/profil">
+      {cloud && !loggedIn && (
+        <Link className="chip on" to="/profil#konto">
           Logga in / skapa konto
         </Link>
       )}
-      {isSupabaseConfigured() && auth.user && (
+      {cloud && loggedIn && (
         <p className="auth-hint">Inloggad · redo för live-karta</p>
       )}
-      {auth.user && (
+      {loggedIn && (
         <button
           type="button"
           className="chip"

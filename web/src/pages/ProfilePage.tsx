@@ -219,11 +219,14 @@ export function ProfilePage() {
           </div>
         </section>
 
-        <section className="profile-card">
+        <section className="profile-card" id="konto">
           <h2>Konto</h2>
           {!isSupabaseConfigured() ? (
             <p className="profile-muted">
-              Lokal profil sparas i webbläsaren.
+              Molnet är inte inkopplat (nycklar saknas i bygget). Därför syns
+              ingen inloggning här — bara lokal profil i webbläsaren. På Render:
+              Environment → VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY → Manual
+              Deploy.
             </p>
           ) : auth.user ? (
             <div className="profile-account-row">
