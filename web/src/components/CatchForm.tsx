@@ -16,6 +16,8 @@ const ZONES = [
   { id: "suell", name: "Suell" },
 ];
 
+type PlaceOption = { id: string; name: string };
+
 function parseNum(raw: string): number | null {
   const t = raw.trim();
   if (!t) return null;
@@ -51,7 +53,8 @@ export function CatchForm({ onSubmitted }: Props) {
   const [species, setSpecies] = useState("Abborre");
   const [lengthCm, setLengthCm] = useState("");
   const [weightKg, setWeightKg] = useState("");
-  const [zoneId, setZoneId] = useState(ZONES[0].id);
+  const [placeId, setPlaceId] = useState(ZONES[0].id);
+  const [spots, setSpots] = useState<PlaceOption[]>([]);
   const [bait, setBait] = useState("");
   const [note, setNote] = useState("");
   const [caughtDate, setCaughtDate] = useState(() => toLocalDate());
@@ -64,6 +67,29 @@ export function CatchForm({ onSubmitted }: Props) {
     setCaughtDate(toLocalDate(now));
     setCaughtTime(toLocalTime(now));
   }
+
+  useEffect(() => {
+    let cancelled = false;
+    void fetch("/geo/lokala-platser.geojson")
+      .then((r) => r.json())
+      .then((geo: { features?: { properties?: { id?: string; name?: string } }[] }) => {
+        if (cancelled) return;
+        const list = (geo.features || [])
+          .map((f) => ({
+            id: String(f.properties?.id || ""),
+            name: String(f.properties?.name || ""),
+          }))
+          .filter((p) => p.id && p.name)
+          .sort((a, b) => a.name.localeCompare(b.name, "sv"));
+        setSpots(list);
+      })
+      .catch(() => {
+        /* keep zones only */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     function applyPref() {
@@ -127,13 +153,16 @@ export function CatchForm({ onSubmitted }: Props) {
 
     setBusy(true);
     setMsg(null);
-    const zone = ZONES.find((z) => z.id === zoneId) || ZONES[0];
+    const place =
+      ZONES.find((z) => z.id === placeId) ||
+      spots.find((s) => s.id === placeId) ||
+      ZONES[0];
     const { error } = await submitCatchReport(auth.user.id, {
       species,
       lengthCm: len,
       weightKg: w,
-      zoneId: zone.id,
-      zoneName: zone.name,
+      zoneId: place.id,
+      zoneName: place.name,
       bait,
       note,
       caughtAt,
@@ -255,13 +284,27 @@ export function CatchForm({ onSubmitted }: Props) {
         </fieldset>
 
         <label className="profile-field">
-          Zon
-          <select value={zoneId} onChange={(e) => setZoneId(e.target.value)}>
-            {ZONES.map((z) => (
-              <option key={z.id} value={z.id}>
-                {z.name}
-              </option>
-            ))}
+          Plats / zon
+          <select
+            value={placeId}
+            onChange={(e) => setPlaceId(e.target.value)}
+          >
+            <optgroup label="Zoner">
+              {ZONES.map((z) => (
+                <option key={z.id} value={z.id}>
+                  {z.name}
+                </option>
+              ))}
+            </optgroup>
+            {spots.length > 0 && (
+              <optgroup label="Platser">
+                {spots.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </optgroup>
+            )}
           </select>
         </label>
         <label className="profile-field">
