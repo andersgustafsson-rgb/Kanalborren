@@ -15,18 +15,17 @@ import { subscribePublicSessions } from "../lib/fishingSessions";
 import type { PublicFishingSession } from "../lib/types";
 import "./CompanyPanel.css";
 
-type Tab = "opna" | "inkorg" | "chatt";
+const DEFAULT_HELLO = "Hej! Öppen för sällskap — fiskar du kvar?";
 
 export function CompanyPanel() {
   const auth = useAuth();
   const [open, setOpen] = useState(false);
-  const [tab, setTab] = useState<Tab>("opna");
   const [others, setOthers] = useState<PublicFishingSession[]>([]);
   const [requests, setRequests] = useState<CompanyRequest[]>([]);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
-  const [draftByUser, setDraftByUser] = useState<Record<string, string>>({});
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
+  const [activeName, setActiveName] = useState("Fiskare");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [chatDraft, setChatDraft] = useState("");
 
@@ -67,6 +66,18 @@ export function CompanyPanel() {
     [requests, auth.user],
   );
 
+  const pendingOut = useMemo(
+    () =>
+      requests.filter(
+        (r) =>
+          r.status === "pending" &&
+          auth.user &&
+          r.fromUserId === auth.user.id &&
+          Date.parse(r.expiresAt) > Date.now(),
+      ),
+    [requests, auth.user],
+  );
+
   const myChats = useMemo(
     () => requests.filter((r) => r.status === "accepted" && r.chatId),
     [requests],
@@ -89,16 +100,18 @@ export function CompanyPanel() {
       cancelled = true;
       window.clearInterval(t);
     };
-  }, [activeChatId, requests]);
+  }, [activeChatId]);
+
+  function openChat(chatId: string, name: string) {
+    setActiveChatId(chatId);
+    setActiveName(name);
+    setMsg(null);
+    setOpen(true);
+  }
 
   async function ask(person: PublicFishingSession) {
     if (!auth.user) {
       setMsg("Logga in under Profil först");
-      return;
-    }
-    const text = (draftByUser[person.userId] || "").trim();
-    if (!text) {
-      setMsg("Skriv en kort hälsning först");
       return;
     }
     setBusy(true);
@@ -106,20 +119,18 @@ export function CompanyPanel() {
     const { error } = await sendCompanyRequest({
       toUserId: person.userId,
       sessionId: person.id,
-      message: text,
+      message: DEFAULT_HELLO,
     });
     setBusy(false);
     if (error) {
       setMsg(error);
       return;
     }
-    setDraftByUser((prev) => ({ ...prev, [person.userId]: "" }));
-    setMsg("Förfrågan skickad");
-    setTab("inkorg");
+    setMsg(`Förfrågan skickad till ${person.displayName}`);
     void refreshRequests();
   }
 
-  async function respond(id: string, accept: boolean) {
+  async function respond(id: string, accept: boolean, name: string) {
     setBusy(true);
     setMsg(null);
     const res = await respondCompanyRequest(id, accept);
@@ -129,9 +140,8 @@ export function CompanyPanel() {
       return;
     }
     if (accept && res.chatId) {
-      setActiveChatId(res.chatId);
-      setTab("chatt");
-      setMsg("Accepterad · chatt öppen");
+      openChat(res.chatId, name);
+      setMsg(null);
     } else {
       setMsg("Nekad");
     }
@@ -152,211 +162,200 @@ export function CompanyPanel() {
     setMessages(await listChatMessages(activeChatId));
   }
 
-  const badge = pendingIn.length;
+  const badge = pendingIn.length + myChats.length;
 
   return (
-    <aside className={`company-panel${open ? " open" : ""}`} aria-label="Sällskap">
-      <button
-        type="button"
-        className="company-toggle"
-        aria-expanded={open}
-        onClick={() => setOpen((v) => !v)}
-      >
-        Sällskap
-        {badge > 0 && <span className="company-badge">{badge}</span>}
-      </button>
-
+    <aside
+      className={`company-panel${open ? " open" : ""}`}
+      aria-label="Sällskap"
+    >
       {open && (
         <div className="company-body">
           {!auth.user ? (
             <p className="company-hint">
               <Link to="/profil#konto">Logga in</Link> för att skicka och ta emot
-              fiskesällskap.
+              sällskap.
             </p>
-          ) : (
-            <>
-              <div className="company-tabs" role="tablist">
-                {(
-                  [
-                    ["opna", "Öppna"],
-                    ["inkorg", `Inkorg${badge ? ` (${badge})` : ""}`],
-                    ["chatt", "Chatt"],
-                  ] as const
-                ).map(([id, label]) => (
-                  <button
-                    key={id}
-                    type="button"
-                    role="tab"
-                    className={tab === id ? "on" : ""}
-                    aria-selected={tab === id}
-                    onClick={() => setTab(id)}
+          ) : activeChatId ? (
+            <div className="company-chat">
+              <div className="company-chat-head">
+                <button
+                  type="button"
+                  className="company-btn ghost"
+                  onClick={() => setActiveChatId(null)}
+                >
+                  ← Tillbaka
+                </button>
+                <strong>{activeName}</strong>
+              </div>
+              <div className="company-chat-log" aria-live="polite">
+                {messages.length === 0 && (
+                  <p className="company-empty">Skriv första meddelandet.</p>
+                )}
+                {messages.map((m) => (
+                  <p
+                    key={m.id}
+                    className={
+                      m.senderId === auth.user!.id ? "mine" : "theirs"
+                    }
                   >
-                    {label}
-                  </button>
+                    {m.body}
+                  </p>
                 ))}
               </div>
+              <form className="company-chat-form" onSubmit={sendChat}>
+                <input
+                  className="company-input"
+                  value={chatDraft}
+                  maxLength={1000}
+                  placeholder="Skriv…"
+                  onChange={(e) => setChatDraft(e.target.value)}
+                />
+                <button
+                  type="submit"
+                  className="company-btn"
+                  disabled={busy || !chatDraft.trim()}
+                >
+                  Skicka
+                </button>
+              </form>
+              {msg && <p className="company-status">{msg}</p>}
+            </div>
+          ) : (
+            <>
+              <p className="company-lead">Allt sällskap i samma ruta</p>
 
-              {tab === "opna" && (
-                <ul className="company-list">
-                  {openPeople.length === 0 && (
-                    <li className="company-empty">
-                      Ingen öppen för sällskap just nu. Checka in med toggle
-                      “Öppen för fiskesällskap”.
-                    </li>
-                  )}
-                  {openPeople.map((p) => (
-                    <li key={p.id}>
-                      <div className="company-row">
-                        <strong>{p.displayName}</strong>
-                        <span>{p.zoneName || "Kanalen"}</span>
-                      </div>
-                      <input
-                        className="company-input"
-                        maxLength={200}
-                        placeholder="Hej, fiskar du kvar en stund?"
-                        value={draftByUser[p.userId] || ""}
-                        onChange={(e) =>
-                          setDraftByUser((prev) => ({
-                            ...prev,
-                            [p.userId]: e.target.value,
-                          }))
-                        }
-                      />
-                      <button
-                        type="button"
-                        className="company-btn"
-                        disabled={busy}
-                        onClick={() => void ask(p)}
-                      >
-                        Fråga om sällskap
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-
-              {tab === "inkorg" && (
-                <ul className="company-list">
-                  {requests.length === 0 && (
-                    <li className="company-empty">Inga förfrågningar ännu.</li>
-                  )}
-                  {requests.map((r) => {
-                    const incoming = r.toUserId === auth.user!.id;
-                    const other = incoming ? r.fromName : r.toName;
-                    return (
-                      <li key={r.id}>
-                        <div className="company-row">
-                          <strong>
-                            {incoming ? "Från" : "Till"} {other || "Fiskare"}
-                          </strong>
-                          <span>{r.status}</span>
-                        </div>
-                        <p className="company-msg">{r.message}</p>
-                        {incoming && r.status === "pending" && (
+              {pendingIn.length > 0 && (
+                <section className="company-section">
+                  <h3>Nya förfrågningar</h3>
+                  <ul className="company-list">
+                    {pendingIn.map((r) => {
+                      const name = r.fromName || "Fiskare";
+                      return (
+                        <li key={r.id}>
+                          <div className="company-row">
+                            <strong>{name}</strong>
+                          </div>
+                          <p className="company-msg">{r.message}</p>
                           <div className="company-actions">
                             <button
                               type="button"
                               className="company-btn"
                               disabled={busy}
-                              onClick={() => void respond(r.id, true)}
+                              onClick={() => void respond(r.id, true, name)}
                             >
-                              Acceptera
+                              Acceptera & chatta
                             </button>
                             <button
                               type="button"
                               className="company-btn ghost"
                               disabled={busy}
-                              onClick={() => void respond(r.id, false)}
+                              onClick={() => void respond(r.id, false, name)}
                             >
                               Neka
                             </button>
                           </div>
-                        )}
-                        {r.status === "accepted" && r.chatId && (
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </section>
+              )}
+
+              {myChats.length > 0 && (
+                <section className="company-section">
+                  <h3>Chattar</h3>
+                  <ul className="company-list">
+                    {myChats.map((r) => {
+                      const name =
+                        (r.fromUserId === auth.user!.id
+                          ? r.toName
+                          : r.fromName) || "Fiskare";
+                      return (
+                        <li key={r.id}>
                           <button
                             type="button"
-                            className="company-btn ghost"
-                            onClick={() => {
-                              setActiveChatId(r.chatId);
-                              setTab("chatt");
-                            }}
+                            className="company-person"
+                            onClick={() => openChat(r.chatId!, name)}
+                          >
+                            <strong>{name}</strong>
+                            <span>Öppna chatt</span>
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </section>
+              )}
+
+              <section className="company-section">
+                <h3>Öppna för sällskap</h3>
+                <ul className="company-list">
+                  {openPeople.length === 0 && (
+                    <li className="company-empty">
+                      Ingen just nu. Be dem bocka i “Öppen för fiskesällskap”.
+                    </li>
+                  )}
+                  {openPeople.map((p) => {
+                    const already = pendingOut.some(
+                      (r) => r.toUserId === p.userId,
+                    );
+                    const chatting = myChats.find(
+                      (r) =>
+                        r.fromUserId === p.userId || r.toUserId === p.userId,
+                    );
+                    return (
+                      <li key={p.id}>
+                        <div className="company-row">
+                          <strong>{p.displayName}</strong>
+                          <span>{p.zoneName || "Kanalen"}</span>
+                        </div>
+                        {chatting?.chatId ? (
+                          <button
+                            type="button"
+                            className="company-btn"
+                            onClick={() =>
+                              openChat(chatting.chatId!, p.displayName)
+                            }
                           >
                             Öppna chatt
+                          </button>
+                        ) : already ? (
+                          <p className="company-status">Väntar på svar…</p>
+                        ) : (
+                          <button
+                            type="button"
+                            className="company-btn"
+                            disabled={busy}
+                            onClick={() => void ask(p)}
+                          >
+                            Fråga om sällskap
                           </button>
                         )}
                       </li>
                     );
                   })}
                 </ul>
-              )}
-
-              {tab === "chatt" && (
-                <div className="company-chat">
-                  {myChats.length === 0 && (
-                    <p className="company-empty">
-                      Inga chattar ännu. Acceptera en förfrågan först.
-                    </p>
-                  )}
-                  {myChats.length > 0 && (
-                    <select
-                      className="company-input"
-                      value={activeChatId || ""}
-                      onChange={(e) => setActiveChatId(e.target.value || null)}
-                    >
-                      <option value="">Välj chatt</option>
-                      {myChats.map((r) => {
-                        const other =
-                          r.fromUserId === auth.user!.id
-                            ? r.toName
-                            : r.fromName;
-                        return (
-                          <option key={r.id} value={r.chatId || ""}>
-                            {other || "Fiskare"}
-                          </option>
-                        );
-                      })}
-                    </select>
-                  )}
-                  {activeChatId && (
-                    <>
-                      <div className="company-chat-log" aria-live="polite">
-                        {messages.map((m) => (
-                          <p
-                            key={m.id}
-                            className={
-                              m.senderId === auth.user!.id ? "mine" : "theirs"
-                            }
-                          >
-                            {m.body}
-                          </p>
-                        ))}
-                      </div>
-                      <form className="company-chat-form" onSubmit={sendChat}>
-                        <input
-                          className="company-input"
-                          value={chatDraft}
-                          maxLength={1000}
-                          placeholder="Skriv meddelande…"
-                          onChange={(e) => setChatDraft(e.target.value)}
-                        />
-                        <button
-                          type="submit"
-                          className="company-btn"
-                          disabled={busy || !chatDraft.trim()}
-                        >
-                          Skicka
-                        </button>
-                      </form>
-                    </>
-                  )}
-                </div>
-              )}
+              </section>
 
               {msg && <p className="company-status">{msg}</p>}
             </>
           )}
         </div>
       )}
+
+      <button
+        type="button"
+        className="company-toggle"
+        aria-expanded={open}
+        onClick={() => {
+          setOpen((v) => !v);
+          if (open) setActiveChatId(null);
+        }}
+      >
+        Sällskap
+        {badge > 0 && <span className="company-badge">{badge}</span>}
+      </button>
     </aside>
   );
 }
