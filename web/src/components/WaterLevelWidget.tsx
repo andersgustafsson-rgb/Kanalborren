@@ -14,6 +14,7 @@ type SkyKind =
 
 type Conditions = {
   waterCm: number | null;
+  waterTempC: number | null;
   waterStation: string;
   tempC: number | null;
   windMs: number | null;
@@ -103,18 +104,24 @@ function WeatherIcon({ kind, large = false }: { kind: SkyKind; large?: boolean }
 
 async function fetchCanalConditions(): Promise<Conditions> {
   try {
-    const waterUrl =
+    const levelUrl =
       "https://opendata-download-ocobs.smhi.se/api/version/1.0/parameter/6/station/35152/period/latest-day/data.json";
+    const waterTempUrl =
+      "https://opendata-download-ocobs.smhi.se/api/version/1.0/parameter/5/station/35152/period/latest-day/data.json";
     const meteoUrl =
       "https://api.open-meteo.com/v1/forecast?latitude=55.605&longitude=12.995&current=temperature_2m,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,precipitation&wind_speed_unit=ms&timezone=Europe%2FStockholm";
 
-    const [waterRes, meteoRes] = await Promise.all([
-      fetch(waterUrl),
+    const [levelRes, waterTempRes, meteoRes] = await Promise.all([
+      fetch(levelUrl),
+      fetch(waterTempUrl),
       fetch(meteoUrl),
     ]);
-    if (!waterRes.ok && !meteoRes.ok) throw new Error("Kunde inte hämta väder");
+    if (!levelRes.ok && !waterTempRes.ok && !meteoRes.ok) {
+      throw new Error("Kunde inte hämta väder");
+    }
 
-    const water = waterRes.ok ? await waterRes.json() : null;
+    const level = levelRes.ok ? await levelRes.json() : null;
+    const waterTemp = waterTempRes.ok ? await waterTempRes.json() : null;
     const meteo = meteoRes.ok
       ? ((await meteoRes.json()) as {
           current?: {
@@ -129,7 +136,8 @@ async function fetchCanalConditions(): Promise<Conditions> {
         })
       : null;
 
-    const w = water ? lastValue(water) : { value: null, time: null };
+    const w = level ? lastValue(level) : { value: null, time: null };
+    const wt = waterTemp ? lastValue(waterTemp) : { value: null, time: null };
     const c = meteo?.current;
     const windMs = typeof c?.wind_speed_10m === "number" ? c.wind_speed_10m : null;
     const code = typeof c?.weather_code === "number" ? c.weather_code : 3;
@@ -141,6 +149,7 @@ async function fetchCanalConditions(): Promise<Conditions> {
 
     return {
       waterCm: w.value,
+      waterTempC: wt.value,
       waterStation: "Malmö Hamn",
       tempC: typeof c?.temperature_2m === "number" ? c.temperature_2m : null,
       windMs,
@@ -150,12 +159,13 @@ async function fetchCanalConditions(): Promise<Conditions> {
       precipMm: typeof c?.precipitation === "number" ? c.precipitation : null,
       sky,
       skyLabel,
-      time: c?.time ? new Date(c.time).toISOString() : w.time,
+      time: c?.time ? new Date(c.time).toISOString() : w.time || wt.time,
       error: null,
     };
   } catch (e) {
     return {
       waterCm: null,
+      waterTempC: null,
       waterStation: "Malmö Hamn",
       tempC: null,
       windMs: null,
@@ -254,11 +264,20 @@ export function WaterLevelWidget() {
               <small>just nu</small>
             </li>
             <li>
+              <span className="conditions-label">🌊 Vattentemp</span>
+              <strong>
+                {data.waterTempC != null
+                  ? `${data.waterTempC.toFixed(1)} °C`
+                  : "–"}
+              </strong>
+              <small>{data.waterStation}</small>
+            </li>
+            <li>
               <span className="conditions-label">Vattenstånd</span>
               <strong>
                 {data.waterCm != null ? `${data.waterCm.toFixed(1)} cm` : "–"}
               </strong>
-              <small>{data.waterStation}</small>
+              <small>Öresund · {data.waterStation}</small>
             </li>
           </ul>
           {data.time && (
