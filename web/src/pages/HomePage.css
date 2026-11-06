@@ -51,10 +51,11 @@
 .home-top {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   gap: 0.85rem;
   padding-top: 0.35rem;
   margin-bottom: 0.15rem;
+  text-align: center;
 }
 
 .home-logo {
@@ -69,6 +70,8 @@
   flex-wrap: wrap;
   gap: 0.5rem;
   align-items: center;
+  justify-content: center;
+  width: 100%;
 }
 
 .home-cta {
@@ -84,6 +87,12 @@
   background: linear-gradient(100deg, #b8e014 0%, #d4f03a 55%, #ff6a00 140%);
   box-shadow: 0 10px 28px rgba(184, 224, 20, 0.28);
   transition: transform 0.15s ease;
+}
+
+.home-cta-main {
+  min-width: min(18rem, 88vw);
+  padding: 0.9rem 1.5rem;
+  font-size: 1.05rem;
 }
 
 .home-cta.ghost {
@@ -427,9 +436,8 @@
   }
 
   .home-top {
-    flex-direction: row;
+    flex-direction: column;
     align-items: center;
-    justify-content: space-between;
     width: 100%;
     max-width: 42rem;
   }

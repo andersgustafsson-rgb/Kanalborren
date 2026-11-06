@@ -92,11 +92,8 @@ export function HomePage() {
             decoding="async"
           />
           <div className="home-cta-row">
-            <Link className="home-cta" to="/karta">
-              Öppna kartan
-            </Link>
-            <Link className="home-cta ghost" to="/hjalp">
-              Bruksanvisning
+            <Link className="home-cta home-cta-main" to="/karta">
+              Till kanalen
             </Link>
           </div>
         </header>
