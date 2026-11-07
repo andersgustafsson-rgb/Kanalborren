@@ -349,8 +349,29 @@ export function CatchForm({ onSubmitted }: Props) {
 
         <fieldset className="catch-place">
           <legend>Plats / zon</legend>
+          <p className="catch-place-lead">
+            Välj plats manuellt, eller använd din position / kartan.
+          </p>
+          <div className="catch-place-row">
+            <button
+              type="button"
+              className="catch-place-btn"
+              disabled={gpsBusy}
+              onClick={useGpsPlace}
+            >
+              {gpsBusy ? "Hämtar position…" : "Använd min position"}
+            </button>
+            <button
+              type="button"
+              className="catch-place-btn"
+              onClick={() => setMapOpen(true)}
+            >
+              Välj på kartan
+            </button>
+          </div>
           <select
             value={placeId}
+            aria-label="Platslista"
             onChange={(e) => {
               setPlaceId(e.target.value);
               if (customPlace && e.target.value !== customPlace.id) {
@@ -380,23 +401,6 @@ export function CatchForm({ onSubmitted }: Props) {
               </optgroup>
             )}
           </select>
-          <div className="catch-place-row">
-            <button
-              type="button"
-              className="chip"
-              disabled={gpsBusy}
-              onClick={useGpsPlace}
-            >
-              {gpsBusy ? "GPS…" : "Min GPS"}
-            </button>
-            <button
-              type="button"
-              className="chip"
-              onClick={() => setMapOpen(true)}
-            >
-              Peka på kartan
-            </button>
-          </div>
         </fieldset>
         <CatchPlacePicker
           open={mapOpen}
