@@ -241,7 +241,7 @@ export function CompanyPanel() {
                       setNotifyState(notificationPermission());
                       setMsg(
                         ok
-                          ? "Notiser på · du får push vid chatt"
+                          ? "Notiser på · chatt, sällskap och check-in"
                           : "Notiser nekades i webbläsaren",
                       );
                     });

@@ -93,6 +93,30 @@ export function ChatNotifyBridge() {
           });
         },
       )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "fishing_sessions" },
+        (payload) => {
+          if (!readyRef.current) return;
+          const row = payload.new as {
+            id?: string;
+            user_id?: string;
+            visibility?: string;
+            zone_name?: string | null;
+            ended_at?: string | null;
+          };
+          if (!row?.user_id || row.user_id === userId) return;
+          if (row.ended_at) return;
+          if (row.visibility !== "zone" && row.visibility !== "precise") return;
+          const where = row.zone_name?.trim() || "kanalen";
+          void showAppNotification({
+            title: "KanalHugget · ute nu",
+            body: `Någon checkade in · ${where}`,
+            url: "/karta",
+            tag: `checkin-${row.id || row.user_id}`,
+          });
+        },
+      )
       .subscribe();
 
     return () => {

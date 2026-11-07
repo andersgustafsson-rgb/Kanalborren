@@ -58,9 +58,16 @@ export function SessionMarkers({
 
   if (spectator) return null;
 
+  const showPublic =
+    Boolean(session) &&
+    (session!.visibility === "zone" || session!.visibility === "precise") &&
+    session!.publicLat != null &&
+    session!.publicLng != null;
+
   return (
     <>
-      {privateFix && (
+      {/* Only private pin when not already shown as public — avoids double "Du". */}
+      {privateFix && !showPublic && (
         <>
           {privateFix.accuracy != null && privateFix.accuracy < 120 && (
             <Circle
@@ -86,37 +93,34 @@ export function SessionMarkers({
         </>
       )}
 
-      {session?.visibility === "zone" &&
-        session.zoneName &&
-        session.publicLat != null &&
-        session.publicLng != null && (
+      {showPublic &&
+        session!.visibility === "zone" &&
+        session!.zoneName && (
           <Marker
-            position={[session.publicLat, session.publicLng]}
+            position={[session!.publicLat!, session!.publicLng!]}
             icon={zoneIcon(
-              session.zoneName,
-              session.openForCompany,
+              session!.zoneName,
+              session!.openForCompany,
               displayName,
             )}
           >
             <Tooltip direction="top" offset={[0, -12]}>
-              Du · {displayName} · {session.zoneName}
+              Du · {displayName} · {session!.zoneName}
             </Tooltip>
           </Marker>
         )}
 
-      {session?.visibility === "precise" &&
-        session.publicLat != null &&
-        session.publicLng != null && (
-          <Marker
-            position={[session.publicLat, session.publicLng]}
-            icon={preciseIcon}
-            zIndexOffset={700}
-          >
-            <Tooltip direction="top" offset={[0, -48]}>
-              Du · {displayName} (publik avatar)
-            </Tooltip>
-          </Marker>
-        )}
+      {showPublic && session!.visibility === "precise" && (
+        <Marker
+          position={[session!.publicLat!, session!.publicLng!]}
+          icon={preciseIcon}
+          zIndexOffset={700}
+        >
+          <Tooltip direction="top" offset={[0, -48]}>
+            Du · {displayName} (publik avatar)
+          </Tooltip>
+        </Marker>
+      )}
     </>
   );
 }

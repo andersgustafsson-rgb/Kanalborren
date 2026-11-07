@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import type { FeatureCollection } from "geojson";
 import { useAuth } from "../lib/AuthContext";
 import { submitCatchReport } from "../lib/catchReports";
+import { resolveZone } from "../map/geo";
+import { CatchPlacePicker, type CatchPlace } from "./CatchPlacePicker";
 
 const SPECIES = ["Abborre", "Gädda", "Sutare", "Mört", "Annan"];
 
@@ -54,7 +57,12 @@ export function CatchForm({ onSubmitted }: Props) {
   const [lengthCm, setLengthCm] = useState("");
   const [weightKg, setWeightKg] = useState("");
   const [placeId, setPlaceId] = useState(ZONES[0].id);
+  const [customPlace, setCustomPlace] = useState<PlaceOption | null>(null);
   const [spots, setSpots] = useState<PlaceOption[]>([]);
+  const [spotsGeo, setSpotsGeo] = useState<FeatureCollection | null>(null);
+  const [zonesGeo, setZonesGeo] = useState<FeatureCollection | null>(null);
+  const [mapOpen, setMapOpen] = useState(false);
+  const [gpsBusy, setGpsBusy] = useState(false);
   const [bait, setBait] = useState("");
   const [note, setNote] = useState("");
   const [caughtDate, setCaughtDate] = useState(() => toLocalDate());
@@ -70,14 +78,24 @@ export function CatchForm({ onSubmitted }: Props) {
 
   useEffect(() => {
     let cancelled = false;
-    void fetch("/geo/lokala-platser.geojson")
-      .then((r) => r.json())
-      .then((geo: { features?: { properties?: { id?: string; name?: string } }[] }) => {
+    void Promise.all([
+      fetch("/geo/lokala-platser.geojson").then((r) => r.json()),
+      fetch("/geo/sociala-zoner.geojson").then((r) => r.json()).catch(() => null),
+    ])
+      .then(([spotsJson, zonesJson]) => {
         if (cancelled) return;
+        const geo = spotsJson as FeatureCollection;
+        setSpotsGeo(geo);
+        if (zonesJson) setZonesGeo(zonesJson as FeatureCollection);
         const list = (geo.features || [])
           .map((f) => ({
-            id: String(f.properties?.id || ""),
-            name: String(f.properties?.name || ""),
+            id: String(
+              (f.properties as { id?: string; name?: string } | null)?.id || "",
+            ),
+            name: String(
+              (f.properties as { id?: string; name?: string } | null)?.name ||
+                "",
+            ),
           }))
           .filter((p) => p.id && p.name)
           .sort((a, b) => a.name.localeCompare(b.name, "sv"));
@@ -90,6 +108,51 @@ export function CatchForm({ onSubmitted }: Props) {
       cancelled = true;
     };
   }, []);
+
+  function applyPlace(place: CatchPlace) {
+    const known =
+      ZONES.find((z) => z.id === place.id) ||
+      spots.find((s) => s.id === place.id);
+    if (known) {
+      setCustomPlace(null);
+      setPlaceId(known.id);
+    } else {
+      setCustomPlace(place);
+      setPlaceId(place.id);
+    }
+    setMsg(`Plats: ${place.name}`);
+  }
+
+  function useGpsPlace() {
+    if (!navigator.geolocation) {
+      setMsg("GPS saknas — peka på kartan i stället");
+      return;
+    }
+    if (!spotsGeo) {
+      setMsg("Platser laddas… prova igen om en sekund");
+      return;
+    }
+    setGpsBusy(true);
+    setMsg(null);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const zones = zonesGeo || ({ type: "FeatureCollection", features: [] } as FeatureCollection);
+        const z = resolveZone(
+          pos.coords.latitude,
+          pos.coords.longitude,
+          spotsGeo,
+          zones,
+        );
+        applyPlace({ id: z.id, name: z.name });
+        setGpsBusy(false);
+      },
+      () => {
+        setGpsBusy(false);
+        setMsg("Kunde inte hämta GPS — peka på kartan i stället");
+      },
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 10_000 },
+    );
+  }
 
   useEffect(() => {
     function applyPref() {
@@ -154,6 +217,7 @@ export function CatchForm({ onSubmitted }: Props) {
     setBusy(true);
     setMsg(null);
     const place =
+      (customPlace && customPlace.id === placeId ? customPlace : null) ||
       ZONES.find((z) => z.id === placeId) ||
       spots.find((s) => s.id === placeId) ||
       ZONES[0];
@@ -283,11 +347,16 @@ export function CatchForm({ onSubmitted }: Props) {
           </button>
         </fieldset>
 
-        <label className="profile-field">
-          Plats / zon
+        <fieldset className="catch-place">
+          <legend>Plats / zon</legend>
           <select
             value={placeId}
-            onChange={(e) => setPlaceId(e.target.value)}
+            onChange={(e) => {
+              setPlaceId(e.target.value);
+              if (customPlace && e.target.value !== customPlace.id) {
+                setCustomPlace(null);
+              }
+            }}
           >
             <optgroup label="Zoner">
               {ZONES.map((z) => (
@@ -305,8 +374,37 @@ export function CatchForm({ onSubmitted }: Props) {
                 ))}
               </optgroup>
             )}
+            {customPlace && (
+              <optgroup label="Vald plats">
+                <option value={customPlace.id}>{customPlace.name}</option>
+              </optgroup>
+            )}
           </select>
-        </label>
+          <div className="catch-place-row">
+            <button
+              type="button"
+              className="chip"
+              disabled={gpsBusy}
+              onClick={useGpsPlace}
+            >
+              {gpsBusy ? "GPS…" : "Min GPS"}
+            </button>
+            <button
+              type="button"
+              className="chip"
+              onClick={() => setMapOpen(true)}
+            >
+              Peka på kartan
+            </button>
+          </div>
+        </fieldset>
+        <CatchPlacePicker
+          open={mapOpen}
+          onClose={() => setMapOpen(false)}
+          onPick={applyPlace}
+          spotsGeo={spotsGeo}
+          zonesGeo={zonesGeo}
+        />
         <label className="profile-field">
           Bete / teknik
           <input
