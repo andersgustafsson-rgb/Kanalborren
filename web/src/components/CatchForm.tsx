@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import type { FeatureCollection } from "geojson";
 import { useAuth } from "../lib/AuthContext";
@@ -58,6 +58,10 @@ export function CatchForm({ onSubmitted }: Props) {
   const [weightKg, setWeightKg] = useState("");
   const [placeId, setPlaceId] = useState(ZONES[0].id);
   const [customPlace, setCustomPlace] = useState<PlaceOption | null>(null);
+  const [placeSource, setPlaceSource] = useState<"gps" | "list" | "map">(
+    "gps",
+  );
+  const [listOpen, setListOpen] = useState(false);
   const [spots, setSpots] = useState<PlaceOption[]>([]);
   const [spotsGeo, setSpotsGeo] = useState<FeatureCollection | null>(null);
   const [zonesGeo, setZonesGeo] = useState<FeatureCollection | null>(null);
@@ -109,7 +113,7 @@ export function CatchForm({ onSubmitted }: Props) {
     };
   }, []);
 
-  function applyPlace(place: CatchPlace) {
+  function applyPlace(place: CatchPlace, source: "gps" | "list" | "map") {
     const known =
       ZONES.find((z) => z.id === place.id) ||
       spots.find((s) => s.id === place.id);
@@ -120,39 +124,51 @@ export function CatchForm({ onSubmitted }: Props) {
       setCustomPlace(place);
       setPlaceId(place.id);
     }
-    setMsg(`Plats: ${place.name}`);
+    setPlaceSource(source);
+    if (source !== "list") setListOpen(false);
   }
 
   function useGpsPlace() {
     if (!navigator.geolocation) {
-      setMsg("GPS saknas — peka på kartan i stället");
+      setMsg("GPS saknas — välj plats eller karta i stället");
       return;
     }
     if (!spotsGeo) {
-      setMsg("Platser laddas… prova igen om en sekund");
+      setMsg("Platser laddas…");
       return;
     }
     setGpsBusy(true);
     setMsg(null);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        const zones = zonesGeo || ({ type: "FeatureCollection", features: [] } as FeatureCollection);
+        const zones =
+          zonesGeo ||
+          ({ type: "FeatureCollection", features: [] } as FeatureCollection);
         const z = resolveZone(
           pos.coords.latitude,
           pos.coords.longitude,
           spotsGeo,
           zones,
         );
-        applyPlace({ id: z.id, name: z.name });
+        applyPlace({ id: z.id, name: z.name }, "gps");
         setGpsBusy(false);
       },
       () => {
         setGpsBusy(false);
-        setMsg("Kunde inte hämta GPS — peka på kartan i stället");
+        setMsg("Kunde inte hämta position — välj plats eller karta");
       },
-      { enableHighAccuracy: true, timeout: 12000, maximumAge: 10_000 },
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 30_000 },
     );
   }
+
+  const autoGpsRef = useRef(false);
+  // Default: resolve place from current GPS once spots are ready.
+  useEffect(() => {
+    if (!auth.user || !spotsGeo || autoGpsRef.current) return;
+    autoGpsRef.current = true;
+    useGpsPlace();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- once when geo+auth ready
+  }, [auth.user, spotsGeo]);
 
   useEffect(() => {
     function applyPref() {
@@ -348,18 +364,49 @@ export function CatchForm({ onSubmitted }: Props) {
         </fieldset>
 
         <fieldset className="catch-place">
-          <legend>Plats / zon</legend>
-          <p className="catch-place-lead">
-            Välj plats manuellt, eller använd din position / kartan.
-          </p>
+          <legend>Plats</legend>
+          <div className="catch-place-current" aria-live="polite">
+            {gpsBusy ? (
+              <strong>Hämtar din position…</strong>
+            ) : (
+              <>
+                <strong>
+                  {(customPlace && customPlace.id === placeId
+                    ? customPlace
+                    : null
+                  )?.name ||
+                    ZONES.find((z) => z.id === placeId)?.name ||
+                    spots.find((s) => s.id === placeId)?.name ||
+                    "Okänd plats"}
+                </strong>
+                <span>
+                  {placeSource === "gps"
+                    ? "från din position"
+                    : placeSource === "map"
+                      ? "vald på kartan"
+                      : "vald från listan"}
+                </span>
+              </>
+            )}
+          </div>
           <div className="catch-place-row">
             <button
               type="button"
-              className="catch-place-btn"
+              className={
+                placeSource === "gps" ? "catch-place-btn on" : "catch-place-btn"
+              }
               disabled={gpsBusy}
               onClick={useGpsPlace}
             >
-              {gpsBusy ? "Hämtar position…" : "Använd min position"}
+              {gpsBusy ? "Hämtar…" : "Uppdatera position"}
+            </button>
+            <button
+              type="button"
+              className={listOpen ? "catch-place-btn on" : "catch-place-btn"}
+              onClick={() => setListOpen((v) => !v)}
+              aria-expanded={listOpen}
+            >
+              Välj plats
             </button>
             <button
               type="button"
@@ -369,43 +416,52 @@ export function CatchForm({ onSubmitted }: Props) {
               Välj på kartan
             </button>
           </div>
-          <select
-            value={placeId}
-            aria-label="Platslista"
-            onChange={(e) => {
-              setPlaceId(e.target.value);
-              if (customPlace && e.target.value !== customPlace.id) {
-                setCustomPlace(null);
-              }
-            }}
-          >
-            <optgroup label="Zoner">
-              {ZONES.map((z) => (
-                <option key={z.id} value={z.id}>
-                  {z.name}
-                </option>
-              ))}
-            </optgroup>
-            {spots.length > 0 && (
-              <optgroup label="Platser">
-                {spots.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
+          {listOpen && (
+            <select
+              value={placeId}
+              aria-label="Platslista"
+              onChange={(e) => {
+                const id = e.target.value;
+                const place =
+                  ZONES.find((z) => z.id === id) ||
+                  spots.find((s) => s.id === id) ||
+                  (customPlace && customPlace.id === id ? customPlace : null);
+                if (place) applyPlace(place, "list");
+                else {
+                  setPlaceId(id);
+                  setPlaceSource("list");
+                  if (customPlace && id !== customPlace.id) setCustomPlace(null);
+                }
+              }}
+            >
+              <optgroup label="Zoner">
+                {ZONES.map((z) => (
+                  <option key={z.id} value={z.id}>
+                    {z.name}
                   </option>
                 ))}
               </optgroup>
-            )}
-            {customPlace && (
-              <optgroup label="Vald plats">
-                <option value={customPlace.id}>{customPlace.name}</option>
-              </optgroup>
-            )}
-          </select>
+              {spots.length > 0 && (
+                <optgroup label="Platser">
+                  {spots.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                    </option>
+                  ))}
+                </optgroup>
+              )}
+              {customPlace && (
+                <optgroup label="Vald plats">
+                  <option value={customPlace.id}>{customPlace.name}</option>
+                </optgroup>
+              )}
+            </select>
+          )}
         </fieldset>
         <CatchPlacePicker
           open={mapOpen}
           onClose={() => setMapOpen(false)}
-          onPick={applyPlace}
+          onPick={(place) => applyPlace(place, "map")}
           spotsGeo={spotsGeo}
           zonesGeo={zonesGeo}
         />
