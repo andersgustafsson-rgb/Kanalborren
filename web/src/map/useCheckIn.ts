@@ -3,9 +3,16 @@ import type { FeatureCollection } from "geojson";
 import {
   CHECKIN_STORAGE_KEY,
   clearSession,
-  DEFAULT_DURATION_MS,
+  EXPIRY_WARN_MS,
+  EXTEND_MS,
+  formatRemaining,
+  INITIAL_DURATION_MS,
   loadSession,
+  markCheckInNudged,
+  MAX_SESSION_MS,
   saveSession,
+  TWO_HOUR_REMINDER_MS,
+  wasCheckInNudged,
   type CheckInSession,
   type Visibility,
 } from "./checkinStorage";
@@ -15,6 +22,7 @@ import {
   publishSession,
   setSessionOpenForCompany,
 } from "../lib/fishingSessions";
+import { showAppNotification } from "../lib/notifications";
 
 type Fix = { lat: number; lng: number; accuracy: number | null };
 
@@ -50,6 +58,7 @@ export function useCheckIn(
   const [simulated, setSimulated] = useState(false);
   const [spectator, setSpectator] = useState(() => !loadSession());
   const [syncing, setSyncing] = useState(false);
+  const [reminder, setReminder] = useState<string | null>(null);
 
   useEffect(() => {
     const t = window.setInterval(() => {
@@ -67,8 +76,48 @@ export function useCheckIn(
       void endSession(session.remoteId, identity.userId);
       clearSession();
       setSession(null);
+      setReminder(null);
     }
   }, [now, session, identity.userId]);
+
+  useEffect(() => {
+    if (!session) {
+      setReminder(null);
+      return;
+    }
+    const started = Date.parse(session.startedAt);
+    const expires = Date.parse(session.expiresAt);
+    const elapsed = now - started;
+    const left = expires - now;
+    if (left <= 0) return;
+
+    const twoKey = `2h:${session.startedAt}`;
+    if (elapsed >= TWO_HOUR_REMINDER_MS && !wasCheckInNudged(twoKey)) {
+      markCheckInNudged(twoKey);
+      const text =
+        "Du har varit ute i 2 timmar — förläng om du stannar, annars dölj dig";
+      setReminder(text);
+      void showAppNotification({
+        title: "KanalHugget · 2 timmar",
+        body: text,
+        url: "/karta",
+        tag: twoKey,
+      });
+    }
+
+    const expKey = `exp:${session.expiresAt}`;
+    if (left <= EXPIRY_WARN_MS && !wasCheckInNudged(expKey)) {
+      markCheckInNudged(expKey);
+      const text = `Check-in går ut om ${formatRemaining(left)} — förläng med +30 min?`;
+      setReminder(text);
+      void showAppNotification({
+        title: "KanalHugget · snart slut",
+        body: text,
+        url: "/karta",
+        tag: expKey,
+      });
+    }
+  }, [session, now]);
 
   const suggestedZone: ResolvedZone | null = useMemo(() => {
     if (!fix || !spots || !zones) return null;
@@ -131,7 +180,7 @@ export function useCheckIn(
 
     const zone = resolveZone(demoFix.lat, demoFix.lng, spots, zones);
     const startedAt = new Date().toISOString();
-    const expiresAt = new Date(Date.now() + DEFAULT_DURATION_MS).toISOString();
+    const expiresAt = new Date(Date.now() + INITIAL_DURATION_MS).toISOString();
 
     const remoteId = await publishSession(
       {
@@ -169,6 +218,7 @@ export function useCheckIn(
     };
     saveSession(next);
     setSession(next);
+    setReminder(null);
     setNote("Test från soffan");
     setSyncing(false);
   }, [spots, zones, identity, session?.remoteId, openForCompany]);
@@ -201,7 +251,7 @@ export function useCheckIn(
     const zone = resolveZone(fix.lat, fix.lng, spots, zones);
     const rounded = roundForPrivacy(fix.lat, fix.lng);
     const startedAt = new Date().toISOString();
-    const expiresAt = new Date(Date.now() + DEFAULT_DURATION_MS).toISOString();
+    const expiresAt = new Date(Date.now() + INITIAL_DURATION_MS).toISOString();
 
     let publicLat: number | null = null;
     let publicLng: number | null = null;
@@ -249,6 +299,7 @@ export function useCheckIn(
     };
     saveSession(next);
     setSession(next);
+    setReminder(null);
     setSyncing(false);
   }, [
     fix,
@@ -265,6 +316,7 @@ export function useCheckIn(
     const remoteId = session?.remoteId;
     clearSession();
     setSession(null);
+    setReminder(null);
     await endSession(remoteId, identity.userId);
   }, [session?.remoteId, identity.userId]);
 
@@ -321,14 +373,17 @@ export function useCheckIn(
   const extend = useCallback(async () => {
     if (!session) return;
     const started = Date.parse(session.startedAt);
-    const maxEnd = started + 180 * 60 * 1000;
+    const maxEnd = started + MAX_SESSION_MS;
     const nextEnd = Math.min(
-      Date.parse(session.expiresAt) + 30 * 60 * 1000,
+      Date.parse(session.expiresAt) + EXTEND_MS,
       maxEnd,
     );
     const expiresAt = new Date(nextEnd).toISOString();
+    setReminder(null);
     await republishActive({ expiresAt });
   }, [session, republishActive]);
+
+  const dismissReminder = useCallback(() => setReminder(null), []);
 
   useEffect(() => {
     if (session && !fix && !spectator) {
@@ -367,6 +422,8 @@ export function useCheckIn(
     checkIn,
     hide,
     extend,
+    reminder,
+    dismissReminder,
     syncing,
     storageKey: CHECKIN_STORAGE_KEY,
     recenterSeq,

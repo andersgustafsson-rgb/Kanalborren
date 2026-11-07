@@ -230,6 +230,35 @@
   color: #c9f0f5;
 }
 
+.map-banner.checkin-reminder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  border-color: rgba(184, 240, 110, 0.45);
+  color: #eef5e0;
+  text-align: center;
+}
+
+.checkin-reminder-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  justify-content: center;
+}
+
+.checkin-reminder-actions .chip {
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.1);
+  color: #f4f7fa;
+  border-radius: 999px;
+  padding: 0.3rem 0.7rem;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+
 .presence-sheet {
   position: absolute;
   z-index: 1210;

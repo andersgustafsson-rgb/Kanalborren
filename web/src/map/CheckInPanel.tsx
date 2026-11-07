@@ -270,7 +270,7 @@ export function CheckInPanel({
             disabled={!fix}
             onClick={onCheckIn}
           >
-            Checka in (2 h)
+            Checka in (4 h)
           </button>
         ) : (
           <div className="checkin-active">

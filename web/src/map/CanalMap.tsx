@@ -575,6 +575,26 @@ export function CanalMap({ toggles }: Props) {
         <div className="map-banner spectator">
           Åskådare · du syns inte som fiskande
         </div>
+      ) : checkIn.reminder ? (
+        <div className="map-banner status checkin-reminder" role="status">
+          <span>{checkIn.reminder}</span>
+          <span className="checkin-reminder-actions">
+            <button
+              type="button"
+              className="chip"
+              onClick={() => void checkIn.extend()}
+            >
+              +30 min
+            </button>
+            <button
+              type="button"
+              className="chip"
+              onClick={checkIn.dismissReminder}
+            >
+              Ok
+            </button>
+          </span>
+        </div>
       ) : (
         status && <div className="map-banner status">{status}</div>
       )}

@@ -20,7 +20,35 @@ export type CheckInSession = {
 };
 
 export const CHECKIN_STORAGE_KEY = "kanalhugget.checkin.v1";
-export const DEFAULT_DURATION_MS = 120 * 60 * 1000;
+/** First check-in lasts longer — typical canal session. */
+export const INITIAL_DURATION_MS = 4 * 60 * 60 * 1000;
+/** @deprecated alias — use INITIAL_DURATION_MS */
+export const DEFAULT_DURATION_MS = INITIAL_DURATION_MS;
+/** Nudge after this much time checked in. */
+export const TWO_HOUR_REMINDER_MS = 2 * 60 * 60 * 1000;
+/** Warn this long before expiry. */
+export const EXPIRY_WARN_MS = 15 * 60 * 1000;
+/** Hard cap from startedAt (includes +30 min extends). */
+export const MAX_SESSION_MS = 6 * 60 * 60 * 1000;
+export const EXTEND_MS = 30 * 60 * 1000;
+
+const NUDGE_PREFIX = "kanalhugget.checkin.nudge.";
+
+export function wasCheckInNudged(key: string): boolean {
+  try {
+    return localStorage.getItem(NUDGE_PREFIX + key) === "1";
+  } catch {
+    return false;
+  }
+}
+
+export function markCheckInNudged(key: string): void {
+  try {
+    localStorage.setItem(NUDGE_PREFIX + key, "1");
+  } catch {
+    /* ignore */
+  }
+}
 
 export function loadSession(): CheckInSession | null {
   try {
