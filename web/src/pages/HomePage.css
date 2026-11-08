@@ -373,18 +373,13 @@
   font-size: 0.78rem;
 }
 
-.catch-swatch {
-  width: 2.6rem;
-  height: 2.6rem;
+.catch-swatch-img {
+  width: 2.75rem;
+  height: 2.75rem;
   border-radius: 50%;
-  box-shadow: inset 0 -8px 12px rgba(0, 0, 0, 0.25);
+  object-fit: cover;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.28);
 }
-
-.catch-swatch.perch { background: linear-gradient(160deg, #d6e35a, #3d6b2f); }
-.catch-swatch.pike { background: linear-gradient(160deg, #c5d6c0, #3e5c45); }
-.catch-swatch.tench { background: linear-gradient(160deg, #e2c15a, #8a5a12); }
-.catch-swatch.roach { background: linear-gradient(160deg, #f2f4f6, #7d8b99); }
-.catch-swatch.other { background: linear-gradient(160deg, #7ee0ea, #1a6f88); }
 
 .catch-block {
   margin: 0;
@@ -424,11 +419,22 @@
   background: #eef2f4;
   color: #0a1220;
   border-radius: 999px;
-  padding: 0.48rem 0.75rem;
+  padding: 0.28rem 0.65rem 0.28rem 0.28rem;
   font: inherit;
   font-size: 0.84rem;
   font-weight: 700;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.catch-species-btn img {
+  width: 1.7rem;
+  height: 1.7rem;
+  border-radius: 50%;
+  object-fit: cover;
+  flex: 0 0 auto;
 }
 
 .catch-species-btn.on {

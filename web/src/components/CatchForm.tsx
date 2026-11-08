@@ -7,11 +7,11 @@ import { resolveZone } from "../map/geo";
 import { CatchPlacePicker, type CatchPlace } from "./CatchPlacePicker";
 
 const SPECIES = [
-  { id: "Abborre", tone: "perch" },
-  { id: "Gädda", tone: "pike" },
-  { id: "Sutare", tone: "tench" },
-  { id: "Mört", tone: "roach" },
-  { id: "Annan", tone: "other" },
+  { id: "Abborre", tone: "perch", img: "/species/abborre.svg" },
+  { id: "Gädda", tone: "pike", img: "/species/gadda.svg" },
+  { id: "Sutare", tone: "tench", img: "/species/sutare.svg" },
+  { id: "Mört", tone: "roach", img: "/species/mort.svg" },
+  { id: "Annan", tone: "other", img: "/species/annan.svg" },
 ] as const;
 
 const ZONES = [
@@ -340,7 +340,16 @@ export function CatchForm({ onSubmitted }: Props) {
       </header>
       <form className="catch-form" onSubmit={onSubmit}>
         <div className="catch-preview" aria-hidden>
-          <span className={`catch-swatch ${SPECIES.find((s) => s.id === species)?.tone || "other"}`} />
+          <img
+            className="catch-swatch-img"
+            src={
+              SPECIES.find((s) => s.id === species)?.img ||
+              "/species/annan.svg"
+            }
+            alt=""
+            width={48}
+            height={48}
+          />
           <div>
             <strong>{species}</strong>
             <small>
@@ -361,14 +370,11 @@ export function CatchForm({ onSubmitted }: Props) {
                 type="button"
                 role="radio"
                 aria-checked={species === s.id}
-                className={
-                  species === s.id
-                    ? `catch-species-btn on ${s.tone}`
-                    : `catch-species-btn ${s.tone}`
-                }
+                className={species === s.id ? "catch-species-btn on" : "catch-species-btn"}
                 onClick={() => setSpecies(s.id)}
               >
-                {s.id}
+                <img src={s.img} alt="" width={28} height={28} />
+                <span>{s.id}</span>
               </button>
             ))}
           </div>
