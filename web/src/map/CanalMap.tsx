@@ -493,21 +493,6 @@ export function CanalMap({ toggles }: Props) {
         >
           Till kanalen
         </button>
-        {!checkIn.session && (
-          <button
-            type="button"
-            className="chip on sofa-chip"
-            onClick={() => {
-              void checkIn.sofaDemoCheckIn().then(() => {
-                setSheetOpen(true);
-                setStatus("Test-incheckad från soffan · zon Slottsparken");
-              });
-            }}
-            title="Simulera dig vid kanalen och checka in"
-          >
-            Soff-check-in
-          </button>
-        )}
         {mapAdmin && (
           <>
             <Link className="chip admin-chip on" to="/admin">
@@ -571,11 +556,7 @@ export function CanalMap({ toggles }: Props) {
         )}
       </div>
 
-      {checkIn.spectator ? (
-        <div className="map-banner spectator">
-          Åskådare · du syns inte som fiskande
-        </div>
-      ) : checkIn.reminder ? (
+      {checkIn.reminder ? (
         <div className="map-banner status checkin-reminder" role="status">
           <span>{checkIn.reminder}</span>
           <span className="checkin-reminder-actions">

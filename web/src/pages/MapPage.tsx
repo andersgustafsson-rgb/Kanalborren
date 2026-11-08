@@ -34,38 +34,40 @@ export function MapPage() {
 
   return (
     <div className="app map-app">
-      <Link className="brand-logo-link" to="/" aria-label="KanalHugget hem">
-        <img
-          className="brand-logo"
-          src="/brand/kanalhugget-logo.png"
-          alt="KanalHugget"
-          width={280}
-          height={100}
-          decoding="async"
-        />
-      </Link>
+      <header className="map-chrome">
+        <Link className="brand-logo-link" to="/" aria-label="KanalHugget hem">
+          <img
+            className="brand-logo"
+            src="/brand/kanalhugget-logo.png"
+            alt="KanalHugget"
+            width={280}
+            height={100}
+            decoding="async"
+          />
+        </Link>
 
-      <div className="hud-actions">
-        <Link className="fab" to="/">
-          Hem
-        </Link>
-        <Link className="fab" to="/hjalp">
-          Hjälp
-        </Link>
-        <Link className="fab" to="/profil">
-          Profil
-        </Link>
-        <PresenceList open={uteOpen} onOpenChange={openUte} />
-        <button
-          type="button"
-          className={layersOpen ? "fab on" : "fab"}
-          aria-expanded={layersOpen}
-          aria-controls="layer-panel"
-          onClick={openLayers}
-        >
-          Lager
-        </button>
-      </div>
+        <nav className="hud-actions" aria-label="Meny">
+          <Link className="fab" to="/">
+            Hem
+          </Link>
+          <Link className="fab" to="/hjalp">
+            Hjälp
+          </Link>
+          <Link className="fab" to="/profil">
+            Profil
+          </Link>
+          <PresenceList open={uteOpen} onOpenChange={openUte} />
+          <button
+            type="button"
+            className={layersOpen ? "fab on" : "fab"}
+            aria-expanded={layersOpen}
+            aria-controls="layer-panel"
+            onClick={openLayers}
+          >
+            Lager
+          </button>
+        </nav>
+      </header>
 
       {layersOpen && (
         <div

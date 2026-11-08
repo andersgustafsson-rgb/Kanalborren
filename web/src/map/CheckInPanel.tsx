@@ -56,10 +56,7 @@ export function CheckInPanel({
   onPresetAvatar,
   onUploadAvatar,
   uploadError,
-  spectator,
   onLocate,
-  onGoToCanal,
-  onSimulateCanal,
   onSofaDemoCheckIn,
   onTogglePickOnMap,
   onVisibility,
@@ -90,23 +87,22 @@ export function CheckInPanel({
         <span className="sheet-peek">
           <img className="sheet-avatar-img" src={avatarSrc} alt="" />
           <span className="sheet-peek-text">
-            {spectator ? (
+            {session ? (
               <>
-                <strong>Åskådarläge</strong>
-                <small>Hemma? Testa check-in från soffan ↓</small>
-              </>
-            ) : session ? (
-              <>
-                <strong>Du fiskar</strong>
+                <strong>Du är ute</strong>
                 <small>
-                  {session.zoneName || session.visibility} ·{" "}
+                  {session.zoneName || "Kanalen"} ·{" "}
                   {formatRemaining(leftLive || left)} kvar
                 </small>
               </>
             ) : (
               <>
                 <strong>Checka in</strong>
-                <small>Visa dig på kanalen · välj avatar</small>
+                <small>
+                  {fix
+                    ? suggestedZone?.name || "Position klar"
+                    : "Du syns inte på kartan ännu"}
+                </small>
               </>
             )}
           </span>
@@ -160,87 +156,73 @@ export function CheckInPanel({
           />
         </div>
         {uploadError && <p className="checkin-error">{uploadError}</p>}
-        <p className="checkin-meta">Tryck + för egen bild (sparas lokalt).</p>
 
         {!session && (
-          <button
-            type="button"
-            className="cta sofa-cta"
-            onClick={onSofaDemoCheckIn}
-          >
-            Testa check-in från soffan
-          </button>
+          <div className="checkin-choices">
+            <button
+              type="button"
+              className="cta"
+              disabled={locating}
+              onClick={onLocate}
+            >
+              {locating ? "Hämtar din position…" : "Jag är vid kanalen"}
+            </button>
+            <p className="checkin-meta">
+              Hämtar din plats. Sen trycker du Checka in.
+            </p>
+            <div className="checkin-actions">
+              <button
+                type="button"
+                className={pickOnMap ? "chip on" : "chip"}
+                aria-pressed={pickOnMap}
+                onClick={onTogglePickOnMap}
+              >
+                Välj på kartan
+              </button>
+              <button type="button" className="chip" onClick={onSofaDemoCheckIn}>
+                Testa hemifrån
+              </button>
+            </div>
+          </div>
         )}
-
-        <div className="checkin-actions">
-          <button type="button" className="chip on" onClick={onGoToCanal}>
-            Bara kika (åskådare)
-          </button>
-          <button
-            type="button"
-            className="chip"
-            onClick={onLocate}
-            disabled={locating}
-          >
-            {locating ? "Hämtar GPS…" : "Min GPS"}
-          </button>
-          <button type="button" className="chip" onClick={onSimulateCanal}>
-            Lägg mig vid kanalen
-          </button>
-          <button
-            type="button"
-            className={pickOnMap ? "chip on" : "chip"}
-            aria-pressed={pickOnMap}
-            onClick={onTogglePickOnMap}
-          >
-            Peka plats
-          </button>
-        </div>
-        <p className="checkin-meta">
-          Hemma i soffan: använd <strong>Testa check-in från soffan</strong> —
-          du syns i zon (märkt som test). På riktigt vid kanalen: Min GPS.
-        </p>
 
         {locateError && <p className="checkin-error">{locateError}</p>}
         {pickOnMap && (
-          <p className="checkin-meta">Klicka på kanalen för simulerad plats.</p>
+          <p className="checkin-meta">Tryck på kartan där du står.</p>
         )}
 
         {fix && (
-          <p className="checkin-meta">
-            {simulated ? "Simulerad" : "GPS OK"}
-            {fix.accuracy != null ? ` (±${Math.round(fix.accuracy)} m)` : ""}
-            {suggestedZone ? (
-              <>
-                {" "}
-                · <strong>{suggestedZone.name}</strong>
-              </>
-            ) : null}
+          <p className="checkin-place" role="status">
+            <strong>{suggestedZone?.name || "Kanalen"}</strong>
+            <span>
+              {simulated ? "vald plats" : "din position"}
+              {fix.accuracy != null ? ` · ±${Math.round(fix.accuracy)} m` : ""}
+            </span>
           </p>
         )}
 
         <fieldset className="checkin-vis">
-          <legend>Synlighet</legend>
-          {(
-            [
-              ["ghost", "Ghost", "Ingen publik prick"],
-              ["zone", "Zon", "Bara zonnamn"],
-              ["precise", "Exakt", "Avatar ~60 m"],
-            ] as const
-          ).map(([value, label, hint]) => (
-            <label key={value} className="checkin-radio">
-              <input
-                type="radio"
-                name="visibility"
-                checked={visibility === value}
-                onChange={() => onVisibility(value)}
-              />
-              <span>
+          <legend>Vad andra ser</legend>
+          <div className="checkin-vis-grid">
+            {(
+              [
+                ["ghost", "Dold", "Ingen ser dig"],
+                ["zone", "Zon", "Bara området"],
+                ["precise", "Exakt", "Ungefär var du står"],
+              ] as const
+            ).map(([value, label, hint]) => (
+              <button
+                key={value}
+                type="button"
+                className={visibility === value ? "vis-opt on" : "vis-opt"}
+                aria-pressed={visibility === value}
+                onClick={() => onVisibility(value)}
+              >
                 <strong>{label}</strong>
                 <small>{hint}</small>
-              </span>
-            </label>
-          ))}
+              </button>
+            ))}
+          </div>
         </fieldset>
 
         <label className="checkin-check">
@@ -270,7 +252,7 @@ export function CheckInPanel({
             disabled={!fix}
             onClick={onCheckIn}
           >
-            Checka in (4 h)
+            Checka in · 4 timmar
           </button>
         ) : (
           <div className="checkin-active">
@@ -286,7 +268,7 @@ export function CheckInPanel({
                 +30 min
               </button>
               <button type="button" className="chip danger" onClick={onHide}>
-                Dölj nu
+                Avsluta
               </button>
             </div>
           </div>

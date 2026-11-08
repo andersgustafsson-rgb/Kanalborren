@@ -1,3 +1,8 @@
+.map-stage.sheet-open .company-panel {
+  opacity: 0;
+  pointer-events: none;
+}
+
 .company-panel {
   position: absolute;
   /* Above check-in peek, clear of "Till kanalen" top-bar */
