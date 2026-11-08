@@ -20,16 +20,41 @@ const BASEMAPS: { id: MapBasemap; label: string }[] = [
   { id: "hybrid", label: "Hybrid" },
 ];
 
+const BASEMAP_STORAGE_KEY = "kanalhugget.basemap.v1";
+
+function loadBasemap(): MapBasemap {
+  try {
+    const raw = localStorage.getItem(BASEMAP_STORAGE_KEY);
+    if (raw === "street" || raw === "satellite" || raw === "hybrid") return raw;
+  } catch {
+    /* ignore */
+  }
+  return "satellite";
+}
+
+function saveBasemap(next: MapBasemap) {
+  try {
+    localStorage.setItem(BASEMAP_STORAGE_KEY, next);
+  } catch {
+    /* ignore */
+  }
+}
+
 export function MapPage() {
   const auth = useAuth();
   const [toggles, setToggles] = useState<LayerToggles>(INITIAL);
-  const [basemap, setBasemap] = useState<MapBasemap>("satellite");
+  const [basemap, setBasemap] = useState<MapBasemap>(() => loadBasemap());
   const [layersOpen, setLayersOpen] = useState(false);
   const [uteOpen, setUteOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
 
   function toggle(key: keyof LayerToggles) {
     setToggles((prev) => ({ ...prev, [key]: !prev[key] }));
+  }
+
+  function chooseBasemap(next: MapBasemap) {
+    setBasemap(next);
+    saveBasemap(next);
   }
 
   function openLayers() {
@@ -113,7 +138,7 @@ export function MapPage() {
                 role="radio"
                 aria-checked={basemap === b.id}
                 className={basemap === b.id ? "chip on" : "chip"}
-                onClick={() => setBasemap(b.id)}
+                onClick={() => chooseBasemap(b.id)}
               >
                 {b.label}
               </button>
