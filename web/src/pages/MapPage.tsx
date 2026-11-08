@@ -46,20 +46,20 @@ export function MapPage() {
           />
         </Link>
 
-        <nav className="hud-actions" aria-label="Meny">
-          <Link className="fab" to="/">
+        <nav className="hud-rail" aria-label="Meny">
+          <Link className="hud-item" to="/">
             Hem
           </Link>
-          <Link className="fab" to="/hjalp">
+          <Link className="hud-item" to="/hjalp">
             Hjälp
           </Link>
-          <Link className="fab" to="/profil">
+          <Link className="hud-item" to="/profil">
             Profil
           </Link>
           <PresenceList open={uteOpen} onOpenChange={openUte} />
           <button
             type="button"
-            className={layersOpen ? "fab on" : "fab"}
+            className={layersOpen ? "hud-item on" : "hud-item"}
             aria-expanded={layersOpen}
             aria-controls="layer-panel"
             onClick={openLayers}

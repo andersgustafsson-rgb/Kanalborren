@@ -77,12 +77,13 @@ export function PresenceList({ open, onOpenChange }: Props) {
     <>
       <button
         type="button"
-        className={open ? "fab on" : "fab"}
+        className={open ? "hud-item on" : "hud-item"}
         aria-expanded={open}
         aria-controls="presence-sheet"
         onClick={() => onOpenChange(!open)}
       >
-        Ute nu{count > 0 ? ` · ${count}` : ""}
+        Ute
+        {count > 0 && <span className="hud-badge">{count}</span>}
       </button>
       {sheet}
     </>
