@@ -1,5 +1,5 @@
 /** Force phones to drop stale PWA/service-worker icon caches once. */
-const ICON_CACHE_VER = "kh-icons-v12";
+const ICON_CACHE_VER = "kh-icons-v13";
 
 export async function bumpPwaIconCache(): Promise<void> {
   try {

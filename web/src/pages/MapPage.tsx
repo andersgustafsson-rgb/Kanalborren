@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { CanalMap } from "../map/CanalMap";
 import { PresenceList } from "../map/PresenceList";
+import { useAuth } from "../lib/AuthContext";
 import type { LayerToggles } from "../map/types";
 
 const INITIAL: LayerToggles = {
@@ -14,9 +15,11 @@ const INITIAL: LayerToggles = {
 };
 
 export function MapPage() {
+  const auth = useAuth();
   const [toggles, setToggles] = useState<LayerToggles>(INITIAL);
   const [layersOpen, setLayersOpen] = useState(false);
   const [uteOpen, setUteOpen] = useState(false);
+  const [adminOpen, setAdminOpen] = useState(false);
 
   function toggle(key: keyof LayerToggles) {
     setToggles((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -24,37 +27,44 @@ export function MapPage() {
 
   function openLayers() {
     setUteOpen(false);
+    setAdminOpen(false);
     setLayersOpen((v) => !v);
   }
 
   function openUte(open: boolean) {
-    if (open) setLayersOpen(false);
+    if (open) {
+      setLayersOpen(false);
+      setAdminOpen(false);
+    }
     setUteOpen(open);
   }
 
-  return (
-    <div className="app map-app">
-      <header className="map-chrome">
-        <Link className="brand-logo-link" to="/" aria-label="KanalHugget hem">
-          <img
-            className="brand-logo"
-            src="/brand/kanalhugget-logo.png"
-            alt="KanalHugget"
-            width={280}
-            height={100}
-            decoding="async"
-          />
-        </Link>
+  function openAdmin() {
+    setUteOpen(false);
+    setLayersOpen(false);
+    setAdminOpen((v) => !v);
+  }
 
+  return (
+    <div className={`app map-app${auth.isAdmin ? " is-admin" : ""}`}>
+      <header className="map-chrome">
         <nav className="hud-rail" aria-label="Meny">
+          <Link
+            className="hud-brand"
+            to="/"
+            aria-label="KanalHugget hem"
+          >
+            <img
+              className="hud-brand-logo"
+              src="/brand/kanalhugget-logo.png"
+              alt=""
+              width={120}
+              height={44}
+              decoding="async"
+            />
+          </Link>
           <Link className="hud-item" to="/">
             Hem
-          </Link>
-          <Link className="hud-item" to="/hjalp">
-            Hjälp
-          </Link>
-          <Link className="hud-item" to="/profil">
-            Profil
           </Link>
           <PresenceList open={uteOpen} onOpenChange={openUte} />
           <button
@@ -66,6 +76,17 @@ export function MapPage() {
           >
             Lager
           </button>
+          {auth.isAdmin && (
+            <button
+              type="button"
+              className={adminOpen ? "hud-item on admin" : "hud-item admin"}
+              aria-expanded={adminOpen}
+              aria-controls="admin-panel"
+              onClick={openAdmin}
+            >
+              Admin
+            </button>
+          )}
         </nav>
       </header>
 
@@ -99,7 +120,7 @@ export function MapPage() {
         </div>
       )}
 
-      <CanalMap toggles={toggles} />
+      <CanalMap toggles={toggles} adminOpen={adminOpen} />
     </div>
   );
 }

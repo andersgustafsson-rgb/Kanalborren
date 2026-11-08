@@ -36,12 +36,12 @@
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 0.45rem;
-  padding: calc(0.45rem + env(safe-area-inset-top, 0px)) 0.65rem 0.7rem;
+  gap: 0.4rem;
+  padding: calc(0.45rem + env(safe-area-inset-top, 0px)) 0.65rem 0.55rem;
   background: linear-gradient(
     180deg,
     rgba(5, 8, 13, 0.82) 0%,
-    rgba(5, 8, 13, 0.35) 70%,
+    rgba(5, 8, 13, 0.28) 75%,
     rgba(5, 8, 13, 0) 100%
   );
   pointer-events: none;
@@ -51,32 +51,14 @@
   pointer-events: auto;
 }
 
-.brand-logo-link {
-  display: block;
-  width: min(42vw, 148px);
-  filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.55));
-  transition: transform 0.18s ease;
-}
-
-.brand-logo-link:active {
-  transform: scale(0.98);
-}
-
-.brand-logo {
-  display: block;
-  width: 100%;
-  height: auto;
-  border-radius: 10px;
-}
-
 .hud-rail {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: auto repeat(3, minmax(0, 1fr));
   align-items: stretch;
   width: 100%;
-  padding: 0.22rem;
+  padding: 0.2rem;
   border-radius: 999px;
-  background: rgba(8, 14, 22, 0.78);
+  background: rgba(8, 14, 22, 0.82);
   border: 1px solid rgba(255, 255, 255, 0.12);
   backdrop-filter: blur(16px);
   box-shadow:
@@ -84,19 +66,40 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
+.map-app.is-admin .hud-rail {
+  grid-template-columns: auto repeat(4, minmax(0, 1fr));
+}
+
+.hud-brand {
+  display: grid;
+  place-items: center;
+  padding: 0.15rem 0.45rem 0.15rem 0.35rem;
+  text-decoration: none;
+  min-width: 4.4rem;
+}
+
+.hud-brand-logo {
+  display: block;
+  height: 1.85rem;
+  width: auto;
+  max-width: 5.6rem;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.35));
+}
+
 .hud-item {
   appearance: none;
   border: 0;
   background: transparent;
-  color: rgba(244, 247, 250, 0.88);
+  color: rgba(244, 247, 250, 0.9);
   font: inherit;
-  font-size: 0.72rem;
+  font-size: 0.78rem;
   font-weight: 750;
   letter-spacing: 0.01em;
   text-decoration: none;
   cursor: pointer;
-  min-height: 2.35rem;
-  padding: 0.35rem 0.2rem;
+  min-height: 2.45rem;
+  padding: 0.35rem 0.25rem;
   border-radius: 999px;
   display: inline-flex;
   align-items: center;
@@ -108,6 +111,7 @@
     transform 0.12s ease;
 }
 
+.hud-brand + .hud-item,
 .hud-item + .hud-item {
   box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.08);
 }
@@ -120,6 +124,11 @@
   background: var(--kb-lime);
   color: #0a1220;
   box-shadow: none;
+}
+
+.hud-item.admin.on {
+  background: var(--kb-orange);
+  color: #0a1220;
 }
 
 .hud-badge {
@@ -138,6 +147,10 @@
 
 .hud-item.on .hud-badge {
   background: rgba(10, 18, 32, 0.18);
+}
+
+.brand-logo-link {
+  display: none;
 }
 
 /* Keep legacy fab usable if referenced elsewhere */
@@ -162,8 +175,26 @@
 }
 
 .layer-sheet,
-.presence-sheet {
-  top: calc(6.9rem + env(safe-area-inset-top, 0px));
+.presence-sheet,
+.admin-sheet {
+  top: calc(4.1rem + env(safe-area-inset-top, 0px));
+}
+
+.admin-sheet {
+  position: absolute;
+  z-index: 1210;
+  left: 0.65rem;
+  right: 0.65rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  max-width: min(96vw, 28rem);
+  padding: 0.55rem;
+  background: var(--kb-panel);
+  border: 1px solid var(--kb-line);
+  border-radius: 14px;
+  backdrop-filter: blur(14px);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.4);
 }
 
 .layer-sheet {
@@ -264,17 +295,6 @@
   outline-offset: -2px;
 }
 
-.top-bar {
-  position: absolute;
-  z-index: 510;
-  left: 0.65rem;
-  top: calc(7rem + env(safe-area-inset-top, 0px));
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-  max-width: min(28rem, calc(100% - 1.3rem));
-}
-
 .canal-map {
   width: 100%;
   height: 100%;
@@ -284,11 +304,32 @@
   margin-bottom: calc(var(--sheet-peek) + 0.35rem + var(--safe-b));
 }
 
-.locate-me {
+.map-float-actions {
   position: absolute;
   z-index: 1100;
   right: 0.7rem;
   bottom: calc(var(--sheet-peek) + 5.15rem + var(--safe-b));
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.4rem;
+}
+
+.map-float-btn {
+  appearance: none;
+  border: 1px solid rgba(62, 199, 214, 0.45);
+  background: rgba(8, 14, 22, 0.92);
+  color: #dff7fb;
+  border-radius: 999px;
+  padding: 0.42rem 0.75rem;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 750;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+}
+
+.locate-me {
   width: 2.75rem;
   height: 2.75rem;
   border-radius: 50%;
@@ -761,18 +802,13 @@
 }
 
 @media (min-width: 900px) {
-  .brand-logo-link {
-    width: 200px;
+  .hud-brand-logo {
+    height: 2.1rem;
+    max-width: 6.5rem;
   }
 
   .hud-item {
-    font-size: 0.8rem;
-  }
-
-  .top-bar {
-    top: calc(7.6rem + env(safe-area-inset-top, 0px));
-    left: 0.75rem;
-    max-width: min(36rem, calc(100% - 12rem));
+    font-size: 0.84rem;
   }
 
   .checkin-sheet {

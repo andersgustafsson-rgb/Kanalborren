@@ -245,9 +245,10 @@ function spotId(f: Feature): string {
 
 type Props = {
   toggles: LayerToggles;
+  adminOpen?: boolean;
 };
 
-export function CanalMap({ toggles }: Props) {
+export function CanalMap({ toggles, adminOpen = false }: Props) {
   const [canalData, setCanalData] = useState<FeatureCollection>(EMPTY);
   const [zonesData, setZonesData] = useState<FeatureCollection>(EMPTY);
   const [rulesData, setRulesData] = useState<FeatureCollection>(EMPTY);
@@ -491,77 +492,72 @@ export function CanalMap({ toggles }: Props) {
       {error && <div className="map-banner error">{error}</div>}
       {!ready && !error && <div className="map-banner">Laddar kanalkarta…</div>}
 
-      <div className="top-bar" role="toolbar" aria-label="Kartverktyg">
-        <button
-          type="button"
-          className="chip on canal-chip"
-          onClick={goToCanal}
-          title="Centrera på Malmö kanal"
+      {mapAdmin && adminOpen && (
+        <div
+          id="admin-panel"
+          className="admin-sheet"
+          role="toolbar"
+          aria-label="Adminverktyg"
         >
-          Till kanalen
-        </button>
-        {mapAdmin && (
-          <>
-            <Link className="chip admin-chip on" to="/admin">
-              Admin
-            </Link>
-            <button
-              type="button"
-              className={editMode === "move" ? "chip on" : "chip"}
-              aria-pressed={editMode === "move"}
-              onClick={() => {
-                setPickOnMap(false);
-                setEditMode((m) => (m === "move" ? "off" : "move"));
-                setStatus(
-                  editMode === "move"
-                    ? null
-                    : "Dra markeringar. Markera en plats för byt namn/ta bort.",
-                );
-              }}
-            >
-              Flytta
-            </button>
-            <button
-              type="button"
-              className={editMode === "add" ? "chip on" : "chip"}
-              aria-pressed={editMode === "add"}
-              onClick={() => {
-                setPickOnMap(false);
-                setEditMode((m) => (m === "add" ? "off" : "add"));
-                setStatus(
-                  editMode === "add"
-                    ? null
-                    : "Klicka på kartan för att lägga till",
-                );
-              }}
-            >
-              Lägg till
-            </button>
-            <button
-              type="button"
-              className="chip"
-              disabled={!selected || !editable}
-              onClick={renameSelected}
-            >
-              Byt namn
-            </button>
-            <button
-              type="button"
-              className="chip danger"
-              disabled={!selected || !editable}
-              onClick={deleteSelected}
-            >
-              Ta bort
-            </button>
-            <button type="button" className="chip" onClick={exportSpots}>
-              Exportera
-            </button>
-            <button type="button" className="chip" onClick={resetSpots}>
-              Återställ
-            </button>
-          </>
-        )}
-      </div>
+          <Link className="chip admin-chip on" to="/admin">
+            Dashboard
+          </Link>
+          <button
+            type="button"
+            className={editMode === "move" ? "chip on" : "chip"}
+            aria-pressed={editMode === "move"}
+            onClick={() => {
+              setPickOnMap(false);
+              setEditMode((m) => (m === "move" ? "off" : "move"));
+              setStatus(
+                editMode === "move"
+                  ? null
+                  : "Dra markeringar. Markera en plats för byt namn/ta bort.",
+              );
+            }}
+          >
+            Flytta
+          </button>
+          <button
+            type="button"
+            className={editMode === "add" ? "chip on" : "chip"}
+            aria-pressed={editMode === "add"}
+            onClick={() => {
+              setPickOnMap(false);
+              setEditMode((m) => (m === "add" ? "off" : "add"));
+              setStatus(
+                editMode === "add"
+                  ? null
+                  : "Klicka på kartan för att lägga till",
+              );
+            }}
+          >
+            Lägg till
+          </button>
+          <button
+            type="button"
+            className="chip"
+            disabled={!selected || !editable}
+            onClick={renameSelected}
+          >
+            Byt namn
+          </button>
+          <button
+            type="button"
+            className="chip danger"
+            disabled={!selected || !editable}
+            onClick={deleteSelected}
+          >
+            Ta bort
+          </button>
+          <button type="button" className="chip" onClick={exportSpots}>
+            Exportera
+          </button>
+          <button type="button" className="chip" onClick={resetSpots}>
+            Återställ
+          </button>
+        </div>
+      )}
 
       {checkIn.reminder ? (
         <div className="map-banner status checkin-reminder" role="status">
@@ -590,16 +586,26 @@ export function CanalMap({ toggles }: Props) {
         <div className="map-banner hint">Klicka på kartan för ny plats</div>
       )}
 
-      {(checkIn.fix || checkIn.session) && (
+      <div className="map-float-actions">
         <button
           type="button"
-          className="locate-me"
-          aria-label="Centrera på mig"
-          onClick={() => checkIn.recenterOnMe()}
+          className="map-float-btn"
+          onClick={goToCanal}
+          title="Visa hela kanalen"
         >
-          <span className="locate-me-icon" aria-hidden />
+          Kanal
         </button>
-      )}
+        {(checkIn.fix || checkIn.session) && (
+          <button
+            type="button"
+            className="locate-me"
+            aria-label="Centrera på mig"
+            onClick={() => checkIn.recenterOnMe()}
+          >
+            <span className="locate-me-icon" aria-hidden />
+          </button>
+        )}
+      </div>
 
       <MapContainer
         center={CENTER}
