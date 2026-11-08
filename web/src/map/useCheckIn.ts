@@ -396,8 +396,14 @@ export function useCheckIn(
       setOpenForCompany(session.openForCompany);
       setNote(session.note);
       setSpectator(false);
+      setRecenterSeq((n) => n + 1);
     }
   }, [session, fix, spectator]);
+
+  const recenterOnMe = useCallback(() => {
+    if (!fix && !session) return;
+    setRecenterSeq((n) => n + 1);
+  }, [fix, session]);
 
   return {
     session,
@@ -424,6 +430,7 @@ export function useCheckIn(
     extend,
     reminder,
     dismissReminder,
+    recenterOnMe,
     syncing,
     storageKey: CHECKIN_STORAGE_KEY,
     recenterSeq,

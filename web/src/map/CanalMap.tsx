@@ -178,13 +178,20 @@ function canalBounds(data: FeatureCollection): L.LatLngBounds | null {
   return b.isValid() ? b : null;
 }
 
-/** Initial fit once data is ready. */
-function FitCanal({ data }: { data: FeatureCollection }) {
+/** Initial overview — skipped when we already have the fisher's own position. */
+function FitCanal({
+  data,
+  holdOnUser,
+}: {
+  data: FeatureCollection;
+  holdOnUser: boolean;
+}) {
   const map = useMap();
   useEffect(() => {
+    if (holdOnUser) return;
     const b = canalBounds(data);
     if (b) map.fitBounds(b.pad(0.08), { animate: false });
-  }, [data, map]);
+  }, [data, map, holdOnUser]);
   return null;
 }
 
@@ -583,6 +590,17 @@ export function CanalMap({ toggles }: Props) {
         <div className="map-banner hint">Klicka på kartan för ny plats</div>
       )}
 
+      {(checkIn.fix || checkIn.session) && (
+        <button
+          type="button"
+          className="locate-me"
+          aria-label="Centrera på mig"
+          onClick={() => checkIn.recenterOnMe()}
+        >
+          <span className="locate-me-icon" aria-hidden />
+        </button>
+      )}
+
       <MapContainer
         center={CENTER}
         zoom={15}
@@ -602,7 +620,12 @@ export function CanalMap({ toggles }: Props) {
           url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}"
           maxZoom={19}
         />
-        {ready && <FitCanal data={canalData} />}
+        {ready && (
+          <FitCanal
+            data={canalData}
+            holdOnUser={Boolean(checkIn.fix || checkIn.session)}
+          />
+        )}
         {ready && <FocusCanal data={canalData} seq={canalFocusSeq} />}
         {checkIn.fix && (
           <Recenter

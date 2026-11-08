@@ -220,6 +220,40 @@
   height: 100%;
 }
 
+.map-shell .leaflet-bottom.leaflet-right {
+  margin-bottom: calc(var(--sheet-peek) + 0.35rem + var(--safe-b));
+}
+
+.locate-me {
+  position: absolute;
+  z-index: 1100;
+  right: 0.7rem;
+  bottom: calc(var(--sheet-peek) + 5.15rem + var(--safe-b));
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(8, 14, 22, 0.94);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  padding: 0;
+}
+
+.locate-me-icon {
+  width: 1.05rem;
+  height: 1.05rem;
+  border: 2px solid var(--kb-lime);
+  border-radius: 50%;
+  box-shadow:
+    0 -7px 0 -5px var(--kb-lime),
+    0 7px 0 -5px var(--kb-lime),
+    -7px 0 0 -5px var(--kb-lime),
+    7px 0 0 -5px var(--kb-lime);
+  background: radial-gradient(circle, var(--kb-lime) 0 2.5px, transparent 3px);
+}
+
 .canal-map.add-cursor {
   cursor: crosshair;
 }

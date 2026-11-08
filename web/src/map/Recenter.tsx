@@ -9,7 +9,7 @@ type Props = {
 };
 
 /** Fly to position only when seq increases (e.g. after Locate). */
-export function Recenter({ lat, lng, seq, zoom = 16 }: Props) {
+export function Recenter({ lat, lng, seq, zoom = 18 }: Props) {
   const map = useMap();
   useEffect(() => {
     if (!seq || lat == null || lng == null) return;
