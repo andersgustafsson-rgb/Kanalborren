@@ -420,9 +420,9 @@
 
 .catch-species-btn {
   appearance: none;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.05);
-  color: #f4f7fa;
+  border: 2px solid rgba(10, 18, 32, 0.18);
+  background: #eef2f4;
+  color: #0a1220;
   border-radius: 999px;
   padding: 0.48rem 0.75rem;
   font: inherit;
@@ -432,15 +432,10 @@
 }
 
 .catch-species-btn.on {
-  color: #0a1220;
-  border-color: transparent;
+  background: #f7faf2;
+  border-color: #0a1220;
+  box-shadow: 0 0 0 2px #b8e014;
 }
-
-.catch-species-btn.on.perch { background: #c6e04a; }
-.catch-species-btn.on.pike { background: #b7d0b4; }
-.catch-species-btn.on.tench { background: #e2c15a; }
-.catch-species-btn.on.roach { background: #e4e8ec; }
-.catch-species-btn.on.other { background: #7ee0ea; }
 
 .catch-measures {
   display: grid;
