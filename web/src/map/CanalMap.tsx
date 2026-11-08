@@ -13,7 +13,12 @@ import {
 import type { Feature, FeatureCollection, Geometry, Point } from "geojson";
 import type { Layer, PathOptions } from "leaflet";
 import L from "leaflet";
-import type { CanalProperties, EditMode, LayerToggles } from "./types";
+import type {
+  CanalProperties,
+  EditMode,
+  LayerToggles,
+  MapBasemap,
+} from "./types";
 import { DraggableSpot } from "./DraggableSpot";
 import { MapClickAdd } from "./MapClickAdd";
 import { CheckInPanel } from "./CheckInPanel";
@@ -246,9 +251,38 @@ function spotId(f: Feature): string {
 type Props = {
   toggles: LayerToggles;
   adminOpen?: boolean;
+  basemap?: MapBasemap;
 };
 
-export function CanalMap({ toggles, adminOpen = false }: Props) {
+const BASEMAPS: Record<
+  MapBasemap,
+  { url: string; attribution: string; maxZoom: number }
+> = {
+  street: {
+    url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",
+    attribution: "© Esri",
+    maxZoom: 19,
+  },
+  satellite: {
+    url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+    attribution: "© Esri",
+    maxZoom: 19,
+  },
+  hybrid: {
+    url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+    attribution: "© Esri",
+    maxZoom: 19,
+  },
+};
+
+const HYBRID_LABELS =
+  "https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}";
+
+export function CanalMap({
+  toggles,
+  adminOpen = false,
+  basemap = "street",
+}: Props) {
   const [canalData, setCanalData] = useState<FeatureCollection>(EMPTY);
   const [zonesData, setZonesData] = useState<FeatureCollection>(EMPTY);
   const [rulesData, setRulesData] = useState<FeatureCollection>(EMPTY);
@@ -622,10 +656,19 @@ export function CanalMap({ toggles, adminOpen = false }: Props) {
           onCollapse={() => setSheetOpen(false)}
         />
         <TileLayer
-          attribution="© Esri"
-          url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}"
-          maxZoom={19}
+          key={`base-${basemap}`}
+          attribution={BASEMAPS[basemap].attribution}
+          url={BASEMAPS[basemap].url}
+          maxZoom={BASEMAPS[basemap].maxZoom}
         />
+        {basemap === "hybrid" && (
+          <TileLayer
+            key="hybrid-labels"
+            url={HYBRID_LABELS}
+            maxZoom={19}
+            opacity={0.95}
+          />
+        )}
         {ready && (
           <FitCanal
             data={canalData}

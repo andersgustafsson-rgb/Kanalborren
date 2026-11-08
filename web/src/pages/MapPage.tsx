@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { CanalMap } from "../map/CanalMap";
 import { PresenceList } from "../map/PresenceList";
 import { useAuth } from "../lib/AuthContext";
-import type { LayerToggles } from "../map/types";
+import type { LayerToggles, MapBasemap } from "../map/types";
 
 const INITIAL: LayerToggles = {
   canal: true,
@@ -14,9 +14,16 @@ const INITIAL: LayerToggles = {
   catches: false,
 };
 
+const BASEMAPS: { id: MapBasemap; label: string }[] = [
+  { id: "street", label: "Karta" },
+  { id: "satellite", label: "Satellit" },
+  { id: "hybrid", label: "Hybrid" },
+];
+
 export function MapPage() {
   const auth = useAuth();
   const [toggles, setToggles] = useState<LayerToggles>(INITIAL);
+  const [basemap, setBasemap] = useState<MapBasemap>("street");
   const [layersOpen, setLayersOpen] = useState(false);
   const [uteOpen, setUteOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
@@ -97,30 +104,48 @@ export function MapPage() {
           role="group"
           aria-label="Kartlager"
         >
-          {(
-            [
-              ["canal", "Kanal"],
-              ["spots", "Platser"],
-              ["zones", "Zoner"],
-              ["catches", "Fångster (7d)"],
-              ["bridges", "Broar"],
-              ["rules", "Regler"],
-            ] as const
-          ).map(([key, label]) => (
-            <button
-              key={key}
-              type="button"
-              className={toggles[key] ? "chip on" : "chip"}
-              aria-pressed={toggles[key]}
-              onClick={() => toggle(key)}
-            >
-              {label}
-            </button>
-          ))}
+          <p className="layer-sheet-label">Vy</p>
+          <div className="layer-sheet-row" role="radiogroup" aria-label="Kartvy">
+            {BASEMAPS.map((b) => (
+              <button
+                key={b.id}
+                type="button"
+                role="radio"
+                aria-checked={basemap === b.id}
+                className={basemap === b.id ? "chip on" : "chip"}
+                onClick={() => setBasemap(b.id)}
+              >
+                {b.label}
+              </button>
+            ))}
+          </div>
+          <p className="layer-sheet-label">Lager</p>
+          <div className="layer-sheet-row">
+            {(
+              [
+                ["canal", "Kanal"],
+                ["spots", "Platser"],
+                ["zones", "Zoner"],
+                ["catches", "Fångster (7d)"],
+                ["bridges", "Broar"],
+                ["rules", "Regler"],
+              ] as const
+            ).map(([key, label]) => (
+              <button
+                key={key}
+                type="button"
+                className={toggles[key] ? "chip on" : "chip"}
+                aria-pressed={toggles[key]}
+                onClick={() => toggle(key)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
-      <CanalMap toggles={toggles} adminOpen={adminOpen} />
+      <CanalMap toggles={toggles} adminOpen={adminOpen} basemap={basemap} />
     </div>
   );
 }

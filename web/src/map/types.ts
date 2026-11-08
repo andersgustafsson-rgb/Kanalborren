@@ -32,4 +32,7 @@ export type LayerToggles = {
   catches: boolean;
 };
 
+/** Base map tiles under canal overlays. */
+export type MapBasemap = "street" | "satellite" | "hybrid";
+
 export type EditMode = "off" | "move" | "add";

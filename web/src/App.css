@@ -202,15 +202,30 @@
   z-index: 1210;
   right: 0.7rem;
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
+  flex-direction: column;
+  gap: 0.45rem;
   max-width: min(92vw, 18rem);
-  padding: 0.55rem;
+  padding: 0.55rem 0.6rem 0.65rem;
   background: var(--kb-panel);
   border: 1px solid var(--kb-line);
   border-radius: 14px;
   backdrop-filter: blur(14px);
   box-shadow: 0 14px 32px rgba(0, 0, 0, 0.4);
+}
+
+.layer-sheet-label {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--kb-cyan);
+}
+
+.layer-sheet-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
 }
 
 .chip {
