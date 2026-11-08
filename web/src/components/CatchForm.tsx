@@ -361,7 +361,7 @@ export function CatchForm({ onSubmitted }: Props) {
           </div>
         </div>
 
-        <fieldset className="catch-block">
+        <fieldset className="catch-block catch-block-art">
           <legend>Art</legend>
           <div className="catch-species" role="radiogroup" aria-label="Art">
             {SPECIES.map((s) => (
