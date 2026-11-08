@@ -6,7 +6,13 @@ import { submitCatchReport } from "../lib/catchReports";
 import { resolveZone } from "../map/geo";
 import { CatchPlacePicker, type CatchPlace } from "./CatchPlacePicker";
 
-const SPECIES = ["Abborre", "Gädda", "Sutare", "Mört", "Annan"];
+const SPECIES = [
+  { id: "Abborre", tone: "perch" },
+  { id: "Gädda", tone: "pike" },
+  { id: "Sutare", tone: "tench" },
+  { id: "Mört", tone: "roach" },
+  { id: "Annan", tone: "other" },
+] as const;
 
 const ZONES = [
   { id: "slottsparken", name: "Slottsparken" },
@@ -71,8 +77,16 @@ export function CatchForm({ onSubmitted }: Props) {
   const [note, setNote] = useState("");
   const [caughtDate, setCaughtDate] = useState(() => toLocalDate());
   const [caughtTime, setCaughtTime] = useState(() => toLocalTime());
+  const [whenOpen, setWhenOpen] = useState(false);
+  const [extraOpen, setExtraOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+  const [msgOk, setMsgOk] = useState(false);
+
+  function say(text: string | null, ok = false) {
+    setMsg(text);
+    setMsgOk(ok);
+  }
 
   function setCaughtToNow() {
     const now = new Date();
@@ -130,15 +144,15 @@ export function CatchForm({ onSubmitted }: Props) {
 
   function useGpsPlace() {
     if (!navigator.geolocation) {
-      setMsg("GPS saknas — välj plats eller karta i stället");
+      say("GPS saknas — välj plats eller karta i stället");
       return;
     }
     if (!spotsGeo) {
-      setMsg("Platser laddas…");
+      say("Platser laddas…");
       return;
     }
     setGpsBusy(true);
-    setMsg(null);
+    say(null);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const zones =
@@ -155,7 +169,7 @@ export function CatchForm({ onSubmitted }: Props) {
       },
       () => {
         setGpsBusy(false);
-        setMsg("Kunde inte hämta position — välj plats eller karta");
+        say("Kunde inte hämta position — välj plats eller karta");
       },
       { enableHighAccuracy: true, timeout: 12000, maximumAge: 30_000 },
     );
@@ -174,7 +188,7 @@ export function CatchForm({ onSubmitted }: Props) {
     function applyPref() {
       try {
         const pref = sessionStorage.getItem("kanalhugget.catchSpecies");
-        if (pref && SPECIES.includes(pref)) {
+        if (pref && SPECIES.some((s) => s.id === pref)) {
           setSpecies(pref);
           sessionStorage.removeItem("kanalhugget.catchSpecies");
         }
@@ -194,44 +208,44 @@ export function CatchForm({ onSubmitted }: Props) {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!auth.user) {
-      setMsg("Logga in under Profil först");
+      say("Logga in under Profil först");
       return;
     }
     const len = parseNum(lengthCm);
     const w = parseNum(weightKg);
     if (Number.isNaN(len as number)) {
-      setMsg("Ogiltig längd (cm)");
+      say("Ogiltig längd (cm)");
       return;
     }
     if (Number.isNaN(w as number)) {
-      setMsg("Ogiltig vikt (kg)");
+      say("Ogiltig vikt (kg)");
       return;
     }
     if (len != null && (len <= 0 || len > 200)) {
-      setMsg("Längd måste vara mellan 0 och 200 cm");
+      say("Längd måste vara mellan 0 och 200 cm");
       return;
     }
     if (w != null && (w <= 0 || w > 50)) {
-      setMsg("Vikt måste vara mellan 0 och 50 kg");
+      say("Vikt måste vara mellan 0 och 50 kg");
       return;
     }
     if (len == null && w == null) {
-      setMsg("Ange längd, vikt eller båda");
+      say("Ange längd, vikt eller båda");
       return;
     }
 
     const caughtAt = dateTimeToIso(caughtDate, caughtTime);
     if (!caughtAt) {
-      setMsg("Välj giltigt datum och tid");
+      say("Välj giltigt datum och tid");
       return;
     }
     if (new Date(caughtAt).getTime() > Date.now() + 60_000) {
-      setMsg("Tidpunkten kan inte vara i framtiden");
+      say("Tidpunkten kan inte vara i framtiden");
       return;
     }
 
     setBusy(true);
-    setMsg(null);
+    say(null);
     const place =
       (customPlace && customPlace.id === placeId ? customPlace : null) ||
       ZONES.find((z) => z.id === placeId) ||
@@ -249,14 +263,14 @@ export function CatchForm({ onSubmitted }: Props) {
     });
     setBusy(false);
     if (error) {
-      setMsg(
+      say(
         /relation .* does not exist|schema cache|weight_kg/i.test(error)
           ? "Databas saknar fält — kör catch_reports.sql i Supabase SQL Editor."
           : error,
       );
       return;
     }
-    setMsg("Fångst sparad · syns i Kanal-toppen och pågående utmaningar");
+    say("Fångst sparad · syns i Kanal-toppen", true);
     setLengthCm("");
     setWeightKg("");
     setNote("");
@@ -293,120 +307,120 @@ export function CatchForm({ onSubmitted }: Props) {
     );
   }
 
+  const placeName =
+    (customPlace && customPlace.id === placeId ? customPlace : null)?.name ||
+    ZONES.find((z) => z.id === placeId)?.name ||
+    spots.find((s) => s.id === placeId)?.name ||
+    "Okänd plats";
+  const placeHint =
+    placeSource === "gps"
+      ? "din position"
+      : placeSource === "map"
+        ? "vald på kartan"
+        : "vald i listan";
+  const whenLabel = whenOpen
+    ? `${caughtDate} · ${caughtTime}`
+    : "Just nu";
+
   return (
     <section className="home-board catch-board" aria-labelledby="catch-title">
       <header className="home-board-head">
         <h2 id="catch-title">Rapportera fångst</h2>
-        <p>Minst längd eller vikt · välj tid om du rapporterar senare</p>
+        <p>Välj art, fyll i längd eller vikt, kolla platsen.</p>
       </header>
       <form className="catch-form" onSubmit={onSubmit}>
-        <label className="profile-field">
-          Art
-          <select value={species} onChange={(e) => setSpecies(e.target.value)}>
-            {SPECIES.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
-        </label>
-        <div className="catch-measures">
-          <label className="profile-field">
-            Längd (cm)
-            <input
-              inputMode="decimal"
-              value={lengthCm}
-              onChange={(e) => setLengthCm(e.target.value)}
-              placeholder="valfritt"
-            />
-          </label>
-          <label className="profile-field">
-            Vikt (kg)
-            <input
-              inputMode="decimal"
-              value={weightKg}
-              onChange={(e) => setWeightKg(e.target.value)}
-              placeholder="valfritt"
-            />
-          </label>
+        <div className="catch-preview" aria-hidden>
+          <span className={`catch-swatch ${SPECIES.find((s) => s.id === species)?.tone || "other"}`} />
+          <div>
+            <strong>{species}</strong>
+            <small>
+              {lengthCm.trim() ? `${lengthCm.replace(",", ".")} cm` : "längd saknas"}
+              {weightKg.trim() ? ` · ${weightKg.replace(",", ".")} kg` : ""}
+              {" · "}
+              {gpsBusy ? "hämtar plats…" : placeName}
+            </small>
+          </div>
         </div>
 
-        <fieldset className="catch-when">
-          <legend>När fångades den?</legend>
-          <div className="catch-when-row">
-            <label className="profile-field">
-              Datum
-              <input
-                type="date"
-                required
-                value={caughtDate}
-                max={toLocalDate()}
-                onChange={(e) => setCaughtDate(e.target.value)}
-              />
-            </label>
-            <label className="profile-field">
-              Tid
-              <input
-                type="time"
-                required
-                value={caughtTime}
-                onChange={(e) => setCaughtTime(e.target.value)}
-              />
-            </label>
+        <fieldset className="catch-block">
+          <legend>Art</legend>
+          <div className="catch-species" role="radiogroup" aria-label="Art">
+            {SPECIES.map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                role="radio"
+                aria-checked={species === s.id}
+                className={
+                  species === s.id
+                    ? `catch-species-btn on ${s.tone}`
+                    : `catch-species-btn ${s.tone}`
+                }
+                onClick={() => setSpecies(s.id)}
+              >
+                {s.id}
+              </button>
+            ))}
           </div>
-          <button
-            type="button"
-            className="chip"
-            onClick={setCaughtToNow}
-          >
-            Sätt till nu
-          </button>
         </fieldset>
 
-        <fieldset className="catch-place">
+        <fieldset className="catch-block">
+          <legend>Mått</legend>
+          <p className="catch-hint">Ett av fälten räcker.</p>
+          <div className="catch-measures">
+            <label className="catch-measure">
+              <span>Längd</span>
+              <input
+                inputMode="decimal"
+                value={lengthCm}
+                onChange={(e) => setLengthCm(e.target.value)}
+                placeholder="43"
+                aria-label="Längd i centimeter"
+              />
+              <em>cm</em>
+            </label>
+            <label className="catch-measure">
+              <span>Vikt</span>
+              <input
+                inputMode="decimal"
+                value={weightKg}
+                onChange={(e) => setWeightKg(e.target.value)}
+                placeholder="0,8"
+                aria-label="Vikt i kilogram"
+              />
+              <em>kg</em>
+            </label>
+          </div>
+        </fieldset>
+
+        <fieldset className="catch-block catch-place">
           <legend>Plats</legend>
           <div className="catch-place-current" aria-live="polite">
             {gpsBusy ? (
               <strong>Hämtar din position…</strong>
             ) : (
               <>
-                <strong>
-                  {(customPlace && customPlace.id === placeId
-                    ? customPlace
-                    : null
-                  )?.name ||
-                    ZONES.find((z) => z.id === placeId)?.name ||
-                    spots.find((s) => s.id === placeId)?.name ||
-                    "Okänd plats"}
-                </strong>
-                <span>
-                  {placeSource === "gps"
-                    ? "från din position"
-                    : placeSource === "map"
-                      ? "vald på kartan"
-                      : "vald från listan"}
-                </span>
+                <strong>{placeName}</strong>
+                <span>{placeHint}</span>
               </>
             )}
-          </div>
-          <div className="catch-place-row">
             <button
               type="button"
-              className={
-                placeSource === "gps" ? "catch-place-btn on" : "catch-place-btn"
-              }
+              className="catch-inline"
               disabled={gpsBusy}
               onClick={useGpsPlace}
             >
-              {gpsBusy ? "Hämtar…" : "Uppdatera position"}
+              Uppdatera
             </button>
+          </div>
+          <div className="catch-place-row">
             <button
               type="button"
               className={listOpen ? "catch-place-btn on" : "catch-place-btn"}
               onClick={() => setListOpen((v) => !v)}
               aria-expanded={listOpen}
             >
-              Välj plats
+              Välj i lista
             </button>
             <button
               type="button"
@@ -458,6 +472,7 @@ export function CatchForm({ onSubmitted }: Props) {
             </select>
           )}
         </fieldset>
+
         <CatchPlacePicker
           open={mapOpen}
           onClose={() => setMapOpen(false)}
@@ -465,28 +480,93 @@ export function CatchForm({ onSubmitted }: Props) {
           spotsGeo={spotsGeo}
           zonesGeo={zonesGeo}
         />
-        <label className="profile-field">
-          Bete / teknik
-          <input
-            value={bait}
-            onChange={(e) => setBait(e.target.value)}
-            maxLength={80}
-            placeholder="jigg, ul…"
-          />
-        </label>
-        <label className="profile-field">
-          Kort notering
-          <input
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            maxLength={120}
-            placeholder="valfritt"
-          />
-        </label>
-        <button type="submit" className="cta" disabled={busy}>
-          {busy ? "Sparar…" : "Skicka fångst"}
+
+        <div className="catch-fold">
+          <button
+            type="button"
+            className="catch-fold-btn"
+            aria-expanded={whenOpen}
+            onClick={() => setWhenOpen((v) => !v)}
+          >
+            Tid · {whenLabel}
+          </button>
+          {whenOpen && (
+            <div className="catch-when-row">
+              <label className="profile-field">
+                Datum
+                <input
+                  type="date"
+                  required
+                  value={caughtDate}
+                  max={toLocalDate()}
+                  onChange={(e) => setCaughtDate(e.target.value)}
+                />
+              </label>
+              <label className="profile-field">
+                Tid
+                <input
+                  type="time"
+                  required
+                  value={caughtTime}
+                  onChange={(e) => setCaughtTime(e.target.value)}
+                />
+              </label>
+              <button
+                type="button"
+                className="catch-inline"
+                onClick={() => {
+                  setCaughtToNow();
+                  setWhenOpen(false);
+                }}
+              >
+                Sätt till nu
+              </button>
+            </div>
+          )}
+        </div>
+
+        <div className="catch-fold">
+          <button
+            type="button"
+            className="catch-fold-btn"
+            aria-expanded={extraOpen}
+            onClick={() => setExtraOpen((v) => !v)}
+          >
+            Bete och notering
+            {bait || note ? " · ifyllt" : " · valfritt"}
+          </button>
+          {extraOpen && (
+            <div className="catch-extra">
+              <label className="profile-field">
+                Bete / teknik
+                <input
+                  value={bait}
+                  onChange={(e) => setBait(e.target.value)}
+                  maxLength={80}
+                  placeholder="jigg, ul…"
+                />
+              </label>
+              <label className="profile-field">
+                Kort notering
+                <input
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  maxLength={120}
+                  placeholder="valfritt"
+                />
+              </label>
+            </div>
+          )}
+        </div>
+
+        <button type="submit" className="cta catch-submit" disabled={busy}>
+          {busy ? "Sparar…" : "Spara fångst"}
         </button>
-        {msg && <p className="catch-msg">{msg}</p>}
+        {msg && (
+          <p className={msgOk ? "catch-msg ok" : "catch-msg"} role="status">
+            {msg}
+          </p>
+        )}
       </form>
     </section>
   );
