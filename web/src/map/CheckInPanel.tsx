@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import type { CheckInSession, Visibility } from "./checkinStorage";
 import { formatRemaining, remainingMs } from "./checkinStorage";
 import type { ResolvedZone } from "./geo";
@@ -23,10 +23,10 @@ type Props = {
   onPresetAvatar: (id: PresetAvatarId) => void;
   onUploadAvatar: (file: File) => void;
   uploadError: string | null;
-  spectator: boolean;
+  spectator?: boolean;
   onLocate: () => void;
-  onGoToCanal: () => void;
-  onSimulateCanal: () => void;
+  onGoToCanal?: () => void;
+  onSimulateCanal?: () => void;
   onSofaDemoCheckIn: () => void;
   onTogglePickOnMap: () => void;
   onVisibility: (v: Visibility) => void;
@@ -34,7 +34,7 @@ type Props = {
   onNote: (v: string) => void;
   onCheckIn: () => void;
   onExtend: () => void;
-  onHide: () => void;
+  onHide: (tripNote?: string | null) => void;
 };
 
 export function CheckInPanel({
@@ -71,6 +71,8 @@ export function CheckInPanel({
     ? Math.max(0, Date.parse(session.expiresAt) - now)
     : 0;
   const fileRef = useRef<HTMLInputElement>(null);
+  const [ending, setEnding] = useState(false);
+  const [tripNote, setTripNote] = useState("");
 
   return (
     <aside
@@ -263,14 +265,56 @@ export function CheckInPanel({
               <br />
               Kvar: {formatRemaining(leftLive || left)}
             </p>
-            <div className="checkin-actions">
-              <button type="button" className="chip" onClick={onExtend}>
-                +30 min
-              </button>
-              <button type="button" className="chip danger" onClick={onHide}>
-                Avsluta
-              </button>
-            </div>
+            {!ending ? (
+              <div className="checkin-actions">
+                <button type="button" className="chip" onClick={onExtend}>
+                  +30 min
+                </button>
+                <button
+                  type="button"
+                  className="chip danger"
+                  onClick={() => setEnding(true)}
+                >
+                  Avsluta
+                </button>
+              </div>
+            ) : (
+              <div className="checkin-end">
+                <label className="checkin-note">
+                  Kort om turen (valfritt)
+                  <input
+                    type="text"
+                    maxLength={400}
+                    value={tripNote}
+                    placeholder="t.ex. bra abborre vid bron, mulen kväll"
+                    onChange={(e) => setTripNote(e.target.value)}
+                  />
+                </label>
+                <div className="checkin-actions">
+                  <button
+                    type="button"
+                    className="chip"
+                    onClick={() => {
+                      setEnding(false);
+                      setTripNote("");
+                    }}
+                  >
+                    Avbryt
+                  </button>
+                  <button
+                    type="button"
+                    className="chip danger"
+                    onClick={() => {
+                      onHide(tripNote.trim() || null);
+                      setEnding(false);
+                      setTripNote("");
+                    }}
+                  >
+                    Avsluta turen
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

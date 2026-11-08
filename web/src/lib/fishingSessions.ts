@@ -116,14 +116,20 @@ export async function publishSession(
 export async function endSession(
   remoteId: string | null | undefined,
   userId?: string | null,
+  tripNote?: string | null,
 ) {
   if (!isSupabaseConfigured() || !supabase || !userId) {
     localEnd(remoteId);
     return;
   }
+  const note = (tripNote || "").trim().slice(0, 400);
+  const patch: { ended_at: string; trip_note?: string } = {
+    ended_at: new Date().toISOString(),
+  };
+  if (note) patch.trip_note = note;
   const q = supabase
     .from("fishing_sessions")
-    .update({ ended_at: new Date().toISOString() })
+    .update(patch)
     .eq("user_id", userId)
     .is("ended_at", null);
   if (remoteId) q.eq("id", remoteId);

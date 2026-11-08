@@ -810,7 +810,7 @@ export function CanalMap({ toggles, adminOpen = false }: Props) {
           void checkIn.checkIn().then(() => setSheetOpen(false));
         }}
         onExtend={() => void checkIn.extend()}
-        onHide={() => void checkIn.hide()}
+        onHide={(tripNote) => void checkIn.hide(tripNote)}
       />
     </div>
   );

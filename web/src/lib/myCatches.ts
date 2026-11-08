@@ -89,6 +89,76 @@ export function buildHotspots(rows: MyCatch[]): MyHotspot[] {
   return [...map.values()].sort((a, b) => b.count - a.count || a.zoneName.localeCompare(b.zoneName, "sv"));
 }
 
+export type MyTripDay = {
+  dateKey: string;
+  label: string;
+  catches: MyCatch[];
+};
+
+export function groupCatchesByDay(rows: MyCatch[]): MyTripDay[] {
+  const map = new Map<string, MyCatch[]>();
+  for (const r of rows) {
+    const d = new Date(r.caughtAt);
+    if (Number.isNaN(d.getTime())) continue;
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    const list = map.get(key) || [];
+    list.push(r);
+    map.set(key, list);
+  }
+  return [...map.entries()]
+    .sort((a, b) => b[0].localeCompare(a[0]))
+    .map(([dateKey, catches]) => {
+      const d = new Date(`${dateKey}T12:00:00`);
+      return {
+        dateKey,
+        label: d.toLocaleDateString("sv-SE", {
+          weekday: "short",
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        }),
+        catches: catches.sort(
+          (a, b) => Date.parse(b.caughtAt) - Date.parse(a.caughtAt),
+        ),
+      };
+    });
+}
+
+export type MyTripNote = {
+  id: string;
+  zoneName: string | null;
+  note: string;
+  startedAt: string;
+  endedAt: string;
+};
+
+export async function fetchMyTripNotes(limit = 30): Promise<MyTripNote[]> {
+  if (!isSupabaseConfigured() || !supabase) return [];
+  const { data, error } = await supabase
+    .from("fishing_sessions")
+    .select("id,zone_name,trip_note,starts_at,ended_at")
+    .not("trip_note", "is", null)
+    .neq("trip_note", "")
+    .not("ended_at", "is", null)
+    .order("ended_at", { ascending: false })
+    .limit(limit);
+
+  if (error || !data) {
+    console.warn("fetchMyTripNotes", error);
+    return [];
+  }
+
+  return data
+    .filter((r) => String(r.trip_note || "").trim())
+    .map((r) => ({
+      id: String(r.id),
+      zoneName: r.zone_name ? String(r.zone_name) : null,
+      note: String(r.trip_note).trim(),
+      startedAt: String(r.starts_at),
+      endedAt: String(r.ended_at),
+    }));
+}
+
 export function bestCatchMonth(rows: MyCatch[]): {
   label: string;
   count: number;

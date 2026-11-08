@@ -74,3 +74,85 @@
   color: rgba(244, 247, 250, 0.62);
   line-height: 1.4;
 }
+
+.catch-dash-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.35rem;
+  margin: 0.35rem 0 0.55rem;
+}
+
+.catch-dash-tabs button {
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.05);
+  color: #f4f7fa;
+  border-radius: 999px;
+  padding: 0.4rem 0.55rem;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.catch-dash-tabs button.on {
+  background: #b8e014;
+  border-color: #b8e014;
+  color: #0a1220;
+}
+
+.catch-dash-days {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.catch-dash-day {
+  padding: 0.55rem 0.15rem 0.15rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.catch-dash-day header {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  align-items: baseline;
+  margin-bottom: 0.35rem;
+}
+
+.catch-dash-day header span {
+  font-size: 0.72rem;
+  color: rgba(244, 247, 250, 0.6);
+  font-weight: 650;
+}
+
+.catch-dash-day ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.catch-dash-day li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.catch-dash-day li small {
+  color: rgba(244, 247, 250, 0.62);
+  font-size: 0.74rem;
+}
+
+.catch-dash-trip-note {
+  margin: 0 0 0.4rem;
+  padding: 0.4rem 0.55rem;
+  border-radius: 10px;
+  background: rgba(62, 199, 214, 0.12);
+  border: 1px solid rgba(62, 199, 214, 0.28);
+  color: #d7eef2;
+  font-size: 0.8rem;
+  line-height: 1.35;
+}

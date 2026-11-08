@@ -801,6 +801,13 @@
   line-height: 1.35;
 }
 
+.checkin-end {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.35rem;
+}
+
 @media (min-width: 900px) {
   .hud-brand-logo {
     height: 2.1rem;

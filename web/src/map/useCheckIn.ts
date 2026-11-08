@@ -312,13 +312,16 @@ export function useCheckIn(
     session?.remoteId,
   ]);
 
-  const hide = useCallback(async () => {
-    const remoteId = session?.remoteId;
-    clearSession();
-    setSession(null);
-    setReminder(null);
-    await endSession(remoteId, identity.userId);
-  }, [session?.remoteId, identity.userId]);
+  const hide = useCallback(
+    async (tripNote?: string | null) => {
+      const remoteId = session?.remoteId;
+      clearSession();
+      setSession(null);
+      setReminder(null);
+      await endSession(remoteId, identity.userId, tripNote);
+    },
+    [session?.remoteId, identity.userId],
+  );
 
   const republishActive = useCallback(
     async (patch: Partial<CheckInSession>) => {
