@@ -23,7 +23,7 @@ const BASEMAPS: { id: MapBasemap; label: string }[] = [
 export function MapPage() {
   const auth = useAuth();
   const [toggles, setToggles] = useState<LayerToggles>(INITIAL);
-  const [basemap, setBasemap] = useState<MapBasemap>("street");
+  const [basemap, setBasemap] = useState<MapBasemap>("satellite");
   const [layersOpen, setLayersOpen] = useState(false);
   const [uteOpen, setUteOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
