@@ -10,6 +10,8 @@ export type CatchInput = {
   note: string;
   /** ISO timestamp — when the fish was caught. */
   caughtAt: string;
+  /** Hidden from map, highscores and other users. */
+  isPrivate?: boolean;
 };
 
 export async function submitCatchReport(
@@ -32,6 +34,7 @@ export async function submitCatchReport(
     bait: input.bait.trim() || null,
     note: input.note.trim() || null,
     caught_at: input.caughtAt,
+    is_private: Boolean(input.isPrivate),
   });
   return { error: error?.message ?? null };
 }

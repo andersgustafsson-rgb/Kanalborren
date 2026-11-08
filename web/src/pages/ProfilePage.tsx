@@ -13,6 +13,7 @@ import {
   saveProfileAvatarPreset,
 } from "../lib/profileStorage";
 import { resolveAvatarSrc, type AvatarChoice } from "../map/avatarStorage";
+import { MyCatchDashboard } from "../components/MyCatchDashboard";
 import "./ProfilePage.css";
 
 export function ProfilePage() {
@@ -148,6 +149,8 @@ export function ProfilePage() {
         </header>
 
         {uploadError && <p className="profile-error">{uploadError}</p>}
+
+        <MyCatchDashboard />
 
         <section className="profile-card">
           <label className="profile-field">

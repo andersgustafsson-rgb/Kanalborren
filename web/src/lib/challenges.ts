@@ -227,6 +227,7 @@ export async function loadChallengeScores(
           .select(col)
           .eq("user_id", userId)
           .eq("species", c.species)
+          .eq("is_private", false)
           .gte("caught_at", windowStart)
           .lte("caught_at", c.endsAt)
           .not(col, "is", null)

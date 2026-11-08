@@ -568,6 +568,115 @@
   margin-top: 0.15rem;
 }
 
+.catch-private {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.55rem;
+  align-items: start;
+  padding: 0.65rem 0.7rem;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+}
+
+.catch-private input {
+  margin-top: 0.2rem;
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+.catch-private strong {
+  display: block;
+  font-size: 0.9rem;
+}
+
+.catch-private small {
+  display: block;
+  margin-top: 0.2rem;
+  color: rgba(244, 247, 250, 0.62);
+  font-size: 0.75rem;
+  line-height: 1.35;
+  font-weight: 500;
+}
+
+.catch-dash {
+  margin-top: 0.35rem;
+}
+
+.catch-dash-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.45rem;
+  margin: 0.75rem 0 0.55rem;
+}
+
+.catch-dash-stats div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.55rem 0.5rem;
+  border-radius: 12px;
+  background: rgba(184, 224, 20, 0.1);
+  border: 1px solid rgba(184, 224, 20, 0.22);
+  text-align: center;
+}
+
+.catch-dash-stats strong {
+  font-size: 1.15rem;
+}
+
+.catch-dash-stats span {
+  font-size: 0.7rem;
+  color: rgba(244, 247, 250, 0.65);
+  font-weight: 650;
+}
+
+.catch-dash-peak {
+  margin: 0 0 0.55rem;
+  font-size: 0.84rem;
+  color: rgba(244, 247, 250, 0.82);
+}
+
+.catch-dash-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.catch-dash-list li {
+  display: grid;
+  grid-template-columns: 1.4rem 1fr;
+  gap: 0.5rem;
+  padding: 0.55rem 0.1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.catch-dash-rank {
+  font-weight: 800;
+  color: #b8e014;
+}
+
+.catch-dash-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+  min-width: 0;
+}
+
+.catch-dash-main small {
+  color: rgba(244, 247, 250, 0.62);
+  font-size: 0.76rem;
+}
+
+.catch-dash-empty,
+.catch-dash-note {
+  margin: 0.55rem 0 0;
+  font-size: 0.8rem;
+  color: rgba(244, 247, 250, 0.62);
+  line-height: 1.4;
+}
+
 .catch-when {
   margin: 0;
   padding: 0.55rem 0.65rem 0.7rem;

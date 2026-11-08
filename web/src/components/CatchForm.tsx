@@ -79,6 +79,7 @@ export function CatchForm({ onSubmitted }: Props) {
   const [caughtTime, setCaughtTime] = useState(() => toLocalTime());
   const [whenOpen, setWhenOpen] = useState(false);
   const [extraOpen, setExtraOpen] = useState(false);
+  const [isPrivate, setIsPrivate] = useState(false);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [msgOk, setMsgOk] = useState(false);
@@ -260,20 +261,29 @@ export function CatchForm({ onSubmitted }: Props) {
       bait,
       note,
       caughtAt,
+      isPrivate,
     });
     setBusy(false);
     if (error) {
       say(
-        /relation .* does not exist|schema cache|weight_kg/i.test(error)
-          ? "Databas saknar fält — kör catch_reports.sql i Supabase SQL Editor."
+        /relation .* does not exist|schema cache|weight_kg|is_private/i.test(
+          error,
+        )
+          ? "Databas saknar fält — kör catch_reports_private.sql i Supabase."
           : error,
       );
       return;
     }
-    say("Fångst sparad · syns i Kanal-toppen", true);
+    say(
+      isPrivate
+        ? "Sparad privat · syns bara i din historik"
+        : "Fångst sparad · syns i Kanal-toppen",
+      true,
+    );
     setLengthCm("");
     setWeightKg("");
     setNote("");
+    setIsPrivate(false);
     setCaughtToNow();
     onSubmitted?.();
   }
@@ -559,8 +569,27 @@ export function CatchForm({ onSubmitted }: Props) {
           )}
         </div>
 
+        <label className="catch-private">
+          <input
+            type="checkbox"
+            checked={isPrivate}
+            onChange={(e) => setIsPrivate(e.target.checked)}
+          />
+          <span>
+            <strong>Bara för mig</strong>
+            <small>
+              Sparas i din historik, men syns inte på kartan, i toppen eller för
+              andra.
+            </small>
+          </span>
+        </label>
+
         <button type="submit" className="cta catch-submit" disabled={busy}>
-          {busy ? "Sparar…" : "Spara fångst"}
+          {busy
+            ? "Sparar…"
+            : isPrivate
+              ? "Spara privat fångst"
+              : "Spara fångst"}
         </button>
         {msg && (
           <p className={msgOk ? "catch-msg ok" : "catch-msg"} role="status">

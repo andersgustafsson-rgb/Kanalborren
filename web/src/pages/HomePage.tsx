@@ -4,6 +4,7 @@ import { AuthBar } from "../components/AuthBar";
 import { CatchForm } from "../components/CatchForm";
 import { ChallengeBoard } from "../components/ChallengeBoard";
 import { FeedbackForm } from "../components/FeedbackForm";
+import { MyCatchDashboard } from "../components/MyCatchDashboard";
 import { WaterLevelWidget } from "../components/WaterLevelWidget";
 import {
   fetchHighscores,
@@ -208,6 +209,7 @@ export function HomePage() {
         {tab === "profil" && (
           <div className="home-panel" role="tabpanel">
             <AuthBar />
+            <MyCatchDashboard />
             <p className="home-profile-more">
               <Link className="home-cta ghost" to="/profil">
                 Öppna hela profilen

@@ -47,6 +47,7 @@ export async function fetchHighscores(
     .select(
       "id,species,length_cm,weight_kg,zone_name,caught_at,profiles(display_name)",
     )
+    .eq("is_private", false)
     .gte("caught_at", periodStart(period))
     .limit(40);
 

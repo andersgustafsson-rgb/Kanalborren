@@ -33,6 +33,7 @@ export async function fetchRecentCatches(
     .select(
       "id,species,length_cm,weight_kg,zone_id,zone_name,caught_at,profiles(display_name)",
     )
+    .eq("is_private", false)
     .gte("caught_at", since.toISOString())
     .order("caught_at", { ascending: false })
     .limit(80);
