@@ -5,7 +5,7 @@ import { useAuth } from "../lib/AuthContext";
 import { submitCatchReport } from "../lib/catchReports";
 import { SPECIES } from "../lib/species";
 import { fetchSpots } from "../lib/spotsApi";
-import { resolveZone } from "../map/geo";
+import { resolveZone, type ResolvedZone } from "../map/geo";
 import { CatchPlacePicker, type CatchPlace } from "./CatchPlacePicker";
 
 const ZONES = [
@@ -65,8 +65,12 @@ export function CatchForm({ onSubmitted }: Props) {
   const [spots, setSpots] = useState<PlaceOption[]>([]);
   const [spotsGeo, setSpotsGeo] = useState<FeatureCollection | null>(null);
   const [zonesGeo, setZonesGeo] = useState<FeatureCollection | null>(null);
+  const [geoReady, setGeoReady] = useState(false);
   const [mapOpen, setMapOpen] = useState(false);
   const [gpsBusy, setGpsBusy] = useState(false);
+  const [gpsResolveSource, setGpsResolveSource] = useState<
+    ResolvedZone["source"] | null
+  >(null);
   const [bait, setBait] = useState("");
   const [note, setNote] = useState("");
   const [caughtDate, setCaughtDate] = useState(() => toLocalDate());
@@ -117,16 +121,21 @@ export function CatchForm({ onSubmitted }: Props) {
           .filter((p) => p.id && p.name)
           .sort((a, b) => a.name.localeCompare(b.name, "sv"));
         setSpots(list);
+        setGeoReady(true);
       })
       .catch(() => {
-        /* keep zones only */
+        if (!cancelled) setGeoReady(true);
       });
     return () => {
       cancelled = true;
     };
   }, []);
 
-  function applyPlace(place: CatchPlace, source: "gps" | "list" | "map") {
+  function applyPlace(
+    place: CatchPlace,
+    source: "gps" | "list" | "map",
+    resolveSource?: ResolvedZone["source"] | null,
+  ) {
     const known =
       ZONES.find((z) => z.id === place.id) ||
       spots.find((s) => s.id === place.id);
@@ -138,6 +147,7 @@ export function CatchForm({ onSubmitted }: Props) {
       setPlaceId(place.id);
     }
     setPlaceSource(source);
+    setGpsResolveSource(source === "gps" ? resolveSource ?? null : null);
     if (source !== "list") setListOpen(false);
   }
 
@@ -163,7 +173,7 @@ export function CatchForm({ onSubmitted }: Props) {
           spotsGeo,
           zones,
         );
-        applyPlace({ id: z.id, name: z.name }, "gps");
+        applyPlace({ id: z.id, name: z.name }, "gps", z.source);
         setGpsBusy(false);
       },
       () => {
@@ -175,13 +185,13 @@ export function CatchForm({ onSubmitted }: Props) {
   }
 
   const autoGpsRef = useRef(false);
-  // Default: resolve place from current GPS once spots are ready.
+  // Default: resolve place from GPS once spots + zones have been attempted.
   useEffect(() => {
-    if (!auth.user || !spotsGeo || autoGpsRef.current) return;
+    if (!auth.user || !geoReady || !spotsGeo || autoGpsRef.current) return;
     autoGpsRef.current = true;
     useGpsPlace();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- once when geo+auth ready
-  }, [auth.user, spotsGeo]);
+  }, [auth.user, geoReady, spotsGeo]);
 
   useEffect(() => {
     function applyPref() {
@@ -322,7 +332,9 @@ export function CatchForm({ onSubmitted }: Props) {
     "Okänd plats";
   const placeHint =
     placeSource === "gps"
-      ? "din position"
+      ? gpsResolveSource === "fallback"
+        ? "ungefärlig plats — välj mer precis"
+        : "närmast din GPS"
       : placeSource === "map"
         ? "vald på kartan"
         : "vald i listan";

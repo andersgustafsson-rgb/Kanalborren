@@ -51,10 +51,16 @@ export function CatchPlacePicker({
   const [pin, setPin] = useState<{ lat: number; lng: number } | null>(null);
   const [hint, setHint] = useState("Tryck på kartan där du fick fisken");
 
+  const emptyZones = useMemo(
+    () =>
+      ({ type: "FeatureCollection", features: [] }) as FeatureCollection,
+    [],
+  );
+
   const preview = useMemo(() => {
-    if (!pin || !spotsGeo || !zonesGeo) return null;
-    return resolveZone(pin.lat, pin.lng, spotsGeo, zonesGeo);
-  }, [pin, spotsGeo, zonesGeo]);
+    if (!pin || !spotsGeo) return null;
+    return resolveZone(pin.lat, pin.lng, spotsGeo, zonesGeo || emptyZones);
+  }, [pin, spotsGeo, zonesGeo, emptyZones]);
 
   useEffect(() => {
     if (!open) {
@@ -67,12 +73,16 @@ export function CatchPlacePicker({
 
   function applyLatLng(lat: number, lng: number) {
     setPin({ lat, lng });
-    if (!spotsGeo || !zonesGeo) {
+    if (!spotsGeo) {
       setHint("Kartlager saknas — prova igen");
       return;
     }
-    const z = resolveZone(lat, lng, spotsGeo, zonesGeo);
-    setHint(`Närmast: ${z.name}`);
+    const z = resolveZone(lat, lng, spotsGeo, zonesGeo || emptyZones);
+    setHint(
+      z.source === "fallback"
+        ? `Ungefärlig: ${z.name} — zooma/peka närmare en kaj`
+        : `Närmast: ${z.name}`,
+    );
   }
 
   function confirm() {

@@ -70,21 +70,55 @@ export type ResolvedZone = {
   distanceM?: number;
 };
 
-export function resolveZone(
+/** Hard snap to a named local spot (precise label). */
+const SPOT_SNAP_M = 220;
+/**
+ * Soft snap: still prefer a named spot when GPS is near the canal but not
+ * right on a landmark (common with phone GPS / sparse spots).
+ */
+const SPOT_NEAR_M = 480;
+/** Soft snap to nearest social zone by edge distance. */
+const ZONE_NEAR_M = 800;
+
+/** Approximate meters from a point to the closest vertex/edge of a ring. */
+export function distanceToRingMeters(
+  lat: number,
+  lng: number,
+  ring: Position[],
+): number {
+  if (pointInPolygon(lng, lat, ring)) return 0;
+  let best = Infinity;
+  for (let i = 0; i < ring.length - 1; i++) {
+    const [lng1, lat1] = ring[i];
+    const [lng2, lat2] = ring[i + 1];
+    // Sample edge endpoints + midpoint (good enough at Malmö canal scale).
+    const midLat = (lat1 + lat2) / 2;
+    const midLng = (lng1 + lng2) / 2;
+    best = Math.min(
+      best,
+      distanceMeters(lat, lng, lat1, lng1),
+      distanceMeters(lat, lng, lat2, lng2),
+      distanceMeters(lat, lng, midLat, midLng),
+    );
+  }
+  return best;
+}
+
+function nearestSpot(
   lat: number,
   lng: number,
   spots: FeatureCollection,
-  zones: FeatureCollection,
-): ResolvedZone {
-  let bestSpot: ResolvedZone | null = null;
+  maxM: number,
+): ResolvedZone | null {
+  let best: ResolvedZone | null = null;
   for (const f of spots.features) {
     if (f.geometry?.type !== "Point") continue;
     const p = (f.properties || {}) as CanalProperties;
     if (p.kind && p.kind !== "local_spot") continue;
     const [slng, slat] = (f.geometry as Point).coordinates;
     const d = distanceMeters(lat, lng, slat, slng);
-    if (d <= 220 && (!bestSpot || (bestSpot.distanceM ?? Infinity) > d)) {
-      bestSpot = {
+    if (d <= maxM && (!best || (best.distanceM ?? Infinity) > d)) {
+      best = {
         id: p.id || p.name || "spot",
         name: p.name || "Plats",
         lat: slat,
@@ -94,7 +128,21 @@ export function resolveZone(
       };
     }
   }
-  if (bestSpot) return bestSpot;
+  return best;
+}
+
+/**
+ * Map a GPS/map point to a named canal place.
+ * Order: tight spot → zone containing point → nearby spot → nearby zone → broad fallback.
+ */
+export function resolveZone(
+  lat: number,
+  lng: number,
+  spots: FeatureCollection,
+  zones: FeatureCollection,
+): ResolvedZone {
+  const tightSpot = nearestSpot(lat, lng, spots, SPOT_SNAP_M);
+  if (tightSpot) return tightSpot;
 
   for (const f of zones.features) {
     if (f.geometry?.type !== "Polygon") continue;
@@ -109,28 +157,34 @@ export function resolveZone(
       lat: c.lat,
       lng: c.lng,
       source: "polygon",
+      distanceM: 0,
     };
   }
 
-  // Nearest zone polygon centroid as soft fallback
-  let nearest: ResolvedZone | null = null;
+  const nearSpot = nearestSpot(lat, lng, spots, SPOT_NEAR_M);
+  if (nearSpot) return nearSpot;
+
+  let nearestZone: ResolvedZone | null = null;
   for (const f of zones.features) {
     if (f.geometry?.type !== "Polygon") continue;
     const p = (f.properties || {}) as CanalProperties;
-    const c = polygonCentroid((f.geometry as Polygon).coordinates[0]);
-    const d = distanceMeters(lat, lng, c.lat, c.lng);
-    if (!nearest || (nearest.distanceM ?? Infinity) > d) {
-      nearest = {
+    const ring = (f.geometry as Polygon).coordinates[0];
+    const c = polygonCentroid(ring);
+    const d = Math.round(distanceToRingMeters(lat, lng, ring));
+    if (!nearestZone || (nearestZone.distanceM ?? Infinity) > d) {
+      nearestZone = {
         id: p.id || p.name || "zone",
         name: p.name || "Zon",
         lat: c.lat,
         lng: c.lng,
         source: "polygon",
-        distanceM: Math.round(d),
+        distanceM: d,
       };
     }
   }
-  if (nearest && (nearest.distanceM ?? 9999) < 800) return nearest;
+  if (nearestZone && (nearestZone.distanceM ?? 9999) < ZONE_NEAR_M) {
+    return nearestZone;
+  }
 
   return {
     id: "malmo_kanal",
