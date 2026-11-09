@@ -40,5 +40,5 @@ Stöd: SMHI Öresunds vattenstånd som **proxy** (inte kanalmätning).
 
 ## Kända luckor
 
-- **Ghost + öppen för sällskap:** Ghost publicerar ingen session ännu; zonlista utan kartnål saknas (se docs).
+- **Ghost + öppen för sällskap:** Syns i Ute/Sällskap utan kartnål när zon + sällskapsflagga är på (se docs).
 - Integritetspolicy/villkor är utkast tills de granskats och publicerats med aktuell kontakt.

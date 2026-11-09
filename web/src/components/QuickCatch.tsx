@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../lib/AuthContext";
 import {
@@ -8,11 +8,15 @@ import {
 } from "../lib/catchReports";
 import {
   loadLastPrivate,
+  loadLastQuickCatch,
   loadLastSpecies,
   openQuickCatch,
   QUICK_CATCH_OPEN_EVENT,
+  QUICK_CATCH_REPEAT_EVENT,
   saveLastPrivate,
+  saveLastQuickCatch,
   saveLastSpecies,
+  type LastQuickCatch,
 } from "../lib/quickCatchPrefs";
 import { QUICK_ZONES, SPECIES } from "../lib/species";
 import { loadSession } from "../map/checkinStorage";
@@ -26,6 +30,7 @@ type ToastState = {
 };
 
 const UNDO_MS = 12_000;
+const LONG_PRESS_MS = 520;
 
 export function QuickCatch() {
   const auth = useAuth();
@@ -40,6 +45,11 @@ export function QuickCatch() {
   const [lengthDraft, setLengthDraft] = useState("");
   const [addingLength, setAddingLength] = useState(false);
   const [sessionTick, setSessionTick] = useState(0);
+  const [lastCatch, setLastCatch] = useState<LastQuickCatch | null>(() =>
+    loadLastQuickCatch(),
+  );
+  const longPressRef = useRef<number | null>(null);
+  const longPressFired = useRef(false);
 
   const session = useMemo(() => loadSession(), [open, sessionTick]);
   const checkedInZone =
@@ -58,6 +68,7 @@ export function QuickCatch() {
       const sess = loadSession();
       setSpecies(loadLastSpecies());
       setIsPrivate(loadLastPrivate());
+      setLastCatch(loadLastQuickCatch());
       setError(null);
       setSessionTick((n) => n + 1);
       // Prefill check-in zone when present; otherwise clear so user picks.
@@ -102,15 +113,17 @@ export function QuickCatch() {
   async function saveQuick(
     nextSpecies: string,
     place: { id: string; name: string },
+    privateFlag = isPrivate,
   ) {
     if (!auth.user) {
       setError("Logga in för att spara fångst");
+      setOpen(true);
       return;
     }
     setBusy(true);
     setError(null);
     saveLastSpecies(nextSpecies);
-    saveLastPrivate(isPrivate);
+    saveLastPrivate(privateFlag);
     const { error: err, id } = await submitCatchReport(auth.user.id, {
       species: nextSpecies,
       lengthCm: null,
@@ -120,13 +133,26 @@ export function QuickCatch() {
       bait: "",
       note: "",
       caughtAt: new Date().toISOString(),
-      isPrivate,
+      isPrivate: privateFlag,
     });
     setBusy(false);
     if (err || !id) {
       setError(err || "Kunde inte spara");
+      setOpen(true);
       return;
     }
+    const saved: LastQuickCatch = {
+      species: nextSpecies,
+      zoneId: place.id,
+      zoneName: place.name,
+      isPrivate: privateFlag,
+      at: new Date().toISOString(),
+    };
+    saveLastQuickCatch(saved);
+    setLastCatch(saved);
+    setSpecies(nextSpecies);
+    setIsPrivate(privateFlag);
+    setZoneId(place.id);
     setOpen(false);
     setAddingLength(false);
     setLengthDraft("");
@@ -137,6 +163,25 @@ export function QuickCatch() {
       expiresAt: Date.now() + UNDO_MS,
     });
   }
+
+  async function repeatLast() {
+    const last = loadLastQuickCatch();
+    if (!last) {
+      setError("Ingen tidigare snabbregg ännu");
+      setOpen(true);
+      return;
+    }
+    setLastCatch(last);
+    await saveQuick(last.species, { id: last.zoneId, name: last.zoneName }, last.isPrivate);
+  }
+
+  useEffect(() => {
+    function onRepeat() {
+      void repeatLast();
+    }
+    window.addEventListener(QUICK_CATCH_REPEAT_EVENT, onRepeat);
+    return () => window.removeEventListener(QUICK_CATCH_REPEAT_EVENT, onRepeat);
+  }, [auth.user]);
 
   async function onPickSpecies(next: string) {
     setSpecies(next);
@@ -194,9 +239,45 @@ export function QuickCatch() {
       <button
         type="button"
         className="qc-fab"
-        aria-label="Logga fångst snabbt"
-        title="Logga fångst"
-        onClick={() => openQuickCatch()}
+        aria-label="Logga fångst snabbt. Håll inne för samma som senast."
+        title="Logga fisk · håll inne = samma som senast"
+        onClick={() => {
+          if (longPressFired.current) {
+            longPressFired.current = false;
+            return;
+          }
+          openQuickCatch();
+        }}
+        onPointerDown={() => {
+          longPressFired.current = false;
+          if (longPressRef.current != null) {
+            window.clearTimeout(longPressRef.current);
+          }
+          longPressRef.current = window.setTimeout(() => {
+            longPressFired.current = true;
+            longPressRef.current = null;
+            void repeatLast();
+          }, LONG_PRESS_MS);
+        }}
+        onPointerUp={() => {
+          if (longPressRef.current != null) {
+            window.clearTimeout(longPressRef.current);
+            longPressRef.current = null;
+          }
+        }}
+        onPointerLeave={() => {
+          if (longPressRef.current != null) {
+            window.clearTimeout(longPressRef.current);
+            longPressRef.current = null;
+          }
+        }}
+        onPointerCancel={() => {
+          if (longPressRef.current != null) {
+            window.clearTimeout(longPressRef.current);
+            longPressRef.current = null;
+          }
+        }}
+        onContextMenu={(e) => e.preventDefault()}
       >
         <img src="/species/abborre.svg" alt="" width={22} height={22} />
         <span className="qc-fab-label">Logga fisk</span>
@@ -229,6 +310,20 @@ export function QuickCatch() {
                 Stäng
               </button>
             </header>
+
+            {lastCatch && (
+              <button
+                type="button"
+                className="qc-repeat"
+                disabled={busy}
+                onClick={() => void repeatLast()}
+              >
+                Samma som senast
+                <span>
+                  {lastCatch.species} · {lastCatch.zoneName}
+                </span>
+              </button>
+            )}
 
             <div className="qc-species" role="group" aria-label="Art">
               {SPECIES.map((s) => (

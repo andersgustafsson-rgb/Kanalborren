@@ -43,7 +43,7 @@ export async function listPublicSessions(
     )
     .is("ended_at", null)
     .gt("expires_at", new Date().toISOString())
-    .in("visibility", ["zone", "precise"]);
+    .in("visibility", ["zone", "precise", "ghost"]);
 
   if (error || !data) {
     console.warn("listPublicSessions", error);
@@ -82,7 +82,12 @@ export async function publishSession(
     .eq("user_id", opts.userId)
     .is("ended_at", null);
 
-  if (input.visibility === "ghost") {
+  // Ghost without company stays fully private (no row). Ghost + open + zone
+  // publishes for the zone list only (coords nulled by DB trigger).
+  if (
+    input.visibility === "ghost" &&
+    !(input.openForCompany && input.zoneId)
+  ) {
     return null;
   }
 
@@ -94,8 +99,8 @@ export async function publishSession(
       visibility: input.visibility,
       zone_id: input.zoneId,
       zone_name: input.zoneName,
-      lat: input.lat,
-      lng: input.lng,
+      lat: input.visibility === "ghost" ? null : input.lat,
+      lng: input.visibility === "ghost" ? null : input.lng,
       open_for_company: input.openForCompany,
       note: input.note || null,
       avatar_id: input.avatarId,

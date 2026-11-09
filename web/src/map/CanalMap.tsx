@@ -26,6 +26,7 @@ import { SessionMarkers } from "./SessionMarkers";
 import { OthersMarkers } from "./OthersMarkers";
 import { CatchMarkers } from "./CatchMarkers";
 import { CompanyPanel } from "./CompanyPanel";
+import { ZoneActivityToast } from "./ZoneActivityToast";
 import { Recenter } from "./Recenter";
 import { useCheckIn } from "./useCheckIn";
 import { useAuth } from "../lib/AuthContext";
@@ -846,6 +847,7 @@ export function CanalMap({
       </MapContainer>
       </div>
 
+      <ZoneActivityToast />
       <CompanyPanel />
 
       <CheckInPanel

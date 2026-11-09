@@ -208,7 +208,13 @@ export function CheckInPanel({
           <div className="checkin-vis-grid">
             {(
               [
-                ["ghost", "Dold", "Ingen ser dig"],
+                [
+                  "ghost",
+                  "Dold",
+                  openForCompany
+                    ? "Ingen nål — syns i zonlista"
+                    : "Ingen ser dig",
+                ],
                 ["zone", "Zon", "Bara området"],
                 ["precise", "Exakt", "Ungefär var du står"],
               ] as const
@@ -234,6 +240,7 @@ export function CheckInPanel({
             onChange={(e) => onOpenForCompany(e.target.checked)}
           />
           Öppen för fiskesällskap
+          {visibility === "ghost" ? " (utan kartnål)" : ""}
         </label>
 
         <label className="checkin-note">

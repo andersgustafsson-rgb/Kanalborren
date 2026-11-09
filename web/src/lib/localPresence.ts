@@ -47,7 +47,13 @@ function deviceId(): string {
 
 export function localListPublic(): PublicFishingSession[] {
   const me = deviceId();
-  return read().sessions.filter((s) => s.userId !== me);
+  return read().sessions.filter((s) => {
+    if (s.userId === me) return false;
+    if (s.visibility === "ghost") {
+      return s.openForCompany && Boolean(s.zoneId);
+    }
+    return true;
+  });
 }
 
 export function localPublish(
@@ -55,13 +61,17 @@ export function localPublish(
   displayName: string,
   existingId?: string | null,
 ): PublicFishingSession | null {
-  if (input.visibility === "ghost") {
+  if (
+    input.visibility === "ghost" &&
+    !(input.openForCompany && input.zoneId)
+  ) {
     localEnd(existingId);
     return null;
   }
   const me = deviceId();
   const store = read();
   store.sessions = store.sessions.filter((s) => s.userId !== me);
+  const ghostListOnly = input.visibility === "ghost";
   const row: PublicFishingSession = {
     id: existingId || crypto.randomUUID(),
     userId: me,
@@ -69,8 +79,8 @@ export function localPublish(
     visibility: input.visibility,
     zoneId: input.zoneId,
     zoneName: input.zoneName,
-    lat: input.lat,
-    lng: input.lng,
+    lat: ghostListOnly ? null : input.lat,
+    lng: ghostListOnly ? null : input.lng,
     openForCompany: input.openForCompany,
     note: input.note,
     avatarId: input.avatarId,

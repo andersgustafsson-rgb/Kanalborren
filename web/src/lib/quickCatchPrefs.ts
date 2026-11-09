@@ -2,6 +2,15 @@ import { SPECIES_IDS } from "./species";
 
 const SPECIES_KEY = "kanalhugget.quick.species.v1";
 const PRIVATE_KEY = "kanalhugget.quick.private.v1";
+const LAST_CATCH_KEY = "kanalhugget.quick.lastCatch.v1";
+
+export type LastQuickCatch = {
+  species: string;
+  zoneId: string;
+  zoneName: string;
+  isPrivate: boolean;
+  at: string;
+};
 
 export function loadLastSpecies(): string {
   try {
@@ -37,8 +46,41 @@ export function saveLastPrivate(isPrivate: boolean): void {
   }
 }
 
+export function loadLastQuickCatch(): LastQuickCatch | null {
+  try {
+    const raw = localStorage.getItem(LAST_CATCH_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as LastQuickCatch;
+    if (
+      !parsed ||
+      !SPECIES_IDS.includes(parsed.species) ||
+      !parsed.zoneId ||
+      !parsed.zoneName
+    ) {
+      return null;
+    }
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+export function saveLastQuickCatch(catchRow: LastQuickCatch): void {
+  try {
+    localStorage.setItem(LAST_CATCH_KEY, JSON.stringify(catchRow));
+  } catch {
+    /* ignore */
+  }
+}
+
 export const QUICK_CATCH_OPEN_EVENT = "kanalhugget-quick-catch-open";
+export const QUICK_CATCH_REPEAT_EVENT = "kanalhugget-quick-catch-repeat";
 
 export function openQuickCatch(): void {
   window.dispatchEvent(new Event(QUICK_CATCH_OPEN_EVENT));
+}
+
+/** Fire “same as last” — QuickCatch listens and saves immediately when possible. */
+export function repeatLastQuickCatch(): void {
+  window.dispatchEvent(new Event(QUICK_CATCH_REPEAT_EVENT));
 }

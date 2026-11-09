@@ -11,6 +11,7 @@ import {
   type MyHotspot,
   type MyTripNote,
 } from "../lib/myCatches";
+import { computeCatchStreak } from "../lib/streaks";
 import "./MyCatchDashboard.css";
 
 type View = "places" | "days";
@@ -47,6 +48,7 @@ export function MyCatchDashboard() {
   const hotspots = useMemo(() => buildHotspots(rows), [rows]);
   const peakMonth = useMemo(() => bestCatchMonth(rows), [rows]);
   const days = useMemo(() => groupCatchesByDay(rows), [rows]);
+  const streak = useMemo(() => computeCatchStreak(rows), [rows]);
   const privateCount = useMemo(
     () => rows.filter((r) => r.isPrivate).length,
     [rows],
@@ -110,7 +112,15 @@ export function MyCatchDashboard() {
               <strong>{privateCount}</strong>
               <span>dolda</span>
             </div>
+            <div>
+              <strong>{streak.catchDays}</strong>
+              <span>streak</span>
+            </div>
           </div>
+
+          {streak.catchDays > 0 && (
+            <p className="catch-dash-peak">{streak.label}</p>
+          )}
 
           {peakMonth && (
             <p className="catch-dash-peak">

@@ -6,11 +6,19 @@ import { ChallengeBoard } from "../components/ChallengeBoard";
 import { FeedbackForm } from "../components/FeedbackForm";
 import { MyCatchDashboard } from "../components/MyCatchDashboard";
 import { WaterLevelWidget } from "../components/WaterLevelWidget";
+import { useAuth } from "../lib/AuthContext";
 import {
   fetchHighscores,
   type HighscorePeriod,
   type HighscoreRow,
 } from "../lib/highscores";
+import { fetchMyCatches } from "../lib/myCatches";
+import type { RecentCatch } from "../lib/recentCatches";
+import { computeCatchStreak, type StreakInfo } from "../lib/streaks";
+import {
+  fetchZoneActivity,
+  formatZoneActivityLine,
+} from "../lib/zoneActivity";
 import "./HomePage.css";
 
 const PERIODS: { id: HighscorePeriod; label: string }[] = [
@@ -39,6 +47,7 @@ function tabFromHash(hash: string): HomeTab {
 }
 
 export function HomePage() {
+  const auth = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [tab, setTab] = useState<HomeTab>(() =>
@@ -48,6 +57,8 @@ export function HomePage() {
   const [rows, setRows] = useState<HighscoreRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [reloadToken, setReloadToken] = useState(0);
+  const [streak, setStreak] = useState<StreakInfo | null>(null);
+  const [activity, setActivity] = useState<RecentCatch[]>([]);
 
   useEffect(() => {
     setTab(tabFromHash(location.hash));
@@ -66,6 +77,30 @@ export function HomePage() {
       cancelled = true;
     };
   }, [period, reloadToken]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void fetchZoneActivity(12).then((data) => {
+      if (!cancelled) setActivity(data.slice(0, 5));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [reloadToken]);
+
+  useEffect(() => {
+    if (!auth.user) {
+      setStreak(null);
+      return;
+    }
+    let cancelled = false;
+    void fetchMyCatches(120).then((data) => {
+      if (!cancelled) setStreak(computeCatchStreak(data));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [auth.user, reloadToken]);
 
   function openTab(next: HomeTab) {
     setTab(next);
@@ -120,6 +155,39 @@ export function HomePage() {
         {tab === "hem" && (
           <div className="home-panel" role="tabpanel">
             <WaterLevelWidget />
+
+            {streak && streak.catchDays > 0 && (
+              <section className="home-streak" aria-label="Streak">
+                <strong>{streak.label}</strong>
+                <span>
+                  {streak.caughtToday
+                    ? "Bra jobbat — streaken lever"
+                    : "Logga en idag så håller streaken"}
+                </span>
+              </section>
+            )}
+
+            {activity.length > 0 && (
+              <section className="home-board home-activity" aria-label="Zonaktivitet">
+                <header className="home-board-head">
+                  <h2>Just nu i zonerna</h2>
+                  <p>Publika fångster senaste 12 h · bara zon, ingen GPS</p>
+                </header>
+                <ul className="activity-list">
+                  {activity.map((c) => (
+                    <li key={c.id}>
+                      <strong>{formatZoneActivityLine(c)}</strong>
+                      <span>
+                        {new Date(c.caughtAt).toLocaleString("sv-SE", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
 
             <section className="home-board" aria-labelledby="highscore-title">
               <header className="home-board-head">

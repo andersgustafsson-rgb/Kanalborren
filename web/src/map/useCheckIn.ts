@@ -329,14 +329,14 @@ export function useCheckIn(
       const next: CheckInSession = { ...session, ...patch };
       saveSession(next);
       setSession(next);
-      if (next.visibility === "ghost") return;
+
       const remoteId = await publishSession(
         {
           visibility: next.visibility,
           zoneId: next.zoneId,
           zoneName: next.zoneName,
-          lat: next.publicLat,
-          lng: next.publicLng,
+          lat: next.visibility === "ghost" ? null : next.publicLat,
+          lng: next.visibility === "ghost" ? null : next.publicLng,
           openForCompany: next.openForCompany,
           note: next.note,
           avatarId: identity.avatarId,
@@ -348,13 +348,51 @@ export function useCheckIn(
           displayName: identity.displayName,
         },
       );
-      if (remoteId && remoteId !== next.remoteId) {
+
+      // Ghost without company ends the remote row — clear remoteId.
+      if (!remoteId) {
+        if (next.remoteId) {
+          const cleared = { ...next, remoteId: null };
+          saveSession(cleared);
+          setSession(cleared);
+        }
+        return;
+      }
+      if (remoteId !== next.remoteId) {
         const withId = { ...next, remoteId };
         saveSession(withId);
         setSession(withId);
       }
     },
     [session, identity],
+  );
+
+  const setVisibilityAndSync = useCallback(
+    (value: Visibility) => {
+      setVisibility(value);
+      if (!session || !fix || !spots || !zones) return;
+
+      const zone = resolveZone(fix.lat, fix.lng, spots, zones);
+      let publicLat: number | null = null;
+      let publicLng: number | null = null;
+      if (value === "zone") {
+        publicLat = zone.lat;
+        publicLng = zone.lng;
+      } else if (value === "precise") {
+        const rounded = roundForPrivacy(fix.lat, fix.lng);
+        publicLat = rounded.lat;
+        publicLng = rounded.lng;
+      }
+
+      void republishActive({
+        visibility: value,
+        zoneId: zone.id,
+        zoneName: zone.name,
+        publicLat,
+        publicLng,
+      });
+    },
+    [session, fix, spots, zones, republishActive],
   );
 
   const setOpenForCompanyAndSync = useCallback(
@@ -364,13 +402,26 @@ export function useCheckIn(
       const next = { ...session, openForCompany: value };
       saveSession(next);
       setSession(next);
+
+      // Ghost needs insert/end when toggling company — plain update is not enough
+      // if there is no remote row yet.
+      if (session.visibility === "ghost") {
+        void republishActive({ openForCompany: value });
+        return;
+      }
+
+      if (!session.remoteId) {
+        void republishActive({ openForCompany: value });
+        return;
+      }
+
       void setSessionOpenForCompany(value, {
         remoteId: session.remoteId,
         userId: identity.userId,
         displayName: identity.displayName,
       });
     },
-    [session, identity],
+    [session, identity, republishActive],
   );
 
   const extend = useCallback(async () => {
@@ -414,7 +465,7 @@ export function useCheckIn(
     locating,
     locateError,
     visibility,
-    setVisibility,
+    setVisibility: setVisibilityAndSync,
     openForCompany,
     setOpenForCompany: setOpenForCompanyAndSync,
     note,

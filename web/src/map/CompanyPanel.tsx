@@ -337,7 +337,10 @@ export function CompanyPanel() {
                       <li key={p.id}>
                         <div className="company-row">
                           <strong>{p.displayName}</strong>
-                          <span>{p.zoneName || "Kanalen"}</span>
+                          <span>
+                            {p.zoneName || "Kanalen"}
+                            {p.visibility === "ghost" ? " · dold" : ""}
+                          </span>
                         </div>
                         {chatting?.chatId ? (
                           <button

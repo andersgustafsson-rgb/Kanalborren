@@ -47,7 +47,7 @@ GeoJSON med ungefärliga polygoner: [data/sociala-zoner.geojson](../data/sociala
 **Beslut:** “Öppen för fiskesällskap” kräver **inte** synlig kartmarkering.  
 Ghost-användare ska kunna synas i **zonlista** som “Någon i Slottsparken – öppen för sällskap” utan kartpin, om de valt zon + öppen-flagga. De syns **inte** med nick på kartan.
 
-**Nuläge i appen:** Ghost publicerar ingen `fishing_sessions`-rad; zonlista utan nål är inte byggt ännu.
+**Nuläge i appen:** Ghost + **öppen för sällskap** + zon publicerar en `fishing_sessions`-rad utan koordinater. Syns i **Ute**-listan och under **Sällskap**, men inte som kartnål. Ghost utan sällskapsflagga publicerar ingen rad.
 
 ---
 

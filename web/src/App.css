@@ -465,8 +465,8 @@
   position: absolute;
   z-index: 1210;
   right: 0.7rem;
-  width: min(14rem, calc(100vw - 1.4rem));
-  max-height: min(42vh, 16rem);
+  width: min(15.5rem, calc(100vw - 1.4rem));
+  max-height: min(58vh, 22rem);
   overflow: auto;
   padding: 0.55rem 0.65rem;
   background: var(--kb-panel);
@@ -516,6 +516,76 @@
   color: var(--kb-muted) !important;
   font-size: 0.72rem !important;
   line-height: 1.35 !important;
+}
+
+.presence-feed {
+  margin-top: 0.55rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.presence-feed-title {
+  margin: 0 0 0.35rem;
+  font-size: 0.65rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--kb-muted);
+}
+
+.presence-feed ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.presence-feed li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+}
+
+.presence-feed li strong {
+  font-size: 0.74rem;
+  font-weight: 650;
+  color: #e8f0f4;
+}
+
+.presence-feed li span {
+  font-size: 0.65rem;
+  color: var(--kb-muted);
+}
+
+.zone-plopp {
+  position: absolute;
+  z-index: 1300;
+  left: 50%;
+  bottom: calc(6.2rem + var(--safe-b, env(safe-area-inset-bottom, 0px)));
+  transform: translateX(-50%);
+  max-width: min(22rem, calc(100vw - 1.5rem));
+  padding: 0.55rem 0.85rem;
+  border-radius: 999px;
+  background: rgba(12, 18, 28, 0.92);
+  border: 1px solid rgba(184, 224, 20, 0.35);
+  color: #f4f7fa;
+  font-size: 0.82rem;
+  font-weight: 650;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+  animation: zone-plopp-in 0.35s ease-out;
+}
+
+@keyframes zone-plopp-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
 }
 
 .map-banner.error {

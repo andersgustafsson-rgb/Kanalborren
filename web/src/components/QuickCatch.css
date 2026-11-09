@@ -94,6 +94,39 @@
   font-size: 0.85rem;
 }
 
+.qc-repeat {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+  margin: 0 0 0.85rem;
+  padding: 0.7rem 0.85rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(184, 224, 20, 0.45);
+  background: linear-gradient(
+    160deg,
+    rgba(184, 224, 20, 0.18),
+    rgba(184, 224, 20, 0.06)
+  );
+  color: #f4f7fa;
+  font: inherit;
+  font-weight: 750;
+  text-align: left;
+  cursor: pointer;
+}
+
+.qc-repeat span {
+  font-size: 0.78rem;
+  font-weight: 550;
+  color: #b7c6cf;
+}
+
+.qc-repeat:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
 .qc-species {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

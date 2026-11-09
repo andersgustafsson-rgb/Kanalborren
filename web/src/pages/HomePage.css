@@ -224,6 +224,62 @@
   gap: 0.55rem;
 }
 
+.home-streak {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.75rem 0.95rem;
+  border-radius: 14px;
+  background: linear-gradient(
+    135deg,
+    rgba(184, 224, 20, 0.16),
+    rgba(12, 22, 34, 0.9)
+  );
+  border: 1px solid rgba(184, 224, 20, 0.28);
+}
+
+.home-streak strong {
+  font-size: 0.98rem;
+  letter-spacing: -0.01em;
+}
+
+.home-streak span {
+  font-size: 0.78rem;
+  color: rgba(244, 247, 250, 0.72);
+}
+
+.home-activity .home-board-head h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.activity-list {
+  list-style: none;
+  margin: 0.65rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.activity-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: baseline;
+  font-size: 0.88rem;
+}
+
+.activity-list li strong {
+  font-weight: 650;
+}
+
+.activity-list li span {
+  flex: 0 0 auto;
+  color: rgba(244, 247, 250, 0.55);
+  font-size: 0.75rem;
+}
+
 .home-board {
   margin-top: 0;
   padding: 0.95rem 1rem 1.05rem;

@@ -58,7 +58,14 @@ create policy "sessions_select_public" on public.fishing_sessions
   for select using (
     ended_at is null
     and expires_at > now()
-    and visibility in ('zone', 'precise')
+    and (
+      visibility in ('zone', 'precise')
+      or (
+        visibility = 'ghost'
+        and open_for_company = true
+        and zone_id is not null
+      )
+    )
   );
 
 create policy "sessions_select_own" on public.fishing_sessions

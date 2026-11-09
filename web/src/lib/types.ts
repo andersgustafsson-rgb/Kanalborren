@@ -4,7 +4,8 @@ export type PublicFishingSession = {
   id: string;
   userId: string;
   displayName: string;
-  visibility: Exclude<Visibility, "ghost">;
+  /** Ghost rows only appear when openForCompany + zone (list only, no pin). */
+  visibility: Visibility;
   zoneId: string | null;
   zoneName: string | null;
   lat: number | null;
