@@ -1,9 +1,20 @@
 # KanalHugget
 
-Lokal fiskekarta och community för sportfiskare i **Malmö kanal**.  
-Status: **Etapp 0 klar** (verifiering, integritet, MVP-lås). Ingen appkod ännu.
+Lokal fiskekarta och community för sportfiskare i **Malmö kanal**.
 
-## Etapp 0 – leverabler
+Status: **live PWA** (`web/`) med karta, check-in, fångster, sällskap, utmaningar och admin — backed by Supabase.
+
+## App
+
+```bash
+cd web
+npm install
+npm run dev
+```
+
+Öppna http://127.0.0.1:5173. Produktion: Render (byggkatalog `web`).
+
+## Etapp 0 – underlag
 
 | Dokument | Innehåll |
 | --- | --- |
@@ -11,13 +22,12 @@ Status: **Etapp 0 klar** (verifiering, integritet, MVP-lås). Ingen appkod ännu
 | [docs/kontakt-malmo-kanalsensorer.md](docs/kontakt-malmo-kanalsensorer.md) | E-postutkast till Malmö stad om kanalsensor-API |
 | [docs/zoner-integritet-sallskap.md](docs/zoner-integritet-sallskap.md) | Sociala zoner, Ghost/Zon/exakt, expire, sällskapsflöde |
 | [docs/data-modell.md](docs/data-modell.md) | Datamodell för status/chatt/expire |
-| [docs/integritetspolicy-utkast.md](docs/integritetspolicy-utkast.md) | Integritetspolicy-utkast |
+| [docs/integritetspolicy-utkast.md](docs/integritetspolicy-utkast.md) | Integritetspolicy (**utkast** — kontrollera innan juridisk användning) |
 | [docs/anvandarvillkor-utkast.md](docs/anvandarvillkor-utkast.md) | Användarvillkor-utkast |
 | [docs/mvp-omfattning.md](docs/mvp-omfattning.md) | Låst MVP (4 kärnfunktioner + SMHI-proxy) |
-| [data/regelzoner.geojson](data/regelzoner.geojson) | Ungefärliga regelpolygoner |
-| [data/sociala-zoner.geojson](data/sociala-zoner.geojson) | Sociala zoner |
-| [data/ordningsforeskrifter.pdf](data/ordningsforeskrifter.pdf) | Primärkälla (KF 2026-05-28) |
-| [data/bilaga4-fiske.pdf](data/bilaga4-fiske.pdf) | Kartbilaga fiske |
+| [docs/karta.md](docs/karta.md) | Kartlager och geojson |
+
+Geo/data: `data/` och `web/public/geo/`. SQL: `supabase/`.
 
 ## MVP i korthet
 
@@ -28,21 +38,7 @@ Status: **Etapp 0 klar** (verifiering, integritet, MVP-lås). Ingen appkod ännu
 
 Stöd: SMHI Öresunds vattenstånd som **proxy** (inte kanalmätning).
 
-## Din nästa manuella åtgärd
+## Kända luckor
 
-Skicka mejlet i `docs/kontakt-malmo-kanalsensorer.md` från din egen adress och uppdatera kontaktloggen.
-
-## Kartprototyp (klar att prova)
-
-```bash
-cd web
-npm install
-npm run dev
-```
-
-Öppna http://127.0.0.1:5173 — zoom/pan, kanallager från OpenStreetMap, zoner/broar/regler.  
-Mer: [docs/karta.md](docs/karta.md)
-
-## Nästa utvecklingssteg
-
-Social status + fiskesällskap ovanpå kartan (Etapp 1 resten) enligt `docs/mvp-omfattning.md`.
+- **Ghost + öppen för sällskap:** Ghost publicerar ingen session ännu; zonlista utan kartnål saknas (se docs).
+- Integritetspolicy/villkor är utkast tills de granskats och publicerats med aktuell kontakt.

@@ -1,7 +1,9 @@
 -- KanalHugget admin — already applied on production; keep for new envs
 alter table public.profiles add column if not exists is_admin boolean not null default false;
 
--- Promote your account (change email/id if needed):
+-- Promote your account (SQL editor / service role only). Client updates cannot
+-- flip is_admin — protect_profile_privileges requires this session flag:
+-- select set_config('kanalhugget.allow_admin_flag', 'on', true);
 -- update public.profiles set is_admin = true
 -- where id = (select id from auth.users where email = 'agracing2@hotmail.com');
 

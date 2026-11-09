@@ -1,6 +1,6 @@
 # Integritetspolicy – KanalHugget
 
-**Status:** Publicerad i appen under `/integritet` (beta). Inte juridisk granskning.  
+**Status:** Utkast / beta — publicerad i appen under `/integritet`. **Inte** juridisk granskning; kontrollera kontaktuppgifter och innehåll innan den betraktas som färdig.  
 **Senast uppdaterad:** 2026-11-06
 
 ## Personuppgiftsansvarig

@@ -146,11 +146,9 @@ export async function respondCompanyRequest(
     if (error) return { error: error.message };
     return { error: null, chatId: data as string };
   }
-  const { error } = await supabase
-    .from("company_requests")
-    .update({ status: "declined" })
-    .eq("id", requestId)
-    .eq("status", "pending");
+  const { error } = await supabase.rpc("decline_company_request", {
+    request_id: requestId,
+  });
   if (error) return { error: error.message };
   return { error: null };
 }

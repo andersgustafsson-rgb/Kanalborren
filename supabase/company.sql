@@ -72,18 +72,11 @@ create policy "company_insert_own" on public.company_requests
     and expires_at > now()
   );
 
-create policy "company_update_involved" on public.company_requests
-  for update using (
-    auth.uid() = from_user_id or auth.uid() = to_user_id
-  );
+-- No direct UPDATE policy: status changes go through accept/decline/cancel RPCs.
+-- No direct chats INSERT policy: chats are created only by accept_company_request.
 
 create policy "chats_select_member" on public.chats
   for select using (
-    auth.uid() = user_a or auth.uid() = user_b
-  );
-
-create policy "chats_insert_member" on public.chats
-  for insert with check (
     auth.uid() = user_a or auth.uid() = user_b
   );
 
@@ -142,3 +135,58 @@ $$;
 
 revoke all on function public.accept_company_request(uuid) from public;
 grant execute on function public.accept_company_request(uuid) to authenticated;
+
+create or replace function public.decline_company_request(request_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  r public.company_requests%rowtype;
+begin
+  select * into r from public.company_requests where id = request_id for update;
+  if not found then
+    raise exception 'Förfrågan hittades inte';
+  end if;
+  if r.to_user_id <> auth.uid() then
+    raise exception 'Bara mottagaren kan avböja';
+  end if;
+  if r.status <> 'pending' or r.expires_at <= now() then
+    raise exception 'Förfrågan är inte längre giltig';
+  end if;
+  update public.company_requests
+  set status = 'declined'
+  where id = r.id;
+end;
+$$;
+
+create or replace function public.cancel_company_request(request_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  r public.company_requests%rowtype;
+begin
+  select * into r from public.company_requests where id = request_id for update;
+  if not found then
+    raise exception 'Förfrågan hittades inte';
+  end if;
+  if r.from_user_id <> auth.uid() then
+    raise exception 'Bara avsändaren kan avbryta';
+  end if;
+  if r.status <> 'pending' then
+    raise exception 'Förfrågan är inte längre giltig';
+  end if;
+  update public.company_requests
+  set status = 'cancelled'
+  where id = r.id;
+end;
+$$;
+
+revoke all on function public.decline_company_request(uuid) from public;
+revoke all on function public.cancel_company_request(uuid) from public;
+grant execute on function public.decline_company_request(uuid) to authenticated;
+grant execute on function public.cancel_company_request(uuid) to authenticated;

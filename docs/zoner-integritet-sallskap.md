@@ -45,7 +45,9 @@ GeoJSON med ungefärliga polygoner: [data/sociala-zoner.geojson](../data/sociala
 ### Ghost + sällskap
 
 **Beslut:** “Öppen för fiskesällskap” kräver **inte** synlig kartmarkering.  
-Ghost-användare kan synas i **zonlista** som “Någon i Slottsparken – öppen för sällskap” utan kartpin, om de valt zon + öppen-flagga. De syns **inte** med nick på kartan.
+Ghost-användare ska kunna synas i **zonlista** som “Någon i Slottsparken – öppen för sällskap” utan kartpin, om de valt zon + öppen-flagga. De syns **inte** med nick på kartan.
+
+**Nuläge i appen:** Ghost publicerar ingen `fishing_sessions`-rad; zonlista utan nål är inte byggt ännu.
 
 ---
 
@@ -53,12 +55,12 @@ Ghost-användare kan synas i **zonlista** som “Någon i Slottsparken – öppe
 
 | Status | Standardvaraktighet | Max | Heartbeat / förlängning |
 | --- | --- | --- | --- |
-| Fiskar nu | **120 minuter** | 180 min | “Jag är kvar” förlänger +30 min, max upp till 180; annars auto-dölj |
+| Fiskar nu | **4 timmar** | **6 timmar** | “Jag är kvar” förlänger +30 min, max upp till 6 h; 2 h-nudge + varning före expire |
 | Planerar pass | Till angiven sluttid | **10 timmar** framåt | Ingen heartbeat; döljs vid sluttid |
 | Manuell | — | — | **Dölj nu / Avsluta** alltid synlig |
 | Efter expire | Markering bort från karta inom ~1 min (server cron/poll) | — | Historik sparas privat enligt retention |
 
-Server ska aldrig lita enbart på klienten: `expires_at` sätts server-side.
+Server litar inte enbart på klienten: `expires_at` cap:as i DB-trigger (`sanitize_fishing_session`, max 6 h) och publika koordinater avrundas (~60 m) / zon-skrivs om mot `canal_spots`.
 
 ---
 
