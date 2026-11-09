@@ -207,9 +207,10 @@ export async function seedSpotsIfEmpty(
 export function subscribeSpots(
   onChange: (fc: FeatureCollection) => void,
 ): () => void {
-  if (!isSupabaseConfigured() || !supabase) return () => {};
+  const client = supabase;
+  if (!isSupabaseConfigured() || !client) return () => {};
 
-  const channel = supabase
+  const channel = client
     .channel("canal_spots_public")
     .on(
       "postgres_changes",
@@ -223,6 +224,6 @@ export function subscribeSpots(
     .subscribe();
 
   return () => {
-    void supabase.removeChannel(channel);
+    void client.removeChannel(channel);
   };
 }
