@@ -288,11 +288,11 @@ export function WaterLevelWidget() {
           <div className="conditions-actions">
             <a
               className="conditions-smhi"
-              href="https://www.smhi.se/vader/prognoser-och-varningar/vaderprognos?lat=55.609&lon=13.000"
+              href="https://www.smhi.se/vader/prognoser-och-varningar/vaderprognos/q/Malm%C3%B6/Malm%C3%B6/2692969"
               target="_blank"
               rel="noreferrer"
             >
-              Vädret nu · SMHI Malmö C
+              Vädret nu · SMHI Malmö
             </a>
             {data.time && (
               <p className="water-muted conditions-time">
