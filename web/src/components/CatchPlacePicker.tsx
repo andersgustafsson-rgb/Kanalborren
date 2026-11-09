@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   MapContainer,
   Marker,
@@ -106,7 +107,7 @@ export function CatchPlacePicker({
     );
   }
 
-  return (
+  return createPortal(
     <div className="catch-place-overlay" role="dialog" aria-modal="true">
       <div className="catch-place-sheet">
         <header className="catch-place-head">
@@ -126,7 +127,11 @@ export function CatchPlacePicker({
             attributionControl={false}
             style={{ height: "100%", width: "100%" }}
           >
-            <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
+            <TileLayer
+              attribution="© Esri"
+              url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}"
+              maxZoom={18}
+            />
             <ClickCatch onClick={applyLatLng} />
             {pin && <Marker position={[pin.lat, pin.lng]} icon={pickIcon} />}
           </MapContainer>
@@ -145,6 +150,7 @@ export function CatchPlacePicker({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

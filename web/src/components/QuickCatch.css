@@ -32,6 +32,13 @@
   pointer-events: none;
 }
 
+/* Don't cover catch place picker / quick sheet */
+body:has(.catch-place-overlay) .qc-fab,
+body:has(.qc-backdrop) .qc-fab {
+  opacity: 0;
+  pointer-events: none;
+}
+
 .qc-fab img {
   width: 1.45rem;
   height: 1.45rem;
