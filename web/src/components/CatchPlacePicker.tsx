@@ -143,6 +143,9 @@ export function CatchPlacePicker({
     setHintForPin(lat, lng, fromGps);
   }
 
+  /** Ignore phone GPS far from an active canal check-in (sofa / office testing). */
+  const CHECKIN_TRUST_M = 700;
+
   function applyGps(lat: number, lng: number, accuracy: number | null) {
     const next = { lat, lng };
     setMe(next);
@@ -153,10 +156,11 @@ export function CatchPlacePicker({
   }
 
   function locate(force = false) {
+    const checkIn = initialMe();
+
     if (!navigator.geolocation) {
-      const fallback = initialMe();
-      if (fallback) {
-        applyGps(fallback.lat, fallback.lng, null);
+      if (checkIn) {
+        applyGps(checkIn.lat, checkIn.lng, null);
         setHint("GPS saknas — använder check-in. Justera nålen om det behövs.");
         return;
       }
@@ -168,17 +172,37 @@ export function CatchPlacePicker({
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setLocating(false);
-        applyGps(
-          pos.coords.latitude,
-          pos.coords.longitude,
-          typeof pos.coords.accuracy === "number" ? pos.coords.accuracy : null,
-        );
+        const gps = {
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+        };
+        const accuracy =
+          typeof pos.coords.accuracy === "number" ? pos.coords.accuracy : null;
+
+        // Soft open: keep check-in when GPS is clearly elsewhere (job/home).
+        // Force ("Du är här") always trusts the phone.
+        if (!force && checkIn) {
+          const away = distanceMeters(
+            checkIn.lat,
+            checkIn.lng,
+            gps.lat,
+            gps.lng,
+          );
+          if (away > CHECKIN_TRUST_M) {
+            applyGps(checkIn.lat, checkIn.lng, null);
+            setHint(
+              `Check-in nära kanalen · telefonen är ~${Math.round(away)} m bort. Tryck “Du är här” för live-GPS.`,
+            );
+            return;
+          }
+        }
+
+        applyGps(gps.lat, gps.lng, accuracy);
       },
       () => {
         setLocating(false);
-        const fallback = initialMe();
-        if (fallback) {
-          applyGps(fallback.lat, fallback.lng, null);
+        if (checkIn) {
+          applyGps(checkIn.lat, checkIn.lng, null);
           setHint(
             "Kunde inte hämta GPS — använder check-in. Justera nålen om det behövs.",
           );
