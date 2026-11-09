@@ -922,7 +922,8 @@
   min-width: 9rem;
 }
 
-.catch-pick-marker {
+.catch-pick-marker,
+.catch-me-marker {
   background: transparent;
   border: 0;
 }
@@ -935,6 +936,35 @@
   background: #b8f06e;
   border: 2px solid #0c1410;
   box-shadow: 0 0 0 3px rgba(184, 240, 110, 0.35);
+}
+
+.catch-me-pin {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  pointer-events: none;
+}
+
+.catch-me-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #3ec7d6;
+  border: 2px solid #0c1410;
+  box-shadow: 0 0 0 3px rgba(62, 199, 214, 0.35);
+  flex: 0 0 auto;
+}
+
+.catch-me-label {
+  padding: 0.1rem 0.35rem;
+  border-radius: 999px;
+  background: rgba(8, 14, 22, 0.92);
+  border: 1px solid rgba(62, 199, 214, 0.45);
+  color: #e8f5f7;
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
 }
 
 @keyframes home-drift {
