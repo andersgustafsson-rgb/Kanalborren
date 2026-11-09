@@ -88,6 +88,32 @@
   color: #9bb0a4;
 }
 
+.conditions-actions {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem 0.85rem;
+}
+
+.conditions-smhi {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.55rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid rgba(184, 224, 20, 0.45);
+  background: rgba(184, 224, 20, 0.12);
+  color: #dff56a;
+  font-size: 0.88rem;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.conditions-smhi:hover {
+  background: rgba(184, 224, 20, 0.2);
+}
+
 .conditions-time {
-  margin: 0.55rem 0 0;
+  margin: 0;
 }

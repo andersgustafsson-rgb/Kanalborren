@@ -285,11 +285,21 @@ export function WaterLevelWidget() {
               <small>Öresund · {data.waterStation}</small>
             </li>
           </ul>
-          {data.time && (
-            <p className="water-muted conditions-time">
-              Uppdaterad {fmtTime(data.time)}
-            </p>
-          )}
+          <div className="conditions-actions">
+            <a
+              className="conditions-smhi"
+              href="https://www.smhi.se/vader/prognoser-och-varningar/vaderprognos?lat=55.609&lon=13.000"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Vädret nu · SMHI Malmö C
+            </a>
+            {data.time && (
+              <p className="water-muted conditions-time">
+                Uppdaterad {fmtTime(data.time)}
+              </p>
+            )}
+          </div>
         </>
       )}
     </section>
