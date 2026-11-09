@@ -315,7 +315,7 @@
   height: 100%;
 }
 
-/* Kvällsläge — soft dusk over tiles, canal stays readable */
+/* Kvällsläge — overlay only (CSS filter on tile-pane blanks Esri tiles) */
 .map-app.evening .hud-rail {
   background: rgba(6, 10, 18, 0.9);
   border-color: rgba(255, 170, 90, 0.18);
@@ -328,18 +328,6 @@
   position: relative;
 }
 
-.map-shell.evening .leaflet-tile-pane {
-  filter: brightness(0.88) contrast(1.05) saturate(0.92)
-    sepia(0.12) hue-rotate(-6deg);
-}
-
-.map-shell.evening .leaflet-overlay-pane,
-.map-shell.evening .leaflet-marker-pane,
-.map-shell.evening .leaflet-tooltip-pane,
-.map-shell.evening .leaflet-popup-pane {
-  filter: none;
-}
-
 .evening-veil {
   position: absolute;
   inset: 0;
@@ -347,16 +335,17 @@
   pointer-events: none;
   background:
     radial-gradient(
-      ellipse 95% 75% at 50% 42%,
-      transparent 55%,
-      rgba(8, 12, 22, 0.22) 100%
+      ellipse 100% 80% at 50% 40%,
+      rgba(255, 160, 80, 0.05) 0%,
+      transparent 52%,
+      rgba(6, 10, 20, 0.34) 100%
     ),
     linear-gradient(
-      180deg,
-      rgba(20, 12, 28, 0.14) 0%,
-      transparent 32%,
-      transparent 68%,
-      rgba(10, 14, 26, 0.28) 100%
+      185deg,
+      rgba(24, 12, 36, 0.22) 0%,
+      transparent 30%,
+      transparent 65%,
+      rgba(8, 12, 24, 0.38) 100%
     );
 }
 
