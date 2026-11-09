@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { ChatNotifyBridge } from "./components/ChatNotifyBridge";
+import { QuickCatch } from "./components/QuickCatch";
 import { HomePage } from "./pages/HomePage";
 import { MapPage } from "./pages/MapPage";
 import { ProfilePage } from "./pages/ProfilePage";
@@ -12,6 +13,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <ChatNotifyBridge />
+      <QuickCatch />
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/karta" element={<MapPage />} />

@@ -11,8 +11,8 @@ create table if not exists public.catch_reports (
   bait text,
   note text check (char_length(coalesce(note, '')) <= 200),
   caught_at timestamptz not null default now(),
-  created_at timestamptz not null default now(),
-  constraint catch_has_measure check (length_cm is not null or weight_kg is not null)
+  created_at timestamptz not null default now()
+  -- length/weight optional (quick catch); see catch_reports_quick.sql
 );
 
 -- If table already existed without weight:

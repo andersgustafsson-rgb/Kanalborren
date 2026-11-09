@@ -315,6 +315,11 @@
   height: 100%;
 }
 
+.map-shell .leaflet-top.leaflet-right {
+  top: calc(4.2rem + env(safe-area-inset-top, 0px));
+  margin-right: 0.55rem;
+}
+
 .map-shell .leaflet-bottom.leaflet-right {
   margin-bottom: calc(var(--sheet-peek) + 0.35rem + var(--safe-b));
 }
@@ -322,26 +327,13 @@
 .map-float-actions {
   position: absolute;
   z-index: 1100;
-  right: 0.7rem;
-  bottom: calc(var(--sheet-peek) + 5.15rem + var(--safe-b));
+  /* Left of the “Logga fisk” FAB so they never stack */
+  right: 8.6rem;
+  bottom: calc(var(--sheet-peek) + 1.05rem + var(--safe-b));
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   gap: 0.4rem;
-}
-
-.map-float-btn {
-  appearance: none;
-  border: 1px solid rgba(62, 199, 214, 0.45);
-  background: rgba(8, 14, 22, 0.92);
-  color: #dff7fb;
-  border-radius: 999px;
-  padding: 0.42rem 0.75rem;
-  font: inherit;
-  font-size: 0.75rem;
-  font-weight: 750;
-  cursor: pointer;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
 }
 
 .locate-me {
@@ -355,6 +347,11 @@
   place-items: center;
   cursor: pointer;
   padding: 0;
+}
+
+.locate-me:disabled {
+  opacity: 0.55;
+  cursor: wait;
 }
 
 .locate-me-icon {

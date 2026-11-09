@@ -61,12 +61,17 @@ function skyFromCode(code: number, windMs: number | null): {
   return { sky: "cloud", skyLabel: "Mulet" };
 }
 
+function parseSmhiNumber(raw: number | string): number | null {
+  if (typeof raw === "number") return Number.isFinite(raw) ? raw : null;
+  const n = Number(String(raw).trim().replace(",", "."));
+  return Number.isFinite(n) ? n : null;
+}
+
 function lastValue(json: {
   value?: { value: number | string; date: number | string }[];
 }): { value: number | null; time: string | null } {
   const last = json.value?.[json.value.length - 1];
   if (!last) return { value: null, time: null };
-  const n = typeof last.value === "number" ? last.value : Number(last.value);
   const time =
     last.date == null
       ? null
@@ -74,7 +79,7 @@ function lastValue(json: {
         ? new Date(last.date).toISOString()
         : String(last.date);
   return {
-    value: Number.isFinite(n) ? n : null,
+    value: parseSmhiNumber(last.value),
     time,
   };
 }
@@ -206,7 +211,7 @@ export function WaterLevelWidget() {
       <header className="home-board-head conditions-head">
         <div>
           <h2>Väder & vatten</h2>
-          <p>Malmö kanal · vattenstånd via Öresund (SMHI)</p>
+          <p>Malmö · luft via Open-Meteo · vatten via SMHI Öresund (Hamnen)</p>
         </div>
         {data && !data.error && (
           <div className="conditions-sky" title={data.skyLabel}>

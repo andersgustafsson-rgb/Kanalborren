@@ -69,6 +69,7 @@ export async function fetchHighscores(
         caughtAt: String(r.caught_at),
       };
     })
+    .filter((r) => r.lengthCm != null || r.weightKg != null)
     .sort((a, b) => sortKey(b) - sortKey(a))
     .slice(0, 20);
 }

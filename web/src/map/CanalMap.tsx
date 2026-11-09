@@ -673,22 +673,17 @@ export function CanalMap({
       <div className="map-float-actions">
         <button
           type="button"
-          className="map-float-btn"
-          onClick={goToCanal}
-          title="Visa hela kanalen"
+          className="locate-me"
+          aria-label="Centrera på min plats"
+          title="Centrera på min plats"
+          disabled={checkIn.locating}
+          onClick={() => {
+            if (checkIn.fix || checkIn.session) checkIn.recenterOnMe();
+            else void checkIn.locate();
+          }}
         >
-          Kanal
+          <span className="locate-me-icon" aria-hidden />
         </button>
-        {(checkIn.fix || checkIn.session) && (
-          <button
-            type="button"
-            className="locate-me"
-            aria-label="Centrera på mig"
-            onClick={() => checkIn.recenterOnMe()}
-          >
-            <span className="locate-me-icon" aria-hidden />
-          </button>
-        )}
       </div>
 
       <MapContainer
@@ -699,7 +694,7 @@ export function CanalMap({
         zoomControl={false}
         className={`canal-map${editMode === "add" || pickOnMap ? " add-cursor" : ""}`}
       >
-        <ZoomControl position="bottomright" />
+        <ZoomControl position="topright" />
         <CompactAttribution />
         <CollapseSheetOnMapMove
           enabled={sheetOpen}

@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { Circle, Marker, Tooltip } from "react-leaflet";
 import L from "leaflet";
+import { openQuickCatch } from "../lib/quickCatchPrefs";
 import type { CheckInSession } from "./checkinStorage";
 import { avatarImgHtml } from "./avatars";
 import { escapeHtml } from "./spotsStorage";
@@ -85,9 +86,15 @@ export function SessionMarkers({
             position={[privateFix.lat, privateFix.lng]}
             icon={youIcon}
             zIndexOffset={800}
+            eventHandlers={{
+              click: (e) => {
+                L.DomEvent.stopPropagation(e);
+                openQuickCatch();
+              },
+            }}
           >
             <Tooltip direction="top" offset={[0, -48]} opacity={0.95}>
-              Du ({displayName}) · privat markering
+              Du ({displayName}) · tryck för snabb fångst
             </Tooltip>
           </Marker>
         </>
@@ -103,9 +110,15 @@ export function SessionMarkers({
               session!.openForCompany,
               displayName,
             )}
+            eventHandlers={{
+              click: (e) => {
+                L.DomEvent.stopPropagation(e);
+                openQuickCatch();
+              },
+            }}
           >
             <Tooltip direction="top" offset={[0, -12]}>
-              Du · {displayName} · {session!.zoneName}
+              Du · {displayName} · tryck för snabb fångst
             </Tooltip>
           </Marker>
         )}
@@ -115,9 +128,15 @@ export function SessionMarkers({
           position={[session!.publicLat!, session!.publicLng!]}
           icon={preciseIcon}
           zIndexOffset={700}
+          eventHandlers={{
+            click: (e) => {
+              L.DomEvent.stopPropagation(e);
+              openQuickCatch();
+            },
+          }}
         >
           <Tooltip direction="top" offset={[0, -48]}>
-            Du · {displayName} (publik avatar)
+            Du · {displayName} · tryck för snabb fångst
           </Tooltip>
         </Marker>
       )}

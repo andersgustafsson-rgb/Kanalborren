@@ -3,17 +3,10 @@ import { Link } from "react-router-dom";
 import type { FeatureCollection } from "geojson";
 import { useAuth } from "../lib/AuthContext";
 import { submitCatchReport } from "../lib/catchReports";
+import { SPECIES } from "../lib/species";
 import { fetchSpots } from "../lib/spotsApi";
 import { resolveZone } from "../map/geo";
 import { CatchPlacePicker, type CatchPlace } from "./CatchPlacePicker";
-
-const SPECIES = [
-  { id: "Abborre", tone: "perch", img: "/species/abborre.svg" },
-  { id: "Gädda", tone: "pike", img: "/species/gadda.svg" },
-  { id: "Sutare", tone: "tench", img: "/species/sutare.svg" },
-  { id: "Mört", tone: "roach", img: "/species/mort.svg" },
-  { id: "Annan", tone: "other", img: "/species/annan.svg" },
-] as const;
 
 const ZONES = [
   { id: "slottsparken", name: "Slottsparken" },

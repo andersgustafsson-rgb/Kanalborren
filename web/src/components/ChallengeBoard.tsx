@@ -12,9 +12,9 @@ import {
   type ChallengeMetric,
   type ChallengeScores,
 } from "../lib/challenges";
+import { SPECIES_IDS as SPECIES } from "../lib/species";
 import "./ChallengeBoard.css";
 
-const SPECIES = ["Abborre", "Gädda", "Sutare", "Mört", "Annan"];
 const HOURS = [
   { h: 6, label: "6 tim" },
   { h: 12, label: "12 tim" },
