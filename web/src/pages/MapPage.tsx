@@ -1,6 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { CanalMap } from "../map/CanalMap";
+import {
+  eveningActive,
+  loadEveningPref,
+  saveEveningPref,
+  type EveningPref,
+} from "../map/eveningMode";
 import { PresenceList } from "../map/PresenceList";
 import { useAuth } from "../lib/AuthContext";
 import type { LayerToggles, MapBasemap } from "../map/types";
@@ -44,9 +50,21 @@ export function MapPage() {
   const auth = useAuth();
   const [toggles, setToggles] = useState<LayerToggles>(INITIAL);
   const [basemap, setBasemap] = useState<MapBasemap>(() => loadBasemap());
+  const [eveningPref, setEveningPref] = useState<EveningPref>(() =>
+    loadEveningPref(),
+  );
+  const [nowTick, setNowTick] = useState(0);
   const [layersOpen, setLayersOpen] = useState(false);
   const [uteOpen, setUteOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
+  const evening = eveningActive(eveningPref);
+
+  useEffect(() => {
+    if (eveningPref !== "auto") return;
+    const id = window.setInterval(() => setNowTick((n) => n + 1), 60_000);
+    return () => window.clearInterval(id);
+  }, [eveningPref]);
+  void nowTick;
 
   function toggle(key: keyof LayerToggles) {
     setToggles((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -55,6 +73,12 @@ export function MapPage() {
   function chooseBasemap(next: MapBasemap) {
     setBasemap(next);
     saveBasemap(next);
+  }
+
+  function toggleEvening() {
+    const next: EveningPref = evening ? "off" : "on";
+    setEveningPref(next);
+    saveEveningPref(next);
   }
 
   function openLayers() {
@@ -78,7 +102,9 @@ export function MapPage() {
   }
 
   return (
-    <div className={`app map-app${auth.isAdmin ? " is-admin" : ""}`}>
+    <div
+      className={`app map-app${auth.isAdmin ? " is-admin" : ""}${evening ? " evening" : ""}`}
+    >
       <header className="map-chrome">
         <nav className="hud-rail" aria-label="Meny">
           <Link
@@ -143,6 +169,21 @@ export function MapPage() {
                 {b.label}
               </button>
             ))}
+            <button
+              type="button"
+              className={evening ? "chip on evening-chip" : "chip evening-chip"}
+              aria-pressed={evening}
+              onClick={toggleEvening}
+              title={
+                eveningPref === "auto"
+                  ? "Auto efter skymning — tryck för att låsa"
+                  : evening
+                    ? "Kvällsläge på"
+                    : "Kvällsläge av"
+              }
+            >
+              Kväll
+            </button>
           </div>
           <p className="layer-sheet-label">Lager</p>
           <div className="layer-sheet-row">
@@ -170,7 +211,12 @@ export function MapPage() {
         </div>
       )}
 
-      <CanalMap toggles={toggles} adminOpen={adminOpen} basemap={basemap} />
+      <CanalMap
+        toggles={toggles}
+        adminOpen={adminOpen}
+        basemap={basemap}
+        evening={evening}
+      />
     </div>
   );
 }

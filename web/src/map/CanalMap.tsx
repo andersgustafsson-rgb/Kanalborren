@@ -259,6 +259,7 @@ type Props = {
   toggles: LayerToggles;
   adminOpen?: boolean;
   basemap?: MapBasemap;
+  evening?: boolean;
 };
 
 const BASEMAPS: Record<
@@ -289,6 +290,7 @@ export function CanalMap({
   toggles,
   adminOpen = false,
   basemap = "street",
+  evening = false,
 }: Props) {
   const [canalData, setCanalData] = useState<FeatureCollection>(EMPTY);
   const [zonesData, setZonesData] = useState<FeatureCollection>(EMPTY);
@@ -569,10 +571,13 @@ export function CanalMap({
   }
 
   return (
-    <div className={`map-stage${sheetOpen ? " sheet-open" : ""}`}>
+    <div
+      className={`map-stage${sheetOpen ? " sheet-open" : ""}${evening ? " evening" : ""}`}
+    >
       <div
-        className={`map-shell${editable ? " editing" : ""}${mapAdmin ? " admin" : ""}`}
+        className={`map-shell${editable ? " editing" : ""}${mapAdmin ? " admin" : ""}${evening ? " evening" : ""}`}
       >
+        {evening && <div className="evening-veil" aria-hidden />}
       {error && <div className="map-banner error">{error}</div>}
       {!ready && !error && <div className="map-banner">Laddar kanalkarta…</div>}
 

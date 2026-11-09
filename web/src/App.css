@@ -315,6 +315,58 @@
   height: 100%;
 }
 
+/* Kvällsläge — soft dusk over tiles, canal stays readable */
+.map-app.evening .hud-rail {
+  background: rgba(6, 10, 18, 0.9);
+  border-color: rgba(255, 170, 90, 0.18);
+  box-shadow:
+    0 10px 28px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 190, 120, 0.08);
+}
+
+.map-shell.evening {
+  position: relative;
+}
+
+.map-shell.evening .leaflet-tile-pane {
+  filter: brightness(0.72) contrast(1.08) saturate(0.85)
+    sepia(0.18) hue-rotate(-8deg);
+}
+
+.map-shell.evening .leaflet-overlay-pane,
+.map-shell.evening .leaflet-marker-pane,
+.map-shell.evening .leaflet-tooltip-pane,
+.map-shell.evening .leaflet-popup-pane {
+  filter: none;
+}
+
+.evening-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 450;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      ellipse 90% 70% at 50% 40%,
+      transparent 35%,
+      rgba(4, 8, 16, 0.45) 100%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(18, 10, 28, 0.28) 0%,
+      transparent 28%,
+      transparent 62%,
+      rgba(8, 14, 28, 0.5) 100%
+    );
+  mix-blend-mode: multiply;
+}
+
+.chip.evening-chip.on {
+  background: rgba(255, 168, 80, 0.22);
+  border-color: rgba(255, 176, 96, 0.55);
+  color: #ffd7a8;
+}
+
 .map-shell .leaflet-top.leaflet-right {
   top: calc(4.2rem + env(safe-area-inset-top, 0px));
   margin-right: 0.55rem;
