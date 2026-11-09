@@ -32,11 +32,17 @@ function asNum(v: unknown): number | null {
 
 export async function fetchMyCatches(limit = 200): Promise<MyCatch[]> {
   if (!isSupabaseConfigured() || !supabase) return [];
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return [];
+
   const { data, error } = await supabase
     .from("catch_reports")
     .select(
       "id,species,length_cm,weight_kg,zone_id,zone_name,bait,note,is_private,caught_at",
     )
+    .eq("user_id", user.id)
     .order("caught_at", { ascending: false })
     .limit(limit);
 
@@ -134,9 +140,15 @@ export type MyTripNote = {
 
 export async function fetchMyTripNotes(limit = 30): Promise<MyTripNote[]> {
   if (!isSupabaseConfigured() || !supabase) return [];
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return [];
+
   const { data, error } = await supabase
     .from("fishing_sessions")
     .select("id,zone_name,trip_note,starts_at,ended_at")
+    .eq("user_id", user.id)
     .not("trip_note", "is", null)
     .neq("trip_note", "")
     .not("ended_at", "is", null)

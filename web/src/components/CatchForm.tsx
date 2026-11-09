@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import type { FeatureCollection } from "geojson";
 import { useAuth } from "../lib/AuthContext";
 import { submitCatchReport } from "../lib/catchReports";
+import { fetchSpots } from "../lib/spotsApi";
 import { resolveZone } from "../map/geo";
 import { CatchPlacePicker, type CatchPlace } from "./CatchPlacePicker";
 
@@ -98,7 +99,11 @@ export function CatchForm({ onSubmitted }: Props) {
   useEffect(() => {
     let cancelled = false;
     void Promise.all([
-      fetch("/geo/lokala-platser.geojson").then((r) => r.json()),
+      fetchSpots().then(async (cloud) => {
+        if (cloud) return cloud;
+        const r = await fetch("/geo/lokala-platser.geojson");
+        return (await r.json()) as FeatureCollection;
+      }),
       fetch("/geo/sociala-zoner.geojson").then((r) => r.json()).catch(() => null),
     ])
       .then(([spotsJson, zonesJson]) => {

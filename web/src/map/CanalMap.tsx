@@ -41,10 +41,17 @@ import type { PresetAvatarId } from "./avatars";
 import {
   clearStoredSpots,
   createSpot,
-  downloadSpotsGeoJson,
   loadStoredSpots,
   saveSpots,
 } from "./spotsStorage";
+import {
+  deleteSpot,
+  fetchSpots,
+  replaceAllSpots,
+  seedSpotsIfEmpty,
+  subscribeSpots,
+  upsertSpot,
+} from "../lib/spotsApi";
 
 const CENTER: [number, number] = [55.6055, 12.997];
 /** No maxBounds — tight bounds lock panning when the viewport is larger than the box. */
@@ -309,19 +316,27 @@ export function CanalMap({
       loadGeoJson("/geo/sociala-zoner.geojson"),
       loadGeoJson("/geo/regelzoner.geojson"),
       loadGeoJson("/geo/lokala-platser.geojson"),
+      fetchSpots(),
     ])
-      .then(([canal, zones, rules, spots]) => {
+      .then(([canal, zones, rules, spots, cloud]) => {
         if (cancelled) return;
         setCanalData(canal);
         setZonesData(zones);
         setRulesData(rules);
         setSeedSpots(spots);
-        const stored = loadStoredSpots();
-        setSpotsData(stored || spots);
-        setReady(true);
-        if (stored) {
-          setStatus("Laddade dina sparade platser från webbläsaren");
+        if (cloud) {
+          setSpotsData(cloud);
+          setStatus("Laddade platser från molnet");
+        } else {
+          const stored = loadStoredSpots();
+          const local = stored || spots;
+          setSpotsData(local);
+          if (stored) {
+            setStatus("Laddade dina sparade platser från webbläsaren");
+          }
+          void seedSpotsIfEmpty(local);
         }
+        setReady(true);
       })
       .catch((e: Error) => {
         if (!cancelled) setError(e.message);
@@ -335,6 +350,13 @@ export function CanalMap({
     if (!ready) return;
     saveSpots(spotsData);
   }, [spotsData, ready]);
+
+  useEffect(() => {
+    if (!ready) return;
+    return subscribeSpots((fc) => {
+      setSpotsData(fc);
+    });
+  }, [ready]);
 
   const waterPolys = useMemo(() => {
     return {
@@ -433,34 +455,49 @@ export function CanalMap({
     }
   }
 
+  async function persistSpot(feature: Feature, sortOrder: number, okMsg: string) {
+    const result = await upsertSpot(feature, sortOrder);
+    setStatus(result.ok ? okMsg : `Molnsparning misslyckades: ${result.error}`);
+  }
+
   function moveSpot(id: string, lat: number, lng: number) {
-    updateSpots(
-      (features) =>
-        features.map((f) => {
-          if (spotId(f) !== id || f.geometry?.type !== "Point") return f;
-          return {
-            ...f,
-            geometry: {
-              type: "Point",
-              coordinates: [lng, lat],
-            },
-            properties: {
-              ...(f.properties as CanalProperties),
-              confidence: "high",
-            },
-          };
-        }),
-      "Plats flyttad · sparad lokalt",
+    let moved: Feature | null = null;
+    let sortOrder = 0;
+    updateSpots((features) =>
+      features.map((f, i) => {
+        if (spotId(f) !== id || f.geometry?.type !== "Point") return f;
+        sortOrder = i;
+        moved = {
+          ...f,
+          geometry: {
+            type: "Point",
+            coordinates: [lng, lat],
+          },
+          properties: {
+            ...(f.properties as CanalProperties),
+            confidence: "high",
+          },
+        };
+        return moved;
+      }),
     );
+    if (moved) {
+      void persistSpot(moved, sortOrder, "Plats flyttad · sparad till molnet");
+    }
   }
 
   function addSpotAt(lat: number, lng: number) {
     const name = window.prompt("Namn på platsen?", "Ny plats");
     if (name === null) return;
     const spot = createSpot(name, lat, lng);
-    updateSpots((features) => [...features, spot], `Lade till “${spot.properties?.name}”`);
+    updateSpots((features) => [...features, spot]);
     setSelectedId(spot.properties?.id || null);
     setEditMode("move");
+    void persistSpot(
+      spot,
+      spotsData.features.length,
+      `Lade till “${spot.properties?.name}” · sparad till molnet`,
+    );
   }
 
   function renameSelected() {
@@ -469,21 +506,25 @@ export function CanalMap({
     const name = window.prompt("Nytt namn", current);
     if (name === null || !name.trim()) return;
     const id = spotId(selected);
-    updateSpots(
-      (features) =>
-        features.map((f) =>
-          spotId(f) === id
-            ? {
-                ...f,
-                properties: {
-                  ...(f.properties as CanalProperties),
-                  name: name.trim(),
-                },
-              }
-            : f,
-        ),
-      "Namn uppdaterat",
+    let renamed: Feature | null = null;
+    let sortOrder = 0;
+    updateSpots((features) =>
+      features.map((f, i) => {
+        if (spotId(f) !== id) return f;
+        sortOrder = i;
+        renamed = {
+          ...f,
+          properties: {
+            ...(f.properties as CanalProperties),
+            name: name.trim(),
+          },
+        };
+        return renamed;
+      }),
     );
+    if (renamed) {
+      void persistSpot(renamed, sortOrder, "Namn uppdaterat · sparat till molnet");
+    }
   }
 
   function deleteSelected() {
@@ -491,22 +532,31 @@ export function CanalMap({
     const name = (selected.properties as CanalProperties).name || "platsen";
     if (!window.confirm(`Ta bort “${name}”?`)) return;
     const id = spotId(selected);
-    updateSpots(
-      (features) => features.filter((f) => spotId(f) !== id),
-      `Tog bort “${name}”`,
-    );
+    updateSpots((features) => features.filter((f) => spotId(f) !== id));
     setSelectedId(null);
+    void deleteSpot(id).then((result) => {
+      setStatus(
+        result.ok
+          ? `Tog bort “${name}” · sparat till molnet`
+          : `Borttagning misslyckades: ${result.error}`,
+      );
+    });
   }
 
-  function exportSpots() {
-    downloadSpotsGeoJson(spotsData);
-    setStatus("Exporterade lokala-platser.geojson");
+  async function publishSpots() {
+    setStatus("Publicerar platser…");
+    const result = await replaceAllSpots(spotsData);
+    setStatus(
+      result.ok
+        ? `Publicerade ${result.count ?? ""} platser till molnet`
+        : `Publicering misslyckades: ${result.error}`,
+    );
   }
 
   function resetSpots() {
     if (
       !window.confirm(
-        "Återställ till ursprungsfilen och radera dina lokala ändringar?",
+        "Återställ till ursprungsfilen lokalt? (Publicera för att skriva över molnet)",
       )
     ) {
       return;
@@ -515,7 +565,7 @@ export function CanalMap({
     setSpotsData(seedSpots);
     setSelectedId(null);
     setEditMode("off");
-    setStatus("Återställde till ursprungsplatser");
+    setStatus("Återställde lokalt till ursprungsplatser");
   }
 
   return (
@@ -584,8 +634,8 @@ export function CanalMap({
           >
             Ta bort
           </button>
-          <button type="button" className="chip" onClick={exportSpots}>
-            Exportera
+          <button type="button" className="chip" onClick={() => void publishSpots()}>
+            Publicera
           </button>
           <button type="button" className="chip" onClick={resetSpots}>
             Återställ
