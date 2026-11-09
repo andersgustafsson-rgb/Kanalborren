@@ -5,6 +5,7 @@ import { useAuth } from "../lib/AuthContext";
 import { submitCatchReport } from "../lib/catchReports";
 import { SPECIES } from "../lib/species";
 import { fetchSpots } from "../lib/spotsApi";
+import { loadSession } from "../map/checkinStorage";
 import { resolveZone, type ResolvedZone } from "../map/geo";
 import { CatchPlacePicker, type CatchPlace } from "./CatchPlacePicker";
 
@@ -58,9 +59,9 @@ export function CatchForm({ onSubmitted }: Props) {
   const [weightKg, setWeightKg] = useState("");
   const [placeId, setPlaceId] = useState(ZONES[0].id);
   const [customPlace, setCustomPlace] = useState<PlaceOption | null>(null);
-  const [placeSource, setPlaceSource] = useState<"gps" | "list" | "map">(
-    "gps",
-  );
+  const [placeSource, setPlaceSource] = useState<
+    "gps" | "list" | "map" | "checkin"
+  >("gps");
   const [listOpen, setListOpen] = useState(false);
   const [spots, setSpots] = useState<PlaceOption[]>([]);
   const [spotsGeo, setSpotsGeo] = useState<FeatureCollection | null>(null);
@@ -133,7 +134,7 @@ export function CatchForm({ onSubmitted }: Props) {
 
   function applyPlace(
     place: CatchPlace,
-    source: "gps" | "list" | "map",
+    source: "gps" | "list" | "map" | "checkin",
     resolveSource?: ResolvedZone["source"] | null,
   ) {
     const known =
@@ -151,44 +152,97 @@ export function CatchForm({ onSubmitted }: Props) {
     if (source !== "list") setListOpen(false);
   }
 
+  /** Prefer active check-in zone — same place you already chose on the map. */
+  function applyCheckInPlace(): boolean {
+    const session = loadSession();
+    if (!session?.zoneId || !session.zoneName) return false;
+    if (Date.parse(session.expiresAt) <= Date.now()) return false;
+    applyPlace(
+      { id: session.zoneId, name: session.zoneName },
+      "checkin",
+    );
+    return true;
+  }
+
+  function resolveFromCoords(lat: number, lng: number): ResolvedZone | null {
+    if (!spotsGeo) return null;
+    const zones =
+      zonesGeo ||
+      ({ type: "FeatureCollection", features: [] } as FeatureCollection);
+    return resolveZone(lat, lng, spotsGeo, zones);
+  }
+
   function useGpsPlace() {
-    if (!navigator.geolocation) {
-      say("GPS saknas — välj plats eller karta i stället");
-      return;
-    }
     if (!spotsGeo) {
       say("Platser laddas…");
       return;
     }
+
+    // If already checked in, keep that zone unless GPS finds a named place.
+    const session = loadSession();
+    const hasCheckIn =
+      Boolean(session?.zoneId && session.zoneName) &&
+      Date.parse(session!.expiresAt) > Date.now();
+
+    if (!navigator.geolocation) {
+      if (applyCheckInPlace()) {
+        say("GPS saknas — använder din check-in");
+        return;
+      }
+      say("GPS saknas — välj plats eller karta i stället");
+      return;
+    }
+
     setGpsBusy(true);
     say(null);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        const zones =
-          zonesGeo ||
-          ({ type: "FeatureCollection", features: [] } as FeatureCollection);
-        const z = resolveZone(
+        const z = resolveFromCoords(
           pos.coords.latitude,
           pos.coords.longitude,
-          spotsGeo,
-          zones,
         );
-        applyPlace({ id: z.id, name: z.name }, "gps", z.source);
         setGpsBusy(false);
+        if (!z) {
+          if (!applyCheckInPlace()) {
+            say("Kunde inte koppla plats — välj i lista eller karta");
+          }
+          return;
+        }
+        // Named spot/zone from GPS wins; broad fallback yields to check-in.
+        if (z.source === "fallback" && hasCheckIn) {
+          applyCheckInPlace();
+          say(`GPS för vag — använder ${session!.zoneName}`);
+          return;
+        }
+        applyPlace({ id: z.id, name: z.name }, "gps", z.source);
       },
       () => {
         setGpsBusy(false);
+        if (applyCheckInPlace()) {
+          say("Kunde inte hämta GPS — använder din check-in");
+          return;
+        }
         say("Kunde inte hämta position — välj plats eller karta");
       },
-      { enableHighAccuracy: true, timeout: 12000, maximumAge: 30_000 },
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 10_000 },
     );
   }
 
-  const autoGpsRef = useRef(false);
-  // Default: resolve place from GPS once spots + zones have been attempted.
+  const autoPlaceRef = useRef(false);
+  // Default: check-in zone first, otherwise GPS once geo is ready.
   useEffect(() => {
-    if (!auth.user || !geoReady || !spotsGeo || autoGpsRef.current) return;
-    autoGpsRef.current = true;
+    if (!auth.user || !geoReady || !spotsGeo || autoPlaceRef.current) return;
+    autoPlaceRef.current = true;
+    if (applyCheckInPlace()) return;
+    // No check-in: try resolving from last private fix stored by map, else GPS.
+    const session = loadSession();
+    if (session?.privateLat != null && session?.privateLng != null) {
+      const z = resolveFromCoords(session.privateLat, session.privateLng);
+      if (z && z.source !== "fallback") {
+        applyPlace({ id: z.id, name: z.name }, "gps", z.source);
+        return;
+      }
+    }
     useGpsPlace();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- once when geo+auth ready
   }, [auth.user, geoReady, spotsGeo]);
@@ -331,13 +385,15 @@ export function CatchForm({ onSubmitted }: Props) {
     spots.find((s) => s.id === placeId)?.name ||
     "Okänd plats";
   const placeHint =
-    placeSource === "gps"
-      ? gpsResolveSource === "fallback"
-        ? "ungefärlig plats — välj mer precis"
-        : "närmast din GPS"
-      : placeSource === "map"
-        ? "vald på kartan"
-        : "vald i listan";
+    placeSource === "checkin"
+      ? "från din check-in"
+      : placeSource === "gps"
+        ? gpsResolveSource === "fallback"
+          ? "ungefärlig plats — välj mer precis"
+          : "närmast din GPS"
+        : placeSource === "map"
+          ? "vald på kartan"
+          : "vald i listan";
   const whenLabel = whenOpen
     ? `${caughtDate} · ${caughtTime}`
     : "Just nu";
