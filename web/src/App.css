@@ -329,8 +329,8 @@
 }
 
 .map-shell.evening .leaflet-tile-pane {
-  filter: brightness(0.72) contrast(1.08) saturate(0.85)
-    sepia(0.18) hue-rotate(-8deg);
+  filter: brightness(0.88) contrast(1.05) saturate(0.92)
+    sepia(0.12) hue-rotate(-6deg);
 }
 
 .map-shell.evening .leaflet-overlay-pane,
@@ -347,18 +347,17 @@
   pointer-events: none;
   background:
     radial-gradient(
-      ellipse 90% 70% at 50% 40%,
-      transparent 35%,
-      rgba(4, 8, 16, 0.45) 100%
+      ellipse 95% 75% at 50% 42%,
+      transparent 55%,
+      rgba(8, 12, 22, 0.22) 100%
     ),
     linear-gradient(
       180deg,
-      rgba(18, 10, 28, 0.28) 0%,
-      transparent 28%,
-      transparent 62%,
-      rgba(8, 14, 28, 0.5) 100%
+      rgba(20, 12, 28, 0.14) 0%,
+      transparent 32%,
+      transparent 68%,
+      rgba(10, 14, 26, 0.28) 100%
     );
-  mix-blend-mode: multiply;
 }
 
 .chip.evening-chip.on {
