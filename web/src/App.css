@@ -367,6 +367,12 @@
   gap: 0.4rem;
 }
 
+/* Check-in sheet is expanded — hide locate so it doesn't sit on the form */
+.map-stage.sheet-open .map-float-actions {
+  opacity: 0;
+  pointer-events: none;
+}
+
 .locate-me {
   width: 2.75rem;
   height: 2.75rem;

@@ -26,6 +26,12 @@
   bottom: calc(5.4rem + var(--safe-b, env(safe-area-inset-bottom, 0px)));
 }
 
+/* Don't cover the expanded check-in sheet */
+.map-app:has(.map-stage.sheet-open) .qc-fab {
+  opacity: 0;
+  pointer-events: none;
+}
+
 .qc-fab img {
   width: 1.45rem;
   height: 1.45rem;
