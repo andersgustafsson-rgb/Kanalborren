@@ -39,7 +39,6 @@ export function ShareCatchPage() {
   const [fromCatch] = useState(() => Boolean(draft));
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [busy, setBusy] = useState<Busy>(null);
-  const [progress, setProgress] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
   const [msgOk, setMsgOk] = useState(false);
 
@@ -114,13 +113,8 @@ export function ShareCatchPage() {
   async function ensureCutout(photo: Blob): Promise<Blob | null> {
     if (cutoutBlob) return cutoutBlob;
     setBusy("cutout");
-    setProgress(null);
     setMsg(null);
-    const { blob, error } = await removePhotoBackground(photo, (key, cur, tot) => {
-      if (!tot) return;
-      setProgress(`${key}: ${Math.round((cur / tot) * 100)}%`);
-    });
-    setProgress(null);
+    const { blob, error } = await removePhotoBackground(photo);
     setBusy(null);
     if (!blob) {
       setMsg(error || "Kunde inte frilägga");
@@ -213,7 +207,7 @@ export function ShareCatchPage() {
 
   const busyLabel =
     busy === "cutout"
-      ? `Frilägger…${progress ? ` ${progress}` : ""}`
+      ? "Jobbar…"
       : busy === "compose"
         ? "Bygger bild…"
         : busy === "share"
@@ -309,52 +303,71 @@ export function ShareCatchPage() {
               "Frilägger motivet, suddar din egen bakgrund bakom."}
           </p>
 
-          <label className="share-catch-field">
-            Art
-            <select
-              value={species}
-              disabled={!!busy}
-              onChange={(e) => {
-                setSpecies(e.target.value);
-                clearPreview();
-              }}
-            >
-              {SPECIES.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.id}
-                </option>
-              ))}
-            </select>
-          </label>
+          {!fromCatch && (
+            <>
+              <label className="share-catch-field">
+                Art
+                <select
+                  value={species}
+                  disabled={!!busy}
+                  onChange={(e) => {
+                    setSpecies(e.target.value);
+                    clearPreview();
+                  }}
+                >
+                  {SPECIES.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.id}
+                    </option>
+                  ))}
+                </select>
+              </label>
 
-          <div className="share-catch-row">
-            <label className="share-catch-field">
-              Längd (cm)
-              <input
-                inputMode="decimal"
-                value={lengthCm}
-                disabled={!!busy}
-                placeholder="32"
-                onChange={(e) => {
-                  setLengthCm(e.target.value);
-                  clearPreview();
-                }}
-              />
-            </label>
-            <label className="share-catch-field">
-              Vikt (kg)
-              <input
-                inputMode="decimal"
-                value={weightKg}
-                disabled={!!busy}
-                placeholder="0,8"
-                onChange={(e) => {
-                  setWeightKg(e.target.value);
-                  clearPreview();
-                }}
-              />
-            </label>
-          </div>
+              <div className="share-catch-row">
+                <label className="share-catch-field">
+                  Längd (cm)
+                  <input
+                    inputMode="decimal"
+                    value={lengthCm}
+                    disabled={!!busy}
+                    placeholder="32"
+                    onChange={(e) => {
+                      setLengthCm(e.target.value);
+                      clearPreview();
+                    }}
+                  />
+                </label>
+                <label className="share-catch-field">
+                  Vikt (kg)
+                  <input
+                    inputMode="decimal"
+                    value={weightKg}
+                    disabled={!!busy}
+                    placeholder="0,8"
+                    onChange={(e) => {
+                      setWeightKg(e.target.value);
+                      clearPreview();
+                    }}
+                  />
+                </label>
+              </div>
+
+              {showPlace && (
+                <label className="share-catch-field">
+                  Plats
+                  <input
+                    value={placeName}
+                    disabled={!!busy}
+                    placeholder="t.ex. Slottsparken"
+                    onChange={(e) => {
+                      setPlaceName(e.target.value);
+                      clearPreview();
+                    }}
+                  />
+                </label>
+              )}
+            </>
+          )}
 
           <label className="share-catch-check">
             <input
@@ -369,21 +382,6 @@ export function ShareCatchPage() {
             Visa plats på bilden
             {fromCatch && draft?.isPrivate ? " (fångsten var privat)" : ""}
           </label>
-
-          {showPlace && (
-            <label className="share-catch-field">
-              Plats
-              <input
-                value={placeName}
-                disabled={!!busy}
-                placeholder="t.ex. Slottsparken"
-                onChange={(e) => {
-                  setPlaceName(e.target.value);
-                  clearPreview();
-                }}
-              />
-            </label>
-          )}
 
           <div className="share-catch-actions">
             <button

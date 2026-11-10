@@ -15,19 +15,18 @@ export type ShareCatchMeta = {
 const TEMPLATE_SRC = "/share/templates/malmo-kanal-dusk.jpg";
 const LOGO_SRC = "/brand/kanalhugget-logo.png";
 
-function loadImage(src: string | Blob): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.decoding = "async";
-    img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error("Kunde inte ladda bild"));
+/** Prefer bitmap via fetch — avoids crossOrigin cache failures when switching looks. */
+async function loadBitmap(src: string | Blob): Promise<ImageBitmap> {
+  try {
     if (typeof src === "string") {
-      img.crossOrigin = "anonymous";
-      img.src = src;
-    } else {
-      img.src = URL.createObjectURL(src);
+      const res = await fetch(src);
+      if (!res.ok) throw new Error("Kunde inte ladda bild");
+      return await createImageBitmap(await res.blob());
     }
-  });
+    return await createImageBitmap(src);
+  } catch {
+    throw new Error("Kunde inte ladda bild");
+  }
 }
 
 /** Cover-draw image into rect (center crop). */
@@ -49,8 +48,58 @@ function drawCover(
   ctx.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh);
 }
 
-/** Contain-draw (fit inside) centered, returns drawn box. */
-function drawContain(
+/**
+ * Crop away empty/transparent padding so a small subject fills the frame.
+ * Returns a new bitmap (caller must close) or the original if already tight.
+ */
+async function trimOpaqueBitmap(
+  src: ImageBitmap,
+  alphaMin = 10,
+  pad = 12,
+): Promise<{ bmp: ImageBitmap; trimmed: boolean }> {
+  const probe = document.createElement("canvas");
+  probe.width = src.width;
+  probe.height = src.height;
+  const pctx = probe.getContext("2d", { willReadFrequently: true });
+  if (!pctx) return { bmp: src, trimmed: false };
+  pctx.drawImage(src, 0, 0);
+  const { data, width, height } = pctx.getImageData(0, 0, probe.width, probe.height);
+
+  let minX = width;
+  let minY = height;
+  let maxX = -1;
+  let maxY = -1;
+  for (let y = 0; y < height; y++) {
+    const row = y * width;
+    for (let x = 0; x < width; x++) {
+      if (data[(row + x) * 4 + 3] > alphaMin) {
+        if (x < minX) minX = x;
+        if (y < minY) minY = y;
+        if (x > maxX) maxX = x;
+        if (y > maxY) maxY = y;
+      }
+    }
+  }
+  if (maxX < 0) return { bmp: src, trimmed: false };
+
+  minX = Math.max(0, minX - pad);
+  minY = Math.max(0, minY - pad);
+  maxX = Math.min(width - 1, maxX + pad);
+  maxY = Math.min(height - 1, maxY + pad);
+  const tw = maxX - minX + 1;
+  const th = maxY - minY + 1;
+
+  // Already fills most of the canvas — no gain from crop.
+  if (tw / width > 0.9 && th / height > 0.9) {
+    return { bmp: src, trimmed: false };
+  }
+
+  const cropped = await createImageBitmap(probe, minX, minY, tw, th);
+  return { bmp: cropped, trimmed: true };
+}
+
+/** Fit subject inside rect; bottom-align so feet sit nearer the pier/water. */
+function drawSubject(
   ctx: CanvasRenderingContext2D,
   img: CanvasImageSource,
   dx: number,
@@ -59,17 +108,31 @@ function drawContain(
   dh: number,
   iw: number,
   ih: number,
-  pad = 0,
+  pad = 16,
 ) {
   const boxW = dw - pad * 2;
   const boxH = dh - pad * 2;
+  // Prefer filling the box — small subjects after trim scale up hard.
   const scale = Math.min(boxW / iw, boxH / ih);
   const w = iw * scale;
   const h = ih * scale;
   const x = dx + (dw - w) / 2;
-  const y = dy + (dh - h) / 2;
+  const y = dy + dh - pad - h;
   ctx.drawImage(img, x, y, w, h);
   return { x, y, w, h };
+}
+
+async function loadTrimmedCutout(cutout: Blob): Promise<{
+  bmp: ImageBitmap;
+  closeExtra: () => void;
+}> {
+  const raw = await loadBitmap(cutout);
+  const { bmp, trimmed } = await trimOpaqueBitmap(raw);
+  if (trimmed) {
+    raw.close();
+    return { bmp, closeExtra: () => bmp.close() };
+  }
+  return { bmp: raw, closeExtra: () => raw.close() };
 }
 
 function roundRect(
@@ -98,21 +161,6 @@ function formatDateSv(isoOrDate: string): string {
     month: "short",
     year: "numeric",
   });
-}
-
-function drawTrackedText(
-  ctx: CanvasRenderingContext2D,
-  text: string,
-  x: number,
-  y: number,
-  tracking: number,
-) {
-  let cursor = x;
-  for (const ch of text) {
-    ctx.fillText(ch, cursor, y);
-    cursor += ctx.measureText(ch).width + tracking;
-  }
-  return cursor - x;
 }
 
 /** Soft “brush” pill for length — slightly skewed teal badge. */
@@ -192,7 +240,8 @@ function drawMeta(
   meta: ShareCatchMeta,
   opts: { bottomSafe: number; withScrim: boolean },
 ) {
-  const species = meta.species.trim().toUpperCase();
+  // Title case brush look (matches ChatGPT mock: "Abborre", not "ABBORRE")
+  const species = meta.species.trim();
   const length =
     meta.lengthCm != null && Number.isFinite(meta.lengthCm)
       ? `${String(meta.lengthCm).replace(".", ",")} cm`
@@ -206,11 +255,11 @@ function drawMeta(
     meta.showPlace && meta.placeName?.trim() ? meta.placeName.trim() : null;
 
   const blockH =
-    (species ? 118 : 0) +
-    (length || weight ? 86 : 0) +
+    (species ? 130 : 0) +
+    (length || weight ? 90 : 0) +
     52 +
     (place ? 48 : 0) +
-    40;
+    36;
   const top = SHARE_H - opts.bottomSafe - blockH;
   const left = 56;
 
@@ -223,20 +272,21 @@ function drawMeta(
     ctx.fillRect(0, top - 80, SHARE_W, SHARE_H - (top - 80));
   }
 
-  let y = top + 8;
+  let y = top + 4;
   ctx.textAlign = "left";
   ctx.textBaseline = "top";
 
   if (species) {
-    ctx.font = "italic 800 104px Rajdhani, Segoe UI, system-ui, sans-serif";
+    ctx.font =
+      "700 118px 'Permanent Marker', 'Segoe Print', cursive, system-ui";
     ctx.fillStyle = "#FFFFFF";
-    ctx.shadowColor = "rgba(0,0,0,0.65)";
-    ctx.shadowBlur = 22;
-    ctx.shadowOffsetY = 5;
-    drawTrackedText(ctx, species, left, y, 3.5);
+    ctx.shadowColor = "rgba(0,0,0,0.7)";
+    ctx.shadowBlur = 16;
+    ctx.shadowOffsetY = 4;
+    ctx.fillText(species, left, y);
     ctx.shadowBlur = 0;
     ctx.shadowOffsetY = 0;
-    y += 112;
+    y += 120;
   }
 
   if (length || weight) {
@@ -248,22 +298,22 @@ function drawMeta(
         ctx.textBaseline = "middle";
         ctx.fillText(weight, left + badge.w + 18, y + badge.h / 2);
       }
-      y += badge.h + 28;
+      y += badge.h + 26;
     } else if (weight) {
       const badge = drawLengthBadge(ctx, weight, left, y);
-      y += badge.h + 28;
+      y += badge.h + 26;
     }
     ctx.textBaseline = "top";
   }
 
-  ctx.font = "600 30px Inter, Segoe UI, system-ui, sans-serif";
+  ctx.font = "600 28px Inter, Segoe UI, system-ui, sans-serif";
   ctx.fillStyle = "rgba(244,247,250,0.92)";
   drawCalendarIcon(ctx, left, y + 2, "#13BFC5");
   ctx.fillText(date, left + 30, y);
-  y += 48;
+  y += 46;
 
   if (place) {
-    ctx.font = "600 30px Inter, Segoe UI, system-ui, sans-serif";
+    ctx.font = "600 28px Inter, Segoe UI, system-ui, sans-serif";
     ctx.fillStyle = "#00D5E8";
     drawPinIcon(ctx, left, y - 2, "#00D5E8");
     ctx.fillText(place, left + 30, y);
@@ -273,9 +323,9 @@ function drawMeta(
 async function ensureFonts() {
   try {
     await Promise.all([
-      document.fonts.load("italic 800 104px Rajdhani"),
+      document.fonts.load("700 118px 'Permanent Marker'"),
       document.fonts.load("700 44px Rajdhani"),
-      document.fonts.load("600 30px Inter"),
+      document.fonts.load("600 28px Inter"),
     ]);
   } catch {
     /* system fonts fallback */
@@ -295,8 +345,8 @@ export async function composeShareCard(input: {
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Canvas saknas");
 
-  const photoImg = await loadImage(input.photo);
-  const logoImg = await loadImage(LOGO_SRC).catch(() => null);
+  const photoImg = await loadBitmap(input.photo);
+  const logoImg = await loadBitmap(LOGO_SRC).catch(() => null);
 
   if (input.mode === "photo") {
     drawCover(
@@ -306,58 +356,58 @@ export async function composeShareCard(input: {
       0,
       SHARE_W,
       SHARE_H,
-      photoImg.naturalWidth,
-      photoImg.naturalHeight,
+      photoImg.width,
+      photoImg.height,
     );
     if (logoImg) {
       const lw = 360;
-      const lh = (logoImg.naturalHeight / logoImg.naturalWidth) * lw;
+      const lh = (logoImg.height / logoImg.width) * lw;
       ctx.drawImage(logoImg, (SHARE_W - lw) / 2, 48, lw, lh);
     }
     drawMeta(ctx, input.meta, { bottomSafe: 48, withScrim: true });
   } else if (input.mode === "template") {
-    const tpl = await loadImage(TEMPLATE_SRC);
-    drawCover(
-      ctx,
-      tpl,
-      0,
-      0,
-      SHARE_W,
-      SHARE_H,
-      tpl.naturalWidth,
-      tpl.naturalHeight,
-    );
-    if (input.cutout) {
-      const cut = await loadImage(input.cutout);
-      drawContain(
-        ctx,
-        cut,
-        0,
-        160,
-        SHARE_W,
-        SHARE_H - 420,
-        cut.naturalWidth,
-        cut.naturalHeight,
-        40,
-      );
-    } else {
-      // Fallback: soft photo plate if cutout missing
-      ctx.save();
-      roundRect(ctx, 80, 220, SHARE_W - 160, 620, 28);
-      ctx.clip();
-      drawCover(
-        ctx,
-        photoImg,
-        80,
-        220,
-        SHARE_W - 160,
-        620,
-        photoImg.naturalWidth,
-        photoImg.naturalHeight,
-      );
-      ctx.restore();
+    const tpl = await loadBitmap(TEMPLATE_SRC);
+    try {
+      drawCover(ctx, tpl, 0, 0, SHARE_W, SHARE_H, tpl.width, tpl.height);
+      if (input.cutout) {
+        const cut = await loadTrimmedCutout(input.cutout);
+        try {
+          // Large mid-frame: logo/waves on template, meta at bottom.
+          drawSubject(
+            ctx,
+            cut.bmp,
+            20,
+            200,
+            SHARE_W - 40,
+            SHARE_H - 520,
+            cut.bmp.width,
+            cut.bmp.height,
+            8,
+          );
+        } finally {
+          cut.closeExtra();
+        }
+      } else {
+        // Fallback: soft photo plate if cutout missing
+        ctx.save();
+        roundRect(ctx, 80, 220, SHARE_W - 160, 620, 28);
+        ctx.clip();
+        drawCover(
+          ctx,
+          photoImg,
+          80,
+          220,
+          SHARE_W - 160,
+          620,
+          photoImg.width,
+          photoImg.height,
+        );
+        ctx.restore();
+      }
+      drawMeta(ctx, input.meta, { bottomSafe: 120, withScrim: false });
+    } finally {
+      tpl.close();
     }
-    drawMeta(ctx, input.meta, { bottomSafe: 120, withScrim: false });
   } else {
     // blur: soft photo as bg + sharp cutout on top
     const small = document.createElement("canvas");
@@ -372,28 +422,31 @@ export async function composeShareCard(input: {
       0,
       small.width,
       small.height,
-      photoImg.naturalWidth,
-      photoImg.naturalHeight,
+      photoImg.width,
+      photoImg.height,
     );
     ctx.filter = "blur(18px) brightness(0.82)";
     ctx.drawImage(small, 0, 0, SHARE_W, SHARE_H);
     ctx.filter = "none";
 
     if (input.cutout) {
-      const cut = await loadImage(input.cutout);
-      drawContain(
-        ctx,
-        cut,
-        0,
-        140,
-        SHARE_W,
-        SHARE_H - 400,
-        cut.naturalWidth,
-        cut.naturalHeight,
-        48,
-      );
+      const cut = await loadTrimmedCutout(input.cutout);
+      try {
+        drawSubject(
+          ctx,
+          cut.bmp,
+          10,
+          160,
+          SHARE_W - 20,
+          SHARE_H - 420,
+          cut.bmp.width,
+          cut.bmp.height,
+          8,
+        );
+      } finally {
+        cut.closeExtra();
+      }
     } else {
-      // No cutout — fall back to sharp photo (still shareable)
       drawCover(
         ctx,
         photoImg,
@@ -401,17 +454,20 @@ export async function composeShareCard(input: {
         0,
         SHARE_W,
         SHARE_H,
-        photoImg.naturalWidth,
-        photoImg.naturalHeight,
+        photoImg.width,
+        photoImg.height,
       );
     }
     if (logoImg) {
-      const lw = 320;
-      const lh = (logoImg.naturalHeight / logoImg.naturalWidth) * lw;
-      ctx.drawImage(logoImg, (SHARE_W - lw) / 2, 40, lw, lh);
+      const lw = 560;
+      const lh = (logoImg.height / logoImg.width) * lw;
+      ctx.drawImage(logoImg, (SHARE_W - lw) / 2, 28, lw, lh);
     }
     drawMeta(ctx, input.meta, { bottomSafe: 48, withScrim: true });
   }
+
+  photoImg.close();
+  logoImg?.close();
 
   // Strip EXIF by re-encoding from canvas pixels only.
   const blob = await new Promise<Blob>((resolve, reject) => {
