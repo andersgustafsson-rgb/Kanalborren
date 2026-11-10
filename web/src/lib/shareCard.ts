@@ -106,7 +106,10 @@ function findSolidContentBounds(
   return { sx, sy, sw: Math.max(1, ex - sx), sh: Math.max(1, ey - sy) };
 }
 
-/** Zoom subject content into rect; bottom-align toward pier/water. */
+/**
+ * Fill the subject box by HEIGHT so crouching/wide cutouts get big.
+ * Sides may clip — better than a tiny floating person.
+ */
 function drawSubject(
   ctx: CanvasRenderingContext2D,
   img: CanvasImageSource,
@@ -115,15 +118,21 @@ function drawSubject(
   dy: number,
   dw: number,
   dh: number,
-  pad = 8,
+  pad = 4,
 ) {
   const boxW = dw - pad * 2;
   const boxH = dh - pad * 2;
-  const scale = Math.min(boxW / content.sw, boxH / content.sh);
+  // Height-first zoom (cover). Contain left wide subjects tiny.
+  const scale = boxH / content.sh;
   const w = content.sw * scale;
-  const h = content.sh * scale;
+  const h = boxH;
   const x = dx + (dw - w) / 2;
   const y = dy + dh - pad - h;
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(dx + pad, dy + pad, boxW, boxH);
+  ctx.clip();
   ctx.drawImage(
     img,
     content.sx,
@@ -135,6 +144,7 @@ function drawSubject(
     w,
     h,
   );
+  ctx.restore();
   return { x, y, w, h };
 }
 
@@ -385,16 +395,16 @@ export async function composeShareCard(input: {
       if (input.cutout) {
         const cut = await loadTrimmedCutout(input.cutout);
         try {
-          // Between logo and meta — fill this box with the solid subject.
+          // Tall mid-frame between logo and meta text.
           drawSubject(
             ctx,
             cut.bmp,
             cut.content,
+            -40,
+            150,
+            SHARE_W + 80,
+            720,
             0,
-            170,
-            SHARE_W,
-            SHARE_H - 560,
-            4,
           );
         } finally {
           cut.closeExtra();
@@ -448,11 +458,11 @@ export async function composeShareCard(input: {
           ctx,
           cut.bmp,
           cut.content,
+          -40,
+          140,
+          SHARE_W + 80,
+          760,
           0,
-          150,
-          SHARE_W,
-          SHARE_H - 430,
-          4,
         );
       } finally {
         cut.closeExtra();

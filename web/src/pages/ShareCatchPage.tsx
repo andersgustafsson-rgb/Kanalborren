@@ -298,9 +298,9 @@ export function ShareCatchPage() {
           <p className="share-catch-hint">
             {mode === "photo" && "Originalfoto + logo och text ovanpå."}
             {mode === "template" &&
-              "Frilägger dig+fisk och lägger på Malmö kanal-mallen."}
+              "Frilägger och zoomar in dig+fisk på Malmö-mallen."}
             {mode === "blur" &&
-              "Frilägger motivet, suddar din egen bakgrund bakom."}
+              "Frilägger och zoomar in motivet mot suddig bakgrund."}
           </p>
 
           {!fromCatch && (
