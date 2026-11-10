@@ -350,6 +350,9 @@ export function ProfilePage() {
         <Link className="chip" to="/hjalp" style={{ alignSelf: "center" }}>
           Så funkar det
         </Link>
+        <Link className="chip" to="/labb/frilagg" style={{ alignSelf: "center" }}>
+          Labb · friläggning
+        </Link>
         <div className="profile-legal-links">
           <Link className="chip" to="/integritet">
             Integritet

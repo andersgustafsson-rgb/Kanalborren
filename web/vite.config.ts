@@ -3,6 +3,9 @@ import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig({
+  optimizeDeps: {
+    exclude: ["onnxruntime-web"],
+  },
   plugins: [
     react(),
     VitePWA({
