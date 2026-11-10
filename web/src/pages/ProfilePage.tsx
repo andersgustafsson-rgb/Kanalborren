@@ -350,6 +350,9 @@ export function ProfilePage() {
         <Link className="chip" to="/hjalp" style={{ alignSelf: "center" }}>
           Så funkar det
         </Link>
+        <Link className="chip" to="/dela" style={{ alignSelf: "center" }}>
+          Dela fångst
+        </Link>
         <Link className="chip" to="/labb/frilagg" style={{ alignSelf: "center" }}>
           Labb · friläggning
         </Link>

@@ -99,7 +99,9 @@ export function QuickCatch() {
   const hideFab =
     location.pathname.startsWith("/admin") ||
     location.pathname.startsWith("/integritet") ||
-    location.pathname.startsWith("/villkor");
+    location.pathname.startsWith("/villkor") ||
+    location.pathname.startsWith("/dela") ||
+    location.pathname.startsWith("/labb");
 
   function resolvePlace(): { id: string; name: string } | null {
     if (zoneId) {

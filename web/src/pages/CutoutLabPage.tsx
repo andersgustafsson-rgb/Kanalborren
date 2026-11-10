@@ -1,44 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { removePhotoBackground } from "../lib/cutout";
 import "./CutoutLabPage.css";
 
-type Status =
-  | "idle"
-  | "loading_model"
-  | "running"
-  | "done"
-  | "failed";
+type Status = "idle" | "loading_model" | "running" | "done" | "failed";
 
 const SAMPLE = "/labb/test-catch.jpg";
-
-/** Rough quality check — mostly-transparent PNG is a failed cutout. */
-async function looksLikeFailedCutout(blob: Blob): Promise<boolean> {
-  if (blob.size < 2_000) return true;
-  try {
-    const bmp = await createImageBitmap(blob);
-    const w = Math.min(64, bmp.width);
-    const h = Math.min(64, bmp.height);
-    const canvas = document.createElement("canvas");
-    canvas.width = w;
-    canvas.height = h;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) {
-      bmp.close();
-      return false;
-    }
-    ctx.drawImage(bmp, 0, 0, w, h);
-    bmp.close();
-    const { data } = ctx.getImageData(0, 0, w, h);
-    let opaque = 0;
-    for (let i = 3; i < data.length; i += 4) {
-      if (data[i] > 24) opaque += 1;
-    }
-    const ratio = opaque / (w * h);
-    return ratio < 0.02 || ratio > 0.98;
-  } catch {
-    return false;
-  }
-}
 
 export function CutoutLabPage() {
   const fileRef = useRef<HTMLInputElement>(null);
@@ -86,8 +53,7 @@ export function CutoutLabPage() {
     try {
       const res = await fetch(SAMPLE);
       if (!res.ok) throw new Error("Kunde inte hämta testbilden");
-      const blob = await res.blob();
-      await setSourceFromBlob(blob, SAMPLE);
+      await setSourceFromBlob(await res.blob(), SAMPLE);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Kunde inte ladda testbild");
     }
@@ -111,7 +77,7 @@ export function CutoutLabPage() {
     }
     setResultUrl(null);
 
-    let input: Blob | string | null = sourceBlob;
+    let input: Blob | null = sourceBlob;
     if (!input && sourceUrl) {
       try {
         const res = await fetch(sourceUrl);
@@ -130,48 +96,36 @@ export function CutoutLabPage() {
     }
 
     setStatus("loading_model");
-    try {
-      const { removeBackground } = await import("@imgly/background-removal");
-      setStatus("running");
-      const blob = await removeBackground(input, {
-        model: "isnet_fp16",
-        output: { format: "image/png", quality: 0.9 },
-        progress: (key, current, total) => {
-          if (!total) return;
-          const pct = Math.round((current / total) * 100);
-          setProgress(`${key}: ${pct}%`);
-          if (key.toLowerCase().includes("model") || pct < 100) {
-            setStatus("loading_model");
-          } else {
-            setStatus("running");
-          }
-        },
-      });
-
-      if (await looksLikeFailedCutout(blob)) {
-        setStatus("failed");
-        setError(
-          "Friläggningen gav ett dåligt resultat — originalet behålls. Prova annat foto eller ljusare bakgrund.",
+    const { blob, error: err } = await removePhotoBackground(
+      input,
+      (key, current, total) => {
+        if (!total) return;
+        const pct = Math.round((current / total) * 100);
+        setProgress(`${key}: ${pct}%`);
+        setStatus(
+          key.toLowerCase().includes("model") || pct < 100
+            ? "loading_model"
+            : "running",
         );
-        return;
-      }
+      },
+    );
 
-      const url = URL.createObjectURL(blob);
-      resultObjectUrl.current = url;
-      setResultUrl(url);
-      setShowResult(true);
-      setStatus("done");
-      setProgress(null);
-    } catch (e) {
-      console.warn("cutout failed", e);
+    if (!blob) {
       setStatus("failed");
       setProgress(null);
       setError(
-        e instanceof Error
-          ? `Kunde inte frilägga: ${e.message}`
-          : "Kunde inte frilägga — originalet behålls",
+        err ||
+          "Friläggningen gav ett dåligt resultat — originalet behålls. Prova annat foto.",
       );
+      return;
     }
+
+    const url = URL.createObjectURL(blob);
+    resultObjectUrl.current = url;
+    setResultUrl(url);
+    setShowResult(true);
+    setStatus("done");
+    setProgress(null);
   }
 
   const busy = status === "loading_model" || status === "running";
@@ -196,7 +150,8 @@ export function CutoutLabPage() {
             <h1>Friläggning</h1>
             <p>
               Lokal bakgrundsborttagning i telefonen — ingen uppladdning till
-              AI-tjänst. Spike innan Dela fångst.
+              AI-tjänst.{" "}
+              <Link to="/dela">Gå till Dela fångst →</Link>
             </p>
           </div>
         </header>
@@ -277,13 +232,6 @@ export function CutoutLabPage() {
               </div>
             )}
           </div>
-
-          {resultUrl && status === "done" && (
-            <p className="cutout-lab-note">
-              Schackrutig bakgrund = transparent. Bedöm om person + fisk håller
-              ihop innan vi bygger delningsmallar.
-            </p>
-          )}
         </section>
       </div>
     </div>
