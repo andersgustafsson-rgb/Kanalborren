@@ -468,6 +468,21 @@ export async function composeShareCard(input: {
   return blob;
 }
 
+export function downloadShareBlob(
+  blob: Blob,
+  filename = "kanalhugget-fangst.jpg",
+) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.rel = "noopener";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 2500);
+}
+
 export async function shareOrDownloadBlob(
   blob: Blob,
   filename = "kanalhugget-fangst.jpg",
@@ -494,11 +509,6 @@ export async function shareOrDownloadBlob(
     }
   }
 
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  a.click();
-  window.setTimeout(() => URL.revokeObjectURL(url), 2000);
+  downloadShareBlob(blob, filename);
   return "downloaded";
 }

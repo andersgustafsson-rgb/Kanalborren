@@ -4,6 +4,7 @@ import { removePhotoBackground } from "../lib/cutout";
 import { SPECIES } from "../lib/species";
 import {
   composeShareCard,
+  downloadShareBlob,
   shareOrDownloadBlob,
   type ShareMode,
 } from "../lib/shareCard";
@@ -12,7 +13,7 @@ import "./ShareCatchPage.css";
 
 const SAMPLE = "/labb/test-catch.jpg";
 
-type Busy = null | "cutout" | "compose" | "share";
+type Busy = null | "cutout" | "compose" | "share" | "save";
 
 function draftLength(v: number | null): string {
   return v != null ? String(v).replace(".", ",") : "";
@@ -172,23 +173,44 @@ export function ShareCatchPage() {
     }
   }
 
+  async function renderCard(): Promise<Blob> {
+    const photo = await ensurePhotoBlob();
+    let cut: Blob | null = cutoutBlob;
+    if (needsCutout && !cut) cut = await ensureCutout(photo);
+    setBusy("compose");
+    const out = await composeShareCard({
+      mode,
+      photo,
+      cutout: cut,
+      meta,
+    });
+    clearPreview();
+    const url = URL.createObjectURL(out);
+    previewObject.current = url;
+    setPreviewUrl(url);
+    return out;
+  }
+
+  async function onSave() {
+    setMsg(null);
+    try {
+      const out = await renderCard();
+      setBusy("save");
+      downloadShareBlob(out);
+      setBusy(null);
+      setMsgOk(true);
+      setMsg("Bilden sparades");
+    } catch (e) {
+      setBusy(null);
+      setMsgOk(false);
+      setMsg(e instanceof Error ? e.message : "Kunde inte spara");
+    }
+  }
+
   async function onShare() {
     setMsg(null);
     try {
-      const photo = await ensurePhotoBlob();
-      let cut: Blob | null = cutoutBlob;
-      if (needsCutout && !cut) cut = await ensureCutout(photo);
-      setBusy("compose");
-      const out = await composeShareCard({
-        mode,
-        photo,
-        cutout: cut,
-        meta,
-      });
-      clearPreview();
-      const url = URL.createObjectURL(out);
-      previewObject.current = url;
-      setPreviewUrl(url);
+      const out = await renderCard();
       setBusy("share");
       const how = await shareOrDownloadBlob(out);
       setBusy(null);
@@ -210,9 +232,11 @@ export function ShareCatchPage() {
       ? "Jobbar…"
       : busy === "compose"
         ? "Bygger bild…"
-        : busy === "share"
-          ? "Delar…"
-          : null;
+        : busy === "save"
+          ? "Sparar…"
+          : busy === "share"
+            ? "Delar…"
+            : null;
 
   return (
     <div className="share-catch">
@@ -391,6 +415,14 @@ export function ShareCatchPage() {
               onClick={() => void buildPreview()}
             >
               Förhandsvisa
+            </button>
+            <button
+              type="button"
+              className="chip"
+              disabled={!!busy || !photoUrl}
+              onClick={() => void onSave()}
+            >
+              Spara
             </button>
             <button
               type="button"
