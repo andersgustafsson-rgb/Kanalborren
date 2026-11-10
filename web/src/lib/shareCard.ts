@@ -107,8 +107,9 @@ function findSolidContentBounds(
 }
 
 /**
- * Fill the subject box by HEIGHT so crouching/wide cutouts get big.
- * Sides may clip — better than a tiny floating person.
+ * Hero zoom: cover the frame and punch in so the person dominates the card.
+ * Cutouts from phone photos are often already tight — "fit" still looks tiny
+ * against a full-bleed Malmö backdrop, so we scale past contain on purpose.
  */
 function drawSubject(
   ctx: CanvasRenderingContext2D,
@@ -118,20 +119,21 @@ function drawSubject(
   dy: number,
   dw: number,
   dh: number,
-  pad = 4,
+  punch = 1.28,
 ) {
-  const boxW = dw - pad * 2;
-  const boxH = dh - pad * 2;
-  // Height-first zoom (cover). Contain left wide subjects tiny.
-  const scale = boxH / content.sh;
+  const boxW = dw;
+  const boxH = dh;
+  // Cover the frame (max), then punch in further.
+  const scale = Math.max(boxW / content.sw, boxH / content.sh) * punch;
   const w = content.sw * scale;
-  const h = boxH;
-  const x = dx + (dw - w) / 2;
-  const y = dy + dh - pad - h;
+  const h = content.sh * scale;
+  const x = dx + (boxW - w) / 2;
+  // Slightly below center so face/fish sit in the upper-mid of the frame.
+  const y = dy + (boxH - h) / 2 + boxH * 0.04;
 
   ctx.save();
   ctx.beginPath();
-  ctx.rect(dx + pad, dy + pad, boxW, boxH);
+  ctx.rect(dx, dy, boxW, boxH);
   ctx.clip();
   ctx.drawImage(
     img,
@@ -395,16 +397,16 @@ export async function composeShareCard(input: {
       if (input.cutout) {
         const cut = await loadTrimmedCutout(input.cutout);
         try {
-          // Tall mid-frame between logo and meta text.
+          // Nearly logo → meta. Punch-in makes a tight cutout look huge.
           drawSubject(
             ctx,
             cut.bmp,
             cut.content,
-            -40,
-            150,
-            SHARE_W + 80,
-            720,
             0,
+            120,
+            SHARE_W,
+            900,
+            1.32,
           );
         } finally {
           cut.closeExtra();
@@ -458,11 +460,11 @@ export async function composeShareCard(input: {
           ctx,
           cut.bmp,
           cut.content,
-          -40,
-          140,
-          SHARE_W + 80,
-          760,
           0,
+          110,
+          SHARE_W,
+          920,
+          1.28,
         );
       } finally {
         cut.closeExtra();
