@@ -107,46 +107,30 @@ function findSolidContentBounds(
 }
 
 /**
- * Hero zoom: cover the frame and punch in so the person dominates the card.
- * Cutouts from phone photos are often already tight — "fit" still looks tiny
- * against a full-bleed Malmö backdrop, so we scale past contain on purpose.
+ * Fit the cutout under the logo. Zoom only when the person is a small
+ * island in a mostly empty cutout — a close-up that already fills the
+ * photo is shown whole, without extra crop.
  */
 function drawSubject(
   ctx: CanvasRenderingContext2D,
   img: CanvasImageSource,
   content: ContentBounds,
-  dx: number,
-  dy: number,
-  dw: number,
-  dh: number,
-  punch = 1.28,
+  fullW: number,
+  fullH: number,
 ) {
-  const boxW = dw;
-  const boxH = dh;
-  // Cover the frame (max), then punch in further.
-  const scale = Math.max(boxW / content.sw, boxH / content.sh) * punch;
-  const w = content.sw * scale;
-  const h = content.sh * scale;
-  const x = dx + (boxW - w) / 2;
-  // Slightly below center so face/fish sit in the upper-mid of the frame.
-  const y = dy + (boxH - h) / 2 + boxH * 0.04;
+  const fill = Math.min(content.sw / fullW, content.sh / fullH);
+  const src = fill < 0.72 ? content : { sx: 0, sy: 0, sw: fullW, sh: fullH };
 
-  ctx.save();
-  ctx.beginPath();
-  ctx.rect(dx, dy, boxW, boxH);
-  ctx.clip();
-  ctx.drawImage(
-    img,
-    content.sx,
-    content.sy,
-    content.sw,
-    content.sh,
-    x,
-    y,
-    w,
-    h,
-  );
-  ctx.restore();
+  const top = 210;
+  const bottom = 1220;
+  const maxH = bottom - top;
+  const maxW = SHARE_W - 64;
+  const scale = Math.min(maxW / src.sw, maxH / src.sh);
+  const w = src.sw * scale;
+  const h = src.sh * scale;
+  const x = (SHARE_W - w) / 2;
+  const y = top + (maxH - h) / 2;
+  ctx.drawImage(img, src.sx, src.sy, src.sw, src.sh, x, y, w, h);
   return { x, y, w, h };
 }
 
@@ -397,17 +381,7 @@ export async function composeShareCard(input: {
       if (input.cutout) {
         const cut = await loadTrimmedCutout(input.cutout);
         try {
-          // Nearly logo → meta. Punch-in makes a tight cutout look huge.
-          drawSubject(
-            ctx,
-            cut.bmp,
-            cut.content,
-            0,
-            120,
-            SHARE_W,
-            900,
-            1.32,
-          );
+          drawSubject(ctx, cut.bmp, cut.content, cut.bmp.width, cut.bmp.height);
         } finally {
           cut.closeExtra();
         }
@@ -456,16 +430,7 @@ export async function composeShareCard(input: {
     if (input.cutout) {
       const cut = await loadTrimmedCutout(input.cutout);
       try {
-        drawSubject(
-          ctx,
-          cut.bmp,
-          cut.content,
-          0,
-          110,
-          SHARE_W,
-          920,
-          1.28,
-        );
+        drawSubject(ctx, cut.bmp, cut.content, cut.bmp.width, cut.bmp.height);
       } finally {
         cut.closeExtra();
       }
