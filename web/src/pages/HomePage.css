@@ -448,6 +448,12 @@
 }
 
 .catch-block-art {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.18);
+  padding-block: 0.55rem;
+}
+
+.catch-block-art.open {
   border-color: rgba(184, 224, 20, 0.28);
   background: linear-gradient(
     100deg,
@@ -456,6 +462,22 @@
     rgba(255, 106, 0, 0.16) 140%
   );
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.catch-species-current {
+  align-self: flex-start;
+}
+
+.catch-species-current small {
+  margin-left: 0.15rem;
+  padding: 0.12rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(10, 18, 32, 0.12);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(10, 18, 32, 0.72);
 }
 
 .catch-block legend,

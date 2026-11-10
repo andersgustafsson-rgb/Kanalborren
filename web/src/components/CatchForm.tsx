@@ -90,6 +90,7 @@ export function CatchForm({ onSubmitted }: Props) {
   const [sharePrompt, setSharePrompt] = useState<ShareAfterCatchInfo | null>(
     null,
   );
+  const [artOpen, setArtOpen] = useState(false);
 
   function say(text: string | null, ok = false) {
     setMsg(text);
@@ -451,23 +452,57 @@ export function CatchForm({ onSubmitted }: Props) {
           </div>
         </div>
 
-        <fieldset className="catch-block catch-block-art">
+        <fieldset
+          className={`catch-block catch-block-art${artOpen ? " open" : ""}`}
+        >
           <legend>Art</legend>
-          <div className="catch-species" role="radiogroup" aria-label="Art">
-            {SPECIES.map((s) => (
-              <button
-                key={s.id}
-                type="button"
-                role="radio"
-                aria-checked={species === s.id}
-                className={species === s.id ? "catch-species-btn on" : "catch-species-btn"}
-                onClick={() => setSpecies(s.id)}
-              >
-                <img src={s.img} alt="" width={28} height={28} />
-                <span>{s.id}</span>
-              </button>
-            ))}
-          </div>
+          {!artOpen ? (
+            <button
+              type="button"
+              className="catch-species-btn on catch-species-current"
+              aria-expanded={false}
+              aria-controls="catch-species-list"
+              onClick={() => setArtOpen(true)}
+            >
+              <img
+                src={
+                  SPECIES.find((s) => s.id === species)?.img ||
+                  "/species/annan.svg"
+                }
+                alt=""
+                width={28}
+                height={28}
+              />
+              <span>{species}</span>
+              <small>Byt</small>
+            </button>
+          ) : (
+            <div
+              id="catch-species-list"
+              className="catch-species"
+              role="radiogroup"
+              aria-label="Välj art"
+            >
+              {SPECIES.map((s) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={species === s.id}
+                  className={
+                    species === s.id ? "catch-species-btn on" : "catch-species-btn"
+                  }
+                  onClick={() => {
+                    setSpecies(s.id);
+                    setArtOpen(false);
+                  }}
+                >
+                  <img src={s.img} alt="" width={28} height={28} />
+                  <span>{s.id}</span>
+                </button>
+              ))}
+            </div>
+          )}
         </fieldset>
 
         <fieldset className="catch-block">
