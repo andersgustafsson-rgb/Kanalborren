@@ -21,6 +21,10 @@ import {
 import { saveShareDraft } from "../lib/shareDraft";
 import { QUICK_ZONES, SPECIES } from "../lib/species";
 import { loadSession } from "../map/checkinStorage";
+import {
+  ShareAfterCatchModal,
+  type ShareAfterCatchInfo,
+} from "./ShareAfterCatchModal";
 import "./QuickCatch.css";
 
 type ToastState = {
@@ -43,6 +47,9 @@ export function QuickCatch() {
   const [isPrivate, setIsPrivate] = useState(() => loadLastPrivate());
   const [zoneId, setZoneId] = useState<string | null>(null);
   const [toast, setToast] = useState<ToastState | null>(null);
+  const [sharePrompt, setSharePrompt] = useState<ShareAfterCatchInfo | null>(
+    null,
+  );
   const [lengthDraft, setLengthDraft] = useState("");
   const [addingLength, setAddingLength] = useState(false);
   const [sessionTick, setSessionTick] = useState(0);
@@ -173,6 +180,10 @@ export function QuickCatch() {
       species: nextSpecies,
       zoneName: place.name,
       expiresAt: Date.now() + UNDO_MS,
+    });
+    setSharePrompt({
+      species: nextSpecies,
+      placeName: place.name,
     });
   }
 
@@ -456,17 +467,16 @@ export function QuickCatch() {
               <button type="button" onClick={() => setAddingLength(true)}>
                 + längd
               </button>
-              <Link
-                to="/dela"
-                className="qc-toast-share"
-                onClick={() => setToast(null)}
-              >
-                Dela
-              </Link>
             </div>
           )}
         </div>
       )}
+
+      <ShareAfterCatchModal
+        open={!!sharePrompt}
+        info={sharePrompt}
+        onClose={() => setSharePrompt(null)}
+      />
     </>
   );
 }

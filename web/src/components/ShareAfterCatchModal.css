@@ -1,0 +1,72 @@
+.share-after-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 3200;
+  display: grid;
+  place-items: center;
+  padding: 1.1rem;
+  padding-bottom: calc(1.1rem + env(safe-area-inset-bottom, 0px));
+  background: rgba(4, 8, 12, 0.72);
+  backdrop-filter: blur(6px);
+}
+
+.share-after-card {
+  width: min(100%, 22rem);
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 1.15rem 1.1rem 1.05rem;
+  border-radius: 18px;
+  background: linear-gradient(165deg, #101820 0%, #0a1016 100%);
+  border: 1px solid rgba(184, 224, 20, 0.28);
+  box-shadow: 0 22px 56px rgba(0, 0, 0, 0.55);
+  color: #f4f7fa;
+  text-align: center;
+}
+
+.share-after-kicker {
+  margin: 0;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #b8e014;
+  font-weight: 700;
+}
+
+.share-after-card h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.share-after-summary {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 650;
+  color: #e8eef3;
+}
+
+.share-after-hint {
+  margin: 0 0 0.25rem;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  color: #9bb0a4;
+}
+
+.share-after-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin-top: 0.25rem;
+}
+
+.share-after-cta {
+  width: 100%;
+  text-align: center;
+  text-decoration: none;
+}
+
+.share-after-actions .chip {
+  width: 100%;
+}

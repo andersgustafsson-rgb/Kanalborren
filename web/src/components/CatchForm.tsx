@@ -9,6 +9,10 @@ import { saveShareDraft } from "../lib/shareDraft";
 import { loadSession } from "../map/checkinStorage";
 import { resolveZone, type ResolvedZone } from "../map/geo";
 import { CatchPlacePicker, type CatchPlace } from "./CatchPlacePicker";
+import {
+  ShareAfterCatchModal,
+  type ShareAfterCatchInfo,
+} from "./ShareAfterCatchModal";
 
 const ZONES = [
   { id: "slottsparken", name: "Slottsparken" },
@@ -83,7 +87,9 @@ export function CatchForm({ onSubmitted }: Props) {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [msgOk, setMsgOk] = useState(false);
-  const [shareReady, setShareReady] = useState(false);
+  const [sharePrompt, setSharePrompt] = useState<ShareAfterCatchInfo | null>(
+    null,
+  );
 
   function say(text: string | null, ok = false) {
     setMsg(text);
@@ -311,7 +317,7 @@ export function CatchForm({ onSubmitted }: Props) {
 
     setBusy(true);
     say(null);
-    setShareReady(false);
+    setSharePrompt(null);
     const place =
       (customPlace && customPlace.id === placeId ? customPlace : null) ||
       ZONES.find((z) => z.id === placeId) ||
@@ -348,7 +354,12 @@ export function CatchForm({ onSubmitted }: Props) {
       caughtAt,
       savedAt: new Date().toISOString(),
     });
-    setShareReady(true);
+    setSharePrompt({
+      species,
+      lengthCm: len,
+      weightKg: w,
+      placeName: place.name,
+    });
     say(
       isPrivate
         ? "Sparad privat · syns bara i din historik"
@@ -681,16 +692,12 @@ export function CatchForm({ onSubmitted }: Props) {
             {msg}
           </p>
         )}
-        {shareReady && (
-          <div className="catch-share-cta">
-            <p>Vill du göra en snygg delningsbild?</p>
-            <Link className="cta" to="/dela">
-              Dela fångstbild
-            </Link>
-            <small>Art, längd och plats följer med — du väljer bara foto och look.</small>
-          </div>
-        )}
       </form>
+      <ShareAfterCatchModal
+        open={!!sharePrompt}
+        info={sharePrompt}
+        onClose={() => setSharePrompt(null)}
+      />
     </section>
   );
 }
