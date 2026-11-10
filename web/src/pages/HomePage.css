@@ -587,6 +587,38 @@
   color: #d7f07a;
 }
 
+.catch-share-cta {
+  margin-top: 0.85rem;
+  padding: 0.85rem 0.9rem;
+  border-radius: 14px;
+  background: linear-gradient(
+    160deg,
+    rgba(0, 213, 232, 0.12),
+    rgba(184, 224, 20, 0.08)
+  );
+  border: 1px solid rgba(0, 213, 232, 0.28);
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.catch-share-cta p {
+  margin: 0;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.catch-share-cta .cta {
+  text-align: center;
+  text-decoration: none;
+}
+
+.catch-share-cta small {
+  color: rgba(244, 247, 250, 0.65);
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
 .catch-inline {
   appearance: none;
   border: 0;

@@ -6,6 +6,7 @@ export type ShareMode = "photo" | "template" | "blur";
 export type ShareCatchMeta = {
   species: string;
   lengthCm: number | null;
+  weightKg: number | null;
   caughtAt: string; // ISO or display-ready
   placeName: string | null;
   showPlace: boolean;
@@ -99,6 +100,93 @@ function formatDateSv(isoOrDate: string): string {
   });
 }
 
+function drawTrackedText(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  x: number,
+  y: number,
+  tracking: number,
+) {
+  let cursor = x;
+  for (const ch of text) {
+    ctx.fillText(ch, cursor, y);
+    cursor += ctx.measureText(ch).width + tracking;
+  }
+  return cursor - x;
+}
+
+/** Soft “brush” pill for length — slightly skewed teal badge. */
+function drawLengthBadge(
+  ctx: CanvasRenderingContext2D,
+  label: string,
+  x: number,
+  y: number,
+) {
+  ctx.font = "700 44px Rajdhani, Segoe UI, system-ui, sans-serif";
+  const tw = ctx.measureText(label).width;
+  const padX = 34;
+  const padY = 14;
+  const w = tw + padX * 2;
+  const h = 44 + padY * 2;
+  const skew = 14;
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(x + skew, y);
+  ctx.lineTo(x + w + skew * 0.35, y);
+  ctx.quadraticCurveTo(x + w + skew + 8, y + h / 2, x + w + skew * 0.2, y + h);
+  ctx.lineTo(x + 4, y + h);
+  ctx.quadraticCurveTo(x - 6, y + h / 2, x + skew, y);
+  ctx.closePath();
+  ctx.fillStyle = "#00D5E8";
+  ctx.shadowColor = "rgba(0, 213, 232, 0.35)";
+  ctx.shadowBlur = 18;
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = "#06172B";
+  ctx.textBaseline = "middle";
+  ctx.fillText(label, x + padX + skew * 0.35, y + h / 2 + 1);
+  ctx.restore();
+  return { h, w: w + skew };
+}
+
+function drawPinIcon(ctx: CanvasRenderingContext2D, x: number, y: number, color: string) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(10, 9, 8, Math.PI, 0);
+  ctx.lineTo(10, 22);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = "#06172B";
+  ctx.beginPath();
+  ctx.arc(10, 9, 3.2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawCalendarIcon(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  color: string,
+) {
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.fillStyle = color;
+  ctx.lineWidth = 2.2;
+  roundRect(ctx, x, y + 3, 20, 16, 3);
+  ctx.stroke();
+  ctx.fillRect(x + 4, y, 2.5, 6);
+  ctx.fillRect(x + 13.5, y, 2.5, 6);
+  ctx.beginPath();
+  ctx.moveTo(x + 2, y + 9);
+  ctx.lineTo(x + 18, y + 9);
+  ctx.stroke();
+  ctx.restore();
+}
+
 function drawMeta(
   ctx: CanvasRenderingContext2D,
   meta: ShareCatchMeta,
@@ -109,78 +197,85 @@ function drawMeta(
     meta.lengthCm != null && Number.isFinite(meta.lengthCm)
       ? `${String(meta.lengthCm).replace(".", ",")} cm`
       : null;
+  const weight =
+    meta.weightKg != null && Number.isFinite(meta.weightKg)
+      ? `${String(meta.weightKg).replace(".", ",")} kg`
+      : null;
   const date = formatDateSv(meta.caughtAt);
   const place =
     meta.showPlace && meta.placeName?.trim() ? meta.placeName.trim() : null;
 
   const blockH =
-    120 +
-    (length ? 70 : 0) +
-    44 +
-    (place ? 40 : 0) +
-    36;
+    (species ? 118 : 0) +
+    (length || weight ? 86 : 0) +
+    52 +
+    (place ? 48 : 0) +
+    40;
   const top = SHARE_H - opts.bottomSafe - blockH;
+  const left = 56;
 
   if (opts.withScrim) {
-    const grd = ctx.createLinearGradient(0, top - 40, 0, SHARE_H);
+    const grd = ctx.createLinearGradient(0, top - 80, 0, SHARE_H);
     grd.addColorStop(0, "rgba(6, 23, 43, 0)");
-    grd.addColorStop(0.35, "rgba(6, 23, 43, 0.55)");
-    grd.addColorStop(1, "rgba(6, 23, 43, 0.88)");
+    grd.addColorStop(0.28, "rgba(6, 23, 43, 0.45)");
+    grd.addColorStop(1, "rgba(6, 23, 43, 0.92)");
     ctx.fillStyle = grd;
-    ctx.fillRect(0, top - 40, SHARE_W, SHARE_H - (top - 40));
+    ctx.fillRect(0, top - 80, SHARE_W, SHARE_H - (top - 80));
   }
 
-  let y = top + 24;
+  let y = top + 8;
   ctx.textAlign = "left";
   ctx.textBaseline = "top";
 
   if (species) {
-    ctx.font = "800 92px Rajdhani, Segoe UI, system-ui, sans-serif";
+    ctx.font = "italic 800 104px Rajdhani, Segoe UI, system-ui, sans-serif";
     ctx.fillStyle = "#FFFFFF";
-    ctx.shadowColor = "rgba(0,0,0,0.55)";
-    ctx.shadowBlur = 18;
-    ctx.shadowOffsetY = 4;
-    ctx.fillText(species, 64, y);
+    ctx.shadowColor = "rgba(0,0,0,0.65)";
+    ctx.shadowBlur = 22;
+    ctx.shadowOffsetY = 5;
+    drawTrackedText(ctx, species, left, y, 3.5);
     ctx.shadowBlur = 0;
     ctx.shadowOffsetY = 0;
-    y += 100;
+    y += 112;
   }
 
-  if (length) {
-    ctx.font = "700 48px Rajdhani, Segoe UI, system-ui, sans-serif";
-    const tw = ctx.measureText(length).width;
-    const padX = 28;
-    const padY = 12;
-    const bx = 64;
-    const by = y;
-    const bw = tw + padX * 2;
-    const bh = 48 + padY * 2;
-    ctx.fillStyle = "#00D5E8";
-    roundRect(ctx, bx, by, bw, bh, 18);
-    ctx.fill();
-    ctx.fillStyle = "#06172B";
-    ctx.fillText(length, bx + padX, by + padY - 2);
-    y += bh + 28;
+  if (length || weight) {
+    if (length) {
+      const badge = drawLengthBadge(ctx, length, left, y);
+      if (weight) {
+        ctx.font = "700 36px Rajdhani, Segoe UI, system-ui, sans-serif";
+        ctx.fillStyle = "rgba(255,255,255,0.92)";
+        ctx.textBaseline = "middle";
+        ctx.fillText(weight, left + badge.w + 18, y + badge.h / 2);
+      }
+      y += badge.h + 28;
+    } else if (weight) {
+      const badge = drawLengthBadge(ctx, weight, left, y);
+      y += badge.h + 28;
+    }
+    ctx.textBaseline = "top";
   }
 
-  ctx.font = "600 32px Inter, Segoe UI, system-ui, sans-serif";
-  ctx.fillStyle = "rgba(255,255,255,0.9)";
-  ctx.fillText(date, 64, y);
-  y += 44;
+  ctx.font = "600 30px Inter, Segoe UI, system-ui, sans-serif";
+  ctx.fillStyle = "rgba(244,247,250,0.92)";
+  drawCalendarIcon(ctx, left, y + 2, "#13BFC5");
+  ctx.fillText(date, left + 30, y);
+  y += 48;
 
   if (place) {
     ctx.font = "600 30px Inter, Segoe UI, system-ui, sans-serif";
-    ctx.fillStyle = "#13BFC5";
-    ctx.fillText(place, 64, y);
+    ctx.fillStyle = "#00D5E8";
+    drawPinIcon(ctx, left, y - 2, "#00D5E8");
+    ctx.fillText(place, left + 30, y);
   }
 }
 
 async function ensureFonts() {
   try {
     await Promise.all([
-      document.fonts.load("800 92px Rajdhani"),
-      document.fonts.load("700 48px Rajdhani"),
-      document.fonts.load("600 32px Inter"),
+      document.fonts.load("italic 800 104px Rajdhani"),
+      document.fonts.load("700 44px Rajdhani"),
+      document.fonts.load("600 30px Inter"),
     ]);
   } catch {
     /* system fonts fallback */

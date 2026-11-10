@@ -18,6 +18,7 @@ import {
   saveLastSpecies,
   type LastQuickCatch,
 } from "../lib/quickCatchPrefs";
+import { saveShareDraft } from "../lib/shareDraft";
 import { QUICK_ZONES, SPECIES } from "../lib/species";
 import { loadSession } from "../map/checkinStorage";
 import "./QuickCatch.css";
@@ -158,6 +159,15 @@ export function QuickCatch() {
     setOpen(false);
     setAddingLength(false);
     setLengthDraft("");
+    saveShareDraft({
+      species: nextSpecies,
+      lengthCm: null,
+      weightKg: null,
+      placeName: place.name,
+      isPrivate: privateFlag,
+      caughtAt: saved.at,
+      savedAt: saved.at,
+    });
     setToast({
       id,
       species: nextSpecies,
@@ -227,6 +237,15 @@ export function QuickCatch() {
       setError(err);
       return;
     }
+    saveShareDraft({
+      species: toast.species,
+      lengthCm: n,
+      weightKg: null,
+      placeName: toast.zoneName,
+      isPrivate: loadLastPrivate(),
+      caughtAt: new Date().toISOString(),
+      savedAt: new Date().toISOString(),
+    });
     setToast(null);
     setAddingLength(false);
     setLengthDraft("");
@@ -437,6 +456,13 @@ export function QuickCatch() {
               <button type="button" onClick={() => setAddingLength(true)}>
                 + längd
               </button>
+              <Link
+                to="/dela"
+                className="qc-toast-share"
+                onClick={() => setToast(null)}
+              >
+                Dela
+              </Link>
             </div>
           )}
         </div>

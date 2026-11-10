@@ -256,7 +256,6 @@ export function HomePage() {
             <CatchForm
               onSubmitted={() => {
                 setReloadToken((n) => n + 1);
-                openTab("hem");
               }}
             />
           </div>

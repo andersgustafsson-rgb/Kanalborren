@@ -7,24 +7,36 @@ import {
   shareOrDownloadBlob,
   type ShareMode,
 } from "../lib/shareCard";
+import { loadShareDraft } from "../lib/shareDraft";
 import "./ShareCatchPage.css";
 
 const SAMPLE = "/labb/test-catch.jpg";
 
 type Busy = null | "cutout" | "compose" | "share";
 
+function draftLength(v: number | null): string {
+  return v != null ? String(v).replace(".", ",") : "";
+}
+
 export function ShareCatchPage() {
   const fileRef = useRef<HTMLInputElement>(null);
+  const draft = useMemo(() => loadShareDraft(), []);
   const [photoBlob, setPhotoBlob] = useState<Blob | null>(null);
-  const [photoUrl, setPhotoUrl] = useState<string | null>(SAMPLE);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [cutoutBlob, setCutoutBlob] = useState<Blob | null>(null);
   const [cutoutUrl, setCutoutUrl] = useState<string | null>(null);
   const [mode, setMode] = useState<ShareMode>("photo");
-  const [species, setSpecies] = useState("Abborre");
-  const [lengthCm, setLengthCm] = useState("32");
-  const [placeName, setPlaceName] = useState("Slottsparken");
-  const [showPlace, setShowPlace] = useState(true);
-  const [caughtAt] = useState(() => new Date().toISOString());
+  const [species, setSpecies] = useState(draft?.species || "Abborre");
+  const [lengthCm, setLengthCm] = useState(draftLength(draft?.lengthCm ?? null));
+  const [weightKg, setWeightKg] = useState(draftLength(draft?.weightKg ?? null));
+  const [placeName, setPlaceName] = useState(draft?.placeName || "");
+  const [showPlace, setShowPlace] = useState(
+    draft ? !draft.isPrivate && Boolean(draft.placeName) : true,
+  );
+  const [caughtAt] = useState(
+    () => draft?.caughtAt || new Date().toISOString(),
+  );
+  const [fromCatch] = useState(() => Boolean(draft));
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [busy, setBusy] = useState<Busy>(null);
   const [progress, setProgress] = useState<string | null>(null);
@@ -47,21 +59,20 @@ export function ShareCatchPage() {
 
   const meta = useMemo(() => {
     const n = Number(String(lengthCm).replace(",", "."));
+    const w = Number(String(weightKg).replace(",", "."));
     return {
       species,
       lengthCm: Number.isFinite(n) && n > 0 ? n : null,
+      weightKg: Number.isFinite(w) && w > 0 ? w : null,
       caughtAt,
       placeName: placeName.trim() || null,
       showPlace,
     };
-  }, [species, lengthCm, caughtAt, placeName, showPlace]);
+  }, [species, lengthCm, weightKg, caughtAt, placeName, showPlace]);
 
   async function ensurePhotoBlob(): Promise<Blob> {
     if (photoBlob) return photoBlob;
-    const res = await fetch(SAMPLE);
-    const blob = await res.blob();
-    setPhotoBlob(blob);
-    return blob;
+    throw new Error("Välj ett foto först");
   }
 
   function clearCutout() {
@@ -218,13 +229,22 @@ export function ShareCatchPage() {
             <p className="share-catch-kicker">Dela</p>
             <h1>Dela din fångst</h1>
             <p>
-              Välj foto och look. Allt byggs lokalt på telefonen — ingen
-              AI-uppladdning.
+              {fromCatch
+                ? "Art, mått och plats hämtades från din fångst. Välj foto och look."
+                : "Välj foto och look. Allt byggs lokalt på telefonen."}
             </p>
           </div>
         </header>
 
         <section className="share-catch-board">
+          {fromCatch && (
+            <p className="share-catch-draft">
+              Från senaste fångsten · {species}
+              {meta.lengthCm != null ? ` · ${meta.lengthCm} cm` : ""}
+              {meta.weightKg != null ? ` · ${meta.weightKg} kg` : ""}
+              {showPlace && placeName ? ` · ${placeName}` : ""}
+            </p>
+          )}
           <div className="share-catch-actions">
             <button
               type="button"
@@ -307,19 +327,34 @@ export function ShareCatchPage() {
             </select>
           </label>
 
-          <label className="share-catch-field">
-            Längd (cm)
-            <input
-              inputMode="decimal"
-              value={lengthCm}
-              disabled={!!busy}
-              placeholder="32"
-              onChange={(e) => {
-                setLengthCm(e.target.value);
-                clearPreview();
-              }}
-            />
-          </label>
+          <div className="share-catch-row">
+            <label className="share-catch-field">
+              Längd (cm)
+              <input
+                inputMode="decimal"
+                value={lengthCm}
+                disabled={!!busy}
+                placeholder="32"
+                onChange={(e) => {
+                  setLengthCm(e.target.value);
+                  clearPreview();
+                }}
+              />
+            </label>
+            <label className="share-catch-field">
+              Vikt (kg)
+              <input
+                inputMode="decimal"
+                value={weightKg}
+                disabled={!!busy}
+                placeholder="0,8"
+                onChange={(e) => {
+                  setWeightKg(e.target.value);
+                  clearPreview();
+                }}
+              />
+            </label>
+          </div>
 
           <label className="share-catch-check">
             <input
@@ -332,6 +367,7 @@ export function ShareCatchPage() {
               }}
             />
             Visa plats på bilden
+            {fromCatch && draft?.isPrivate ? " (fångsten var privat)" : ""}
           </label>
 
           {showPlace && (

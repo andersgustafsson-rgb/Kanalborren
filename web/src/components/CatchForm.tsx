@@ -5,6 +5,7 @@ import { useAuth } from "../lib/AuthContext";
 import { submitCatchReport } from "../lib/catchReports";
 import { SPECIES } from "../lib/species";
 import { fetchSpots } from "../lib/spotsApi";
+import { saveShareDraft } from "../lib/shareDraft";
 import { loadSession } from "../map/checkinStorage";
 import { resolveZone, type ResolvedZone } from "../map/geo";
 import { CatchPlacePicker, type CatchPlace } from "./CatchPlacePicker";
@@ -82,6 +83,7 @@ export function CatchForm({ onSubmitted }: Props) {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [msgOk, setMsgOk] = useState(false);
+  const [shareReady, setShareReady] = useState(false);
 
   function say(text: string | null, ok = false) {
     setMsg(text);
@@ -309,6 +311,7 @@ export function CatchForm({ onSubmitted }: Props) {
 
     setBusy(true);
     say(null);
+    setShareReady(false);
     const place =
       (customPlace && customPlace.id === placeId ? customPlace : null) ||
       ZONES.find((z) => z.id === placeId) ||
@@ -336,6 +339,16 @@ export function CatchForm({ onSubmitted }: Props) {
       );
       return;
     }
+    saveShareDraft({
+      species,
+      lengthCm: len,
+      weightKg: w,
+      placeName: place.name,
+      isPrivate,
+      caughtAt,
+      savedAt: new Date().toISOString(),
+    });
+    setShareReady(true);
     say(
       isPrivate
         ? "Sparad privat · syns bara i din historik"
@@ -667,6 +680,15 @@ export function CatchForm({ onSubmitted }: Props) {
           <p className={msgOk ? "catch-msg ok" : "catch-msg"} role="status">
             {msg}
           </p>
+        )}
+        {shareReady && (
+          <div className="catch-share-cta">
+            <p>Vill du göra en snygg delningsbild?</p>
+            <Link className="cta" to="/dela">
+              Dela fångstbild
+            </Link>
+            <small>Art, längd och plats följer med — du väljer bara foto och look.</small>
+          </div>
         )}
       </form>
     </section>

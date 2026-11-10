@@ -81,6 +81,23 @@
   line-height: 1.35;
 }
 
+.share-catch-draft {
+  margin: 0;
+  padding: 0.55rem 0.7rem;
+  border-radius: 12px;
+  background: rgba(184, 224, 20, 0.1);
+  border: 1px solid rgba(184, 224, 20, 0.28);
+  color: #e8f5c8;
+  font-size: 0.84rem;
+  line-height: 1.35;
+}
+
+.share-catch-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.55rem;
+}
+
 .share-catch-field {
   display: flex;
   flex-direction: column;
