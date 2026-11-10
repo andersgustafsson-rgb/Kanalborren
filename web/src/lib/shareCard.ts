@@ -48,31 +48,43 @@ function drawCover(
   ctx.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh);
 }
 
-/**
- * Crop away empty/transparent padding so a small subject fills the frame.
- * Returns a new bitmap (caller must close) or the original if already tight.
- */
-async function trimOpaqueBitmap(
-  src: ImageBitmap,
-  alphaMin = 10,
-  pad = 12,
-): Promise<{ bmp: ImageBitmap; trimmed: boolean }> {
-  const probe = document.createElement("canvas");
-  probe.width = src.width;
-  probe.height = src.height;
-  const pctx = probe.getContext("2d", { willReadFrequently: true });
-  if (!pctx) return { bmp: src, trimmed: false };
-  pctx.drawImage(src, 0, 0);
-  const { data, width, height } = pctx.getImageData(0, 0, probe.width, probe.height);
+type ContentBounds = { sx: number; sy: number; sw: number; sh: number };
 
-  let minX = width;
-  let minY = height;
+/**
+ * Find the solid subject inside a cutout. Soft ML-halos (alpha 1–40) are ignored
+ * so a small person in a large transparent frame still zooms up.
+ */
+function findSolidContentBounds(
+  src: ImageBitmap,
+  alphaMin = 72,
+  padPx = 16,
+): ContentBounds {
+  const fullW = src.width;
+  const fullH = src.height;
+  const fallback = { sx: 0, sy: 0, sw: fullW, sh: fullH };
+
+  // Scan a downscaled copy — faster on phone, less halo noise.
+  const maxSide = 480;
+  const scanScale = Math.min(1, maxSide / Math.max(fullW, fullH));
+  const pw = Math.max(1, Math.round(fullW * scanScale));
+  const ph = Math.max(1, Math.round(fullH * scanScale));
+  const probe = document.createElement("canvas");
+  probe.width = pw;
+  probe.height = ph;
+  const pctx = probe.getContext("2d", { willReadFrequently: true });
+  if (!pctx) return fallback;
+  pctx.clearRect(0, 0, pw, ph);
+  pctx.drawImage(src, 0, 0, pw, ph);
+  const { data } = pctx.getImageData(0, 0, pw, ph);
+
+  let minX = pw;
+  let minY = ph;
   let maxX = -1;
   let maxY = -1;
-  for (let y = 0; y < height; y++) {
-    const row = y * width;
-    for (let x = 0; x < width; x++) {
-      if (data[(row + x) * 4 + 3] > alphaMin) {
+  for (let y = 0; y < ph; y++) {
+    const row = y * pw;
+    for (let x = 0; x < pw; x++) {
+      if (data[(row + x) * 4 + 3] >= alphaMin) {
         if (x < minX) minX = x;
         if (y < minY) minY = y;
         if (x > maxX) maxX = x;
@@ -80,59 +92,60 @@ async function trimOpaqueBitmap(
       }
     }
   }
-  if (maxX < 0) return { bmp: src, trimmed: false };
+  if (maxX < 0) return fallback;
 
-  minX = Math.max(0, minX - pad);
-  minY = Math.max(0, minY - pad);
-  maxX = Math.min(width - 1, maxX + pad);
-  maxY = Math.min(height - 1, maxY + pad);
-  const tw = maxX - minX + 1;
-  const th = maxY - minY + 1;
-
-  // Already fills most of the canvas — no gain from crop.
-  if (tw / width > 0.9 && th / height > 0.9) {
-    return { bmp: src, trimmed: false };
-  }
-
-  const cropped = await createImageBitmap(probe, minX, minY, tw, th);
-  return { bmp: cropped, trimmed: true };
+  const inv = 1 / scanScale;
+  let sx = Math.floor(minX * inv);
+  let sy = Math.floor(minY * inv);
+  let ex = Math.ceil((maxX + 1) * inv);
+  let ey = Math.ceil((maxY + 1) * inv);
+  sx = Math.max(0, sx - padPx);
+  sy = Math.max(0, sy - padPx);
+  ex = Math.min(fullW, ex + padPx);
+  ey = Math.min(fullH, ey + padPx);
+  return { sx, sy, sw: Math.max(1, ex - sx), sh: Math.max(1, ey - sy) };
 }
 
-/** Fit subject inside rect; bottom-align so feet sit nearer the pier/water. */
+/** Zoom subject content into rect; bottom-align toward pier/water. */
 function drawSubject(
   ctx: CanvasRenderingContext2D,
   img: CanvasImageSource,
+  content: ContentBounds,
   dx: number,
   dy: number,
   dw: number,
   dh: number,
-  iw: number,
-  ih: number,
-  pad = 16,
+  pad = 8,
 ) {
   const boxW = dw - pad * 2;
   const boxH = dh - pad * 2;
-  // Prefer filling the box — small subjects after trim scale up hard.
-  const scale = Math.min(boxW / iw, boxH / ih);
-  const w = iw * scale;
-  const h = ih * scale;
+  const scale = Math.min(boxW / content.sw, boxH / content.sh);
+  const w = content.sw * scale;
+  const h = content.sh * scale;
   const x = dx + (dw - w) / 2;
   const y = dy + dh - pad - h;
-  ctx.drawImage(img, x, y, w, h);
+  ctx.drawImage(
+    img,
+    content.sx,
+    content.sy,
+    content.sw,
+    content.sh,
+    x,
+    y,
+    w,
+    h,
+  );
   return { x, y, w, h };
 }
 
 async function loadTrimmedCutout(cutout: Blob): Promise<{
   bmp: ImageBitmap;
+  content: ContentBounds;
   closeExtra: () => void;
 }> {
   const raw = await loadBitmap(cutout);
-  const { bmp, trimmed } = await trimOpaqueBitmap(raw);
-  if (trimmed) {
-    raw.close();
-    return { bmp, closeExtra: () => bmp.close() };
-  }
-  return { bmp: raw, closeExtra: () => raw.close() };
+  const content = findSolidContentBounds(raw);
+  return { bmp: raw, content, closeExtra: () => raw.close() };
 }
 
 function roundRect(
@@ -372,17 +385,16 @@ export async function composeShareCard(input: {
       if (input.cutout) {
         const cut = await loadTrimmedCutout(input.cutout);
         try {
-          // Large mid-frame: logo/waves on template, meta at bottom.
+          // Between logo and meta — fill this box with the solid subject.
           drawSubject(
             ctx,
             cut.bmp,
-            20,
-            200,
-            SHARE_W - 40,
-            SHARE_H - 520,
-            cut.bmp.width,
-            cut.bmp.height,
-            8,
+            cut.content,
+            0,
+            170,
+            SHARE_W,
+            SHARE_H - 560,
+            4,
           );
         } finally {
           cut.closeExtra();
@@ -435,13 +447,12 @@ export async function composeShareCard(input: {
         drawSubject(
           ctx,
           cut.bmp,
-          10,
-          160,
-          SHARE_W - 20,
-          SHARE_H - 420,
-          cut.bmp.width,
-          cut.bmp.height,
-          8,
+          cut.content,
+          0,
+          150,
+          SHARE_W,
+          SHARE_H - 430,
+          4,
         );
       } finally {
         cut.closeExtra();
