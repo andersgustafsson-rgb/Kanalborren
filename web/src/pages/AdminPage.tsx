@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "../lib/AuthContext";
 import {
@@ -31,6 +37,10 @@ const KIND_LABEL: Record<string, string> = {
   idea: "Förbättring",
 };
 
+type UserFilter = "all" | "active" | "banned";
+
+type SectionId = "feedback" | "users" | "sessions" | "catches" | "requests";
+
 function fmt(iso: string) {
   try {
     return new Date(iso).toLocaleString("sv-SE", {
@@ -40,6 +50,52 @@ function fmt(iso: string) {
   } catch {
     return iso;
   }
+}
+
+function fmtDay(iso: string) {
+  try {
+    return new Date(iso).toLocaleDateString("sv-SE", { dateStyle: "short" });
+  } catch {
+    return iso;
+  }
+}
+
+function AdminSection({
+  id,
+  title,
+  count,
+  open,
+  onToggle,
+  children,
+}: {
+  id: SectionId;
+  title: string;
+  count?: number;
+  open: boolean;
+  onToggle: (id: SectionId) => void;
+  children: ReactNode;
+}) {
+  return (
+    <section className={`admin-card${open ? " open" : ""}`}>
+      <button
+        type="button"
+        className="admin-card-toggle"
+        aria-expanded={open}
+        onClick={() => onToggle(id)}
+      >
+        <span>
+          {title}
+          {typeof count === "number" ? (
+            <em className="admin-count">{count}</em>
+          ) : null}
+        </span>
+        <span className="admin-chevron" aria-hidden>
+          {open ? "▾" : "▸"}
+        </span>
+      </button>
+      {open ? <div className="admin-card-body">{children}</div> : null}
+    </section>
+  );
 }
 
 export function AdminPage() {
@@ -52,6 +108,16 @@ export function AdminPage() {
   const [feedback, setFeedback] = useState<FeedbackRow[]>([]);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+  const [userQuery, setUserQuery] = useState("");
+  const [userFilter, setUserFilter] = useState<UserFilter>("all");
+  const [showEndedSessions, setShowEndedSessions] = useState(false);
+  const [openSections, setOpenSections] = useState<Record<SectionId, boolean>>({
+    feedback: true,
+    users: true,
+    sessions: false,
+    catches: false,
+    requests: false,
+  });
 
   const reload = useCallback(async () => {
     setBusy(true);
@@ -81,6 +147,41 @@ export function AdminPage() {
   useEffect(() => {
     if (auth.ready && auth.isAdmin) void reload();
   }, [auth.ready, auth.isAdmin, reload]);
+
+  const filteredUsers = useMemo(() => {
+    const q = userQuery.trim().toLowerCase();
+    return users
+      .filter((u) => {
+        if (userFilter === "active" && !u.activeNow) return false;
+        if (userFilter === "banned" && !u.bannedAt) return false;
+        if (!q) return true;
+        return (
+          u.displayName.toLowerCase().includes(q) ||
+          u.email.toLowerCase().includes(q)
+        );
+      })
+      .sort((a, b) => {
+        if (a.activeNow !== b.activeNow) return a.activeNow ? -1 : 1;
+        if (Boolean(a.bannedAt) !== Boolean(b.bannedAt)) {
+          return a.bannedAt ? -1 : 1;
+        }
+        return b.createdAt.localeCompare(a.createdAt);
+      });
+  }, [users, userQuery, userFilter]);
+
+  const activeSessions = useMemo(
+    () => sessions.filter((s) => !s.endedAt),
+    [sessions],
+  );
+  const visibleSessions = showEndedSessions ? sessions : activeSessions;
+  const newFeedback = useMemo(
+    () => feedback.filter((f) => f.status === "new").length,
+    [feedback],
+  );
+
+  function toggleSection(id: SectionId) {
+    setOpenSections((prev) => ({ ...prev, [id]: !prev[id] }));
+  }
 
   if (!auth.ready) {
     return (
@@ -159,16 +260,19 @@ export function AdminPage() {
             <span>Chattar</span>
           </article>
           <article>
-            <strong>
-              {feedback.filter((f) => f.status === "new").length || "–"}
-            </strong>
+            <strong>{newFeedback || "–"}</strong>
             <span>Nya tips</span>
           </article>
         </section>
 
-        <section className="admin-card">
-          <h2>Tips & buggar</h2>
-          <div className="admin-table-wrap">
+        <AdminSection
+          id="feedback"
+          title="Tips & buggar"
+          count={feedback.length}
+          open={openSections.feedback}
+          onToggle={toggleSection}
+        >
+          <div className="admin-table-wrap admin-scroll">
             <table className="admin-table">
               <thead>
                 <tr>
@@ -188,7 +292,10 @@ export function AdminPage() {
                   </tr>
                 )}
                 {feedback.map((f) => (
-                  <tr key={f.id} className={f.status !== "new" ? "dim" : undefined}>
+                  <tr
+                    key={f.id}
+                    className={f.status !== "new" ? "dim" : undefined}
+                  >
                     <td>
                       {KIND_LABEL[f.kind] || f.kind}
                       {f.status !== "new" ? ` · ${f.status}` : ""}
@@ -243,32 +350,79 @@ export function AdminPage() {
               </tbody>
             </table>
           </div>
-        </section>
+        </AdminSection>
 
-        <section className="admin-card">
-          <h2>Användare</h2>
-          <div className="admin-table-wrap">
+        <AdminSection
+          id="users"
+          title="Användare"
+          count={users.length}
+          open={openSections.users}
+          onToggle={toggleSection}
+        >
+          <div className="admin-toolbar">
+            <input
+              className="admin-search"
+              type="search"
+              value={userQuery}
+              onChange={(e) => setUserQuery(e.target.value)}
+              placeholder="Sök namn eller e-post"
+              aria-label="Sök användare"
+            />
+            <div className="admin-filters" role="group" aria-label="Filter">
+              {(
+                [
+                  ["all", "Alla"],
+                  ["active", "Ute nu"],
+                  ["banned", "Bannade"],
+                ] as const
+              ).map(([id, label]) => (
+                <button
+                  key={id}
+                  type="button"
+                  className={userFilter === id ? "chip on" : "chip"}
+                  onClick={() => setUserFilter(id)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <p className="admin-muted admin-result-count">
+            Visar {filteredUsers.length} av {users.length}
+          </p>
+          <div className="admin-table-wrap admin-scroll">
             <table className="admin-table">
               <thead>
                 <tr>
-                  <th>Namn</th>
-                  <th>E-post</th>
+                  <th>Användare</th>
                   <th>Status</th>
                   <th>Skapad</th>
                   <th />
                 </tr>
               </thead>
               <tbody>
-                {users.map((u) => (
-                  <tr key={u.id}>
+                {filteredUsers.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="admin-muted">
+                      Inga träffar
+                    </td>
+                  </tr>
+                )}
+                {filteredUsers.map((u) => (
+                  <tr key={u.id} className={u.bannedAt ? "dim" : undefined}>
                     <td>
-                      {u.displayName}
+                      <strong>{u.displayName}</strong>
                       {u.isAdmin ? " · admin" : ""}
                       {u.activeNow ? " · ute nu" : ""}
+                      {u.email ? (
+                        <>
+                          <br />
+                          <span className="admin-muted">{u.email}</span>
+                        </>
+                      ) : null}
                     </td>
-                    <td>{u.email}</td>
                     <td>{u.bannedAt ? "Bannad" : "OK"}</td>
-                    <td>{fmt(u.createdAt)}</td>
+                    <td>{fmtDay(u.createdAt)}</td>
                     <td>
                       {!u.isAdmin && (
                         <div className="admin-row-actions">
@@ -312,11 +466,24 @@ export function AdminPage() {
               </tbody>
             </table>
           </div>
-        </section>
+        </AdminSection>
 
-        <section className="admin-card">
-          <h2>Sessioner</h2>
-          <div className="admin-table-wrap">
+        <AdminSection
+          id="sessions"
+          title="Sessioner"
+          count={activeSessions.length}
+          open={openSections.sessions}
+          onToggle={toggleSection}
+        >
+          <label className="admin-check">
+            <input
+              type="checkbox"
+              checked={showEndedSessions}
+              onChange={(e) => setShowEndedSessions(e.target.checked)}
+            />
+            Visa avslutade
+          </label>
+          <div className="admin-table-wrap admin-scroll">
             <table className="admin-table">
               <thead>
                 <tr>
@@ -328,7 +495,14 @@ export function AdminPage() {
                 </tr>
               </thead>
               <tbody>
-                {sessions.map((s) => (
+                {visibleSessions.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="admin-muted">
+                      Inga sessioner
+                    </td>
+                  </tr>
+                )}
+                {visibleSessions.map((s) => (
                   <tr key={s.id} className={s.endedAt ? "dim" : undefined}>
                     <td>{s.displayName}</td>
                     <td>
@@ -336,7 +510,11 @@ export function AdminPage() {
                       {s.openForCompany ? " · sällskap" : ""}
                     </td>
                     <td>{s.visibility}</td>
-                    <td>{s.endedAt ? `Avslutad ${fmt(s.endedAt)}` : fmt(s.expiresAt)}</td>
+                    <td>
+                      {s.endedAt
+                        ? `Avslutad ${fmt(s.endedAt)}`
+                        : fmt(s.expiresAt)}
+                    </td>
                     <td>
                       {!s.endedAt && (
                         <button
@@ -359,11 +537,16 @@ export function AdminPage() {
               </tbody>
             </table>
           </div>
-        </section>
+        </AdminSection>
 
-        <section className="admin-card">
-          <h2>Fångster</h2>
-          <div className="admin-table-wrap">
+        <AdminSection
+          id="catches"
+          title="Fångster"
+          count={catches.length}
+          open={openSections.catches}
+          onToggle={toggleSection}
+        >
+          <div className="admin-table-wrap admin-scroll">
             <table className="admin-table">
               <thead>
                 <tr>
@@ -375,6 +558,13 @@ export function AdminPage() {
                 </tr>
               </thead>
               <tbody>
+                {catches.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="admin-muted">
+                      Inga fångster
+                    </td>
+                  </tr>
+                )}
                 {catches.map((c) => (
                   <tr key={c.id}>
                     <td>{c.displayName}</td>
@@ -408,11 +598,16 @@ export function AdminPage() {
               </tbody>
             </table>
           </div>
-        </section>
+        </AdminSection>
 
-        <section className="admin-card">
-          <h2>Sällskapsförfrågningar</h2>
-          <div className="admin-table-wrap">
+        <AdminSection
+          id="requests"
+          title="Sällskapsförfrågningar"
+          count={requests.length}
+          open={openSections.requests}
+          onToggle={toggleSection}
+        >
+          <div className="admin-table-wrap admin-scroll">
             <table className="admin-table">
               <thead>
                 <tr>
@@ -423,6 +618,13 @@ export function AdminPage() {
                 </tr>
               </thead>
               <tbody>
+                {requests.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="admin-muted">
+                      Inga förfrågningar
+                    </td>
+                  </tr>
+                )}
                 {requests.map((r) => (
                   <tr key={r.id}>
                     <td>
@@ -436,7 +638,7 @@ export function AdminPage() {
               </tbody>
             </table>
           </div>
-        </section>
+        </AdminSection>
       </div>
     </div>
   );
