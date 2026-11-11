@@ -18,6 +18,7 @@ const INITIAL: LayerToggles = {
   bridges: false,
   rules: false,
   catches: false,
+  parking: false,
 };
 
 const BASEMAPS: { id: MapBasemap; label: string }[] = [
@@ -192,6 +193,7 @@ export function MapPage() {
                 ["canal", "Kanal"],
                 ["spots", "Platser"],
                 ["zones", "Zoner"],
+                ["parking", "Parkering"],
                 ["catches", "Fångster (7d)"],
                 ["bridges", "Broar"],
                 ["rules", "Regler"],

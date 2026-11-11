@@ -53,6 +53,12 @@ import {
   subscribeSpots,
   upsertSpot,
 } from "../lib/spotsApi";
+import {
+  bindParkingPopup,
+  loadParkingFees,
+  parkingStyle,
+  type ParkingProps,
+} from "./parkingLayer";
 
 const CENTER: [number, number] = [55.6055, 12.997];
 /** No maxBounds — tight bounds lock panning when the viewport is larger than the box. */
@@ -295,6 +301,9 @@ export function CanalMap({
 }: Props) {
   const [canalData, setCanalData] = useState<FeatureCollection>(EMPTY);
   const [zonesData, setZonesData] = useState<FeatureCollection>(EMPTY);
+  const [parkingData, setParkingData] = useState<FeatureCollection | null>(
+    null,
+  );
   const [rulesData, setRulesData] = useState<FeatureCollection>(EMPTY);
   const [spotsData, setSpotsData] = useState<FeatureCollection>(EMPTY);
   const [seedSpots, setSeedSpots] = useState<FeatureCollection>(EMPTY);
@@ -353,6 +362,21 @@ export function CanalMap({
     if (!ready) return;
     saveSpots(spotsData);
   }, [spotsData, ready]);
+
+  useEffect(() => {
+    if (!toggles.parking || parkingData) return;
+    let cancelled = false;
+    loadParkingFees()
+      .then((fc) => {
+        if (!cancelled) setParkingData(fc);
+      })
+      .catch((e: Error) => {
+        if (!cancelled) setStatus(e.message || "Kunde inte ladda parkering");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [toggles.parking, parkingData]);
 
   useEffect(() => {
     if (!ready) return;
@@ -773,6 +797,19 @@ export function CanalMap({
               styleFor((feat?.properties || {}) as CanalProperties)
             }
             onEachFeature={onEachFeature}
+          />
+        )}
+
+        {toggles.parking && parkingData && (
+          <GeoJSON
+            key={`parking-${parkingData.features.length}`}
+            data={parkingData}
+            style={(feat) =>
+              parkingStyle((feat?.properties || {}) as ParkingProps)
+            }
+            onEachFeature={(feature, layer) => {
+              bindParkingPopup(feature, layer);
+            }}
           />
         )}
 

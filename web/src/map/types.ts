@@ -30,6 +30,7 @@ export type LayerToggles = {
   bridges: boolean;
   rules: boolean;
   catches: boolean;
+  parking: boolean;
 };
 
 /** Base map tiles under canal overlays. */
