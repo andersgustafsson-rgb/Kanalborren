@@ -218,7 +218,7 @@ export function ShareCatchPage() {
       setMsg(
         how === "shared"
           ? "Öppnade delning"
-          : "Bilden laddades ner (dela manuellt)",
+          : "Bilden sparades — dela den från Filmer/Bilder",
       );
     } catch (e) {
       setBusy(null);

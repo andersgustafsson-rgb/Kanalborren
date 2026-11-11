@@ -483,13 +483,29 @@ export function downloadShareBlob(
   window.setTimeout(() => URL.revokeObjectURL(url), 2500);
 }
 
+/** Windows Chrome Web Share often hangs — only use native share on phones. */
+function prefersNativeShare(): boolean {
+  if (typeof navigator === "undefined") return false;
+  const uaData = (
+    navigator as Navigator & {
+      userAgentData?: { mobile?: boolean };
+    }
+  ).userAgentData;
+  if (typeof uaData?.mobile === "boolean") return uaData.mobile;
+  if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) return true;
+  return (
+    typeof window !== "undefined" &&
+    window.matchMedia("(hover: none) and (pointer: coarse)").matches
+  );
+}
+
 export async function shareOrDownloadBlob(
   blob: Blob,
   filename = "kanalhugget-fangst.jpg",
 ): Promise<"shared" | "downloaded"> {
   const file = new File([blob], filename, { type: "image/jpeg" });
   const canShare =
-    typeof navigator !== "undefined" &&
+    prefersNativeShare() &&
     typeof navigator.share === "function" &&
     (!navigator.canShare || navigator.canShare({ files: [file] }));
 
