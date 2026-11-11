@@ -404,6 +404,60 @@
   background: radial-gradient(circle, var(--kb-lime) 0 2.5px, transparent 3px);
 }
 
+.car-fab-label {
+  font-size: 0.95rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  color: #0a1220;
+}
+
+.car-fab {
+  background: linear-gradient(145deg, #d4f03a, #b8e014);
+  border-color: rgba(10, 18, 32, 0.2);
+}
+
+.car-fab.on {
+  background: linear-gradient(145deg, #38bdf8, #0ea5e9);
+}
+
+.car-fab.on .car-fab-label {
+  color: #041018;
+}
+
+.parked-car-marker {
+  background: transparent;
+  border: 0;
+}
+
+.parked-car-pin {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #0ea5e9;
+  color: #041018;
+  font-weight: 900;
+  font-size: 0.95rem;
+  border: 2px solid #f4f7fa;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45);
+}
+
+.parked-car-popup {
+  min-width: 10rem;
+}
+
+.parked-car-popup p {
+  margin: 0.25rem 0 0.55rem;
+  font-size: 0.8rem;
+}
+
+.parked-car-popup-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
 .canal-map.add-cursor {
   cursor: crosshair;
 }

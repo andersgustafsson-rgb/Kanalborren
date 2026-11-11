@@ -4,6 +4,8 @@ import {
   CircleMarker,
   GeoJSON,
   MapContainer,
+  Marker,
+  Popup,
   TileLayer,
   Tooltip,
   useMap,
@@ -59,6 +61,19 @@ import {
   parkingStyle,
   type ParkingProps,
 } from "./parkingLayer";
+import {
+  clearParkedCar,
+  loadParkedCar,
+  saveParkedCar,
+  type ParkedCar,
+} from "./carParkingStorage";
+
+const CAR_ICON = L.divIcon({
+  className: "parked-car-marker",
+  html: '<span class="parked-car-pin" aria-hidden="true">P</span>',
+  iconSize: [34, 34],
+  iconAnchor: [17, 17],
+});
 
 const CENTER: [number, number] = [55.6055, 12.997];
 /** No maxBounds — tight bounds lock panning when the viewport is larger than the box. */
@@ -304,6 +319,10 @@ export function CanalMap({
   const [parkingData, setParkingData] = useState<FeatureCollection | null>(
     null,
   );
+  const [parkedCar, setParkedCar] = useState<ParkedCar | null>(() =>
+    loadParkedCar(),
+  );
+  const [carFocusSeq, setCarFocusSeq] = useState(0);
   const [rulesData, setRulesData] = useState<FeatureCollection>(EMPTY);
   const [spotsData, setSpotsData] = useState<FeatureCollection>(EMPTY);
   const [seedSpots, setSeedSpots] = useState<FeatureCollection>(EMPTY);
@@ -703,6 +722,57 @@ export function CanalMap({
       <div className="map-float-actions">
         <button
           type="button"
+          className={parkedCar ? "locate-me car-fab on" : "locate-me car-fab"}
+          aria-label={parkedCar ? "Hitta bilen" : "Spara bil här"}
+          title={parkedCar ? "Hitta bilen" : "Spara bil här"}
+          disabled={checkIn.locating}
+          onClick={() => {
+            if (parkedCar) {
+              setCarFocusSeq((n) => n + 1);
+              setStatus("Zoomar till bilen");
+              return;
+            }
+            const pin = checkIn.fix;
+            if (pin) {
+              const next = {
+                lat: pin.lat,
+                lng: pin.lng,
+                savedAt: new Date().toISOString(),
+              };
+              saveParkedCar(next);
+              setParkedCar(next);
+              setCarFocusSeq((n) => n + 1);
+              setStatus("Bilen sparad här");
+              return;
+            }
+            if (!navigator.geolocation) {
+              setStatus("GPS saknas — aktivera plats eller checka in först");
+              return;
+            }
+            setStatus("Hämtar plats för bilen…");
+            navigator.geolocation.getCurrentPosition(
+              (pos) => {
+                const next = {
+                  lat: pos.coords.latitude,
+                  lng: pos.coords.longitude,
+                  savedAt: new Date().toISOString(),
+                };
+                saveParkedCar(next);
+                setParkedCar(next);
+                setCarFocusSeq((n) => n + 1);
+                setStatus("Bilen sparad här");
+              },
+              () => setStatus("Kunde inte hämta plats för bilen"),
+              { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 },
+            );
+          }}
+        >
+          <span className="car-fab-label" aria-hidden>
+            P
+          </span>
+        </button>
+        <button
+          type="button"
           className="locate-me"
           aria-label="Centrera på min plats"
           title="Centrera på min plats"
@@ -757,6 +827,65 @@ export function CanalMap({
             lng={checkIn.fix.lng}
             seq={checkIn.recenterSeq}
           />
+        )}
+        {parkedCar && (
+          <Recenter
+            lat={parkedCar.lat}
+            lng={parkedCar.lng}
+            seq={carFocusSeq}
+            zoom={18}
+          />
+        )}
+        {parkedCar && (
+          <Marker position={[parkedCar.lat, parkedCar.lng]} icon={CAR_ICON}>
+            <Popup>
+              <div className="parked-car-popup">
+                <strong>Här står bilen</strong>
+                <p>
+                  Sparad{" "}
+                  {new Date(parkedCar.savedAt).toLocaleString("sv-SE", {
+                    dateStyle: "short",
+                    timeStyle: "short",
+                  })}
+                </p>
+                <div className="parked-car-popup-actions">
+                  <button
+                    type="button"
+                    className="chip"
+                    onClick={() => {
+                      const pin = checkIn.fix;
+                      if (!pin) {
+                        setStatus("Aktivera plats först, sen uppdatera bilen");
+                        return;
+                      }
+                      const next = {
+                        lat: pin.lat,
+                        lng: pin.lng,
+                        savedAt: new Date().toISOString(),
+                      };
+                      saveParkedCar(next);
+                      setParkedCar(next);
+                      setCarFocusSeq((n) => n + 1);
+                      setStatus("Bilposition uppdaterad");
+                    }}
+                  >
+                    Flytta hit
+                  </button>
+                  <button
+                    type="button"
+                    className="chip danger"
+                    onClick={() => {
+                      clearParkedCar();
+                      setParkedCar(null);
+                      setStatus("Bilpin borttagen");
+                    }}
+                  >
+                    Ta bort
+                  </button>
+                </div>
+              </div>
+            </Popup>
+          </Marker>
         )}
         <MapClickAdd
           enabled={editMode === "add" || pickOnMap}
