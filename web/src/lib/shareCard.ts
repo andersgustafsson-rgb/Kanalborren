@@ -468,6 +468,38 @@ export async function composeShareCard(input: {
   return blob;
 }
 
+const THUMB_W = 360;
+const THUMB_H = 450;
+
+/** Full card, then downscale for look picker thumbnails. */
+export async function composeShareThumb(input: {
+  mode: ShareMode;
+  photo: Blob;
+  cutout: Blob | null;
+  meta: ShareCatchMeta;
+}): Promise<Blob> {
+  const full = await composeShareCard(input);
+  const bmp = await createImageBitmap(full);
+  try {
+    const canvas = document.createElement("canvas");
+    canvas.width = THUMB_W;
+    canvas.height = THUMB_H;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("Canvas saknas");
+    ctx.drawImage(bmp, 0, 0, THUMB_W, THUMB_H);
+    const blob = await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob(
+        (b) => (b ? resolve(b) : reject(new Error("Kunde inte skapa bild"))),
+        "image/jpeg",
+        0.82,
+      );
+    });
+    return blob;
+  } finally {
+    bmp.close();
+  }
+}
+
 export function downloadShareBlob(
   blob: Blob,
   filename = "kanalhugget-fangst.jpg",

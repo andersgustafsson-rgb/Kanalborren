@@ -4,8 +4,10 @@ import { removePhotoBackground } from "../lib/cutout";
 import { SPECIES } from "../lib/species";
 import {
   composeShareCard,
+  composeShareThumb,
   downloadShareBlob,
   shareOrDownloadBlob,
+  type ShareCatchMeta,
   type ShareMode,
 } from "../lib/shareCard";
 import { loadShareDraft } from "../lib/shareDraft";
@@ -13,10 +15,23 @@ import "./ShareCatchPage.css";
 
 const SAMPLE = "/labb/test-catch.jpg";
 
+const LOOKS: { id: ShareMode; label: string }[] = [
+  { id: "photo", label: "Eget foto" },
+  { id: "template", label: "Malmö-mall" },
+  { id: "blur", label: "Blur" },
+];
+
 type Busy = null | "cutout" | "compose" | "share" | "save";
+type ThumbMap = Partial<Record<ShareMode, string>>;
 
 function draftLength(v: number | null): string {
   return v != null ? String(v).replace(".", ",") : "";
+}
+
+function revokeMap(map: ThumbMap) {
+  for (const url of Object.values(map)) {
+    if (url) URL.revokeObjectURL(url);
+  }
 }
 
 export function ShareCatchPage() {
@@ -25,7 +40,6 @@ export function ShareCatchPage() {
   const [photoBlob, setPhotoBlob] = useState<Blob | null>(null);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [cutoutBlob, setCutoutBlob] = useState<Blob | null>(null);
-  const [cutoutUrl, setCutoutUrl] = useState<string | null>(null);
   const [mode, setMode] = useState<ShareMode>("photo");
   const [species, setSpecies] = useState(draft?.species || "Abborre");
   const [lengthCm, setLengthCm] = useState(draftLength(draft?.lengthCm ?? null));
@@ -38,26 +52,27 @@ export function ShareCatchPage() {
     () => draft?.caughtAt || new Date().toISOString(),
   );
   const [fromCatch] = useState(() => Boolean(draft));
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [thumbs, setThumbs] = useState<ThumbMap>({});
   const [busy, setBusy] = useState<Busy>(null);
   const [msg, setMsg] = useState<string | null>(null);
   const [msgOk, setMsgOk] = useState(false);
 
   const photoObject = useRef<string | null>(null);
   const cutoutObject = useRef<string | null>(null);
-  const previewObject = useRef<string | null>(null);
+  const thumbsRef = useRef<ThumbMap>({});
+  const genRef = useRef(0);
+  const userPickedLook = useRef(false);
 
   useEffect(() => {
     return () => {
+      genRef.current += 1;
       if (photoObject.current) URL.revokeObjectURL(photoObject.current);
       if (cutoutObject.current) URL.revokeObjectURL(cutoutObject.current);
-      if (previewObject.current) URL.revokeObjectURL(previewObject.current);
+      revokeMap(thumbsRef.current);
     };
   }, []);
 
-  const needsCutout = mode === "template" || mode === "blur";
-
-  const meta = useMemo(() => {
+  const meta = useMemo<ShareCatchMeta>(() => {
     const n = Number(String(lengthCm).replace(",", "."));
     const w = Number(String(weightKg).replace(",", "."));
     return {
@@ -70,9 +85,10 @@ export function ShareCatchPage() {
     };
   }, [species, lengthCm, weightKg, caughtAt, placeName, showPlace]);
 
-  async function ensurePhotoBlob(): Promise<Blob> {
-    if (photoBlob) return photoBlob;
-    throw new Error("Välj ett foto först");
+  function clearThumbs() {
+    revokeMap(thumbsRef.current);
+    thumbsRef.current = {};
+    setThumbs({});
   }
 
   function clearCutout() {
@@ -81,20 +97,88 @@ export function ShareCatchPage() {
       cutoutObject.current = null;
     }
     setCutoutBlob(null);
-    setCutoutUrl(null);
   }
 
-  function clearPreview() {
-    if (previewObject.current) {
-      URL.revokeObjectURL(previewObject.current);
-      previewObject.current = null;
+  function putThumb(id: ShareMode, blob: Blob) {
+    const url = URL.createObjectURL(blob);
+    const prev = thumbsRef.current[id];
+    if (prev) URL.revokeObjectURL(prev);
+    thumbsRef.current = { ...thumbsRef.current, [id]: url };
+    setThumbs({ ...thumbsRef.current });
+    return url;
+  }
+
+  async function buildLooks(photo: Blob, nextMeta: ShareCatchMeta) {
+    const gen = ++genRef.current;
+    clearThumbs();
+    clearCutout();
+    setMsg(null);
+    setMode("photo");
+
+    try {
+      setBusy("compose");
+      const photoThumb = await composeShareThumb({
+        mode: "photo",
+        photo,
+        cutout: null,
+        meta: nextMeta,
+      });
+      if (gen !== genRef.current) return;
+      putThumb("photo", photoThumb);
+
+      setBusy("cutout");
+      const { blob: cut, error } = await removePhotoBackground(photo);
+      if (gen !== genRef.current) return;
+
+      if (!cut) {
+        setBusy(null);
+        setMsgOk(false);
+        setMsg(
+          error ||
+            "Kunde inte frilägga — du kan fortfarande använda Eget foto.",
+        );
+        return;
+      }
+
+      const cutUrl = URL.createObjectURL(cut);
+      if (cutoutObject.current) URL.revokeObjectURL(cutoutObject.current);
+      cutoutObject.current = cutUrl;
+      setCutoutBlob(cut);
+
+      setBusy("compose");
+      const [templateThumb, blurThumb] = await Promise.all([
+        composeShareThumb({
+          mode: "template",
+          photo,
+          cutout: cut,
+          meta: nextMeta,
+        }),
+        composeShareThumb({
+          mode: "blur",
+          photo,
+          cutout: cut,
+          meta: nextMeta,
+        }),
+      ]);
+      if (gen !== genRef.current) return;
+      putThumb("template", templateThumb);
+      putThumb("blur", blurThumb);
+      if (!userPickedLook.current) setMode("template");
+      setBusy(null);
+      setMsgOk(true);
+      setMsg("Välj en look");
+    } catch (e) {
+      if (gen !== genRef.current) return;
+      setBusy(null);
+      setMsgOk(false);
+      setMsg(e instanceof Error ? e.message : "Kunde inte bygga looks");
     }
-    setPreviewUrl(null);
   }
 
   async function setPhoto(blob: Blob, preview?: string) {
+    genRef.current += 1;
+    clearThumbs();
     clearCutout();
-    clearPreview();
     if (photoObject.current) {
       URL.revokeObjectURL(photoObject.current);
       photoObject.current = null;
@@ -104,6 +188,8 @@ export function ShareCatchPage() {
     setPhotoBlob(blob);
     setPhotoUrl(url);
     setMsg(null);
+    userPickedLook.current = false;
+    await buildLooks(blob, meta);
   }
 
   async function loadSample() {
@@ -111,84 +197,42 @@ export function ShareCatchPage() {
     await setPhoto(await res.blob(), SAMPLE);
   }
 
-  async function ensureCutout(photo: Blob): Promise<Blob | null> {
-    if (cutoutBlob) return cutoutBlob;
-    setBusy("cutout");
-    setMsg(null);
-    const { blob, error } = await removePhotoBackground(photo);
-    setBusy(null);
-    if (!blob) {
-      setMsg(error || "Kunde inte frilägga");
-      setMsgOk(false);
-      return null;
+  // Rebuild thumbs when catch text on the card changes (not on first photo pick).
+  const metaKey = useMemo(() => JSON.stringify(meta), [meta]);
+  const metaKeyRef = useRef(metaKey);
+  useEffect(() => {
+    if (!photoBlob) {
+      metaKeyRef.current = metaKey;
+      return;
     }
-    if (cutoutObject.current) URL.revokeObjectURL(cutoutObject.current);
-    const url = URL.createObjectURL(blob);
-    cutoutObject.current = url;
-    setCutoutBlob(blob);
-    setCutoutUrl(url);
-    return blob;
-  }
-
-  async function buildPreview() {
-    setMsg(null);
-    try {
-      const photo = await ensurePhotoBlob();
-      let cut: Blob | null = null;
-      if (needsCutout) {
-        cut = await ensureCutout(photo);
-        if (!cut && mode === "template") {
-          setMsgOk(false);
-          setMsg(
-            "Friläggning misslyckades — förhandsvisar mall med fotoplatta i stället.",
-          );
-        }
-        if (!cut && mode === "blur") {
-          setMsgOk(false);
-          setMsg(
-            "Friläggning misslyckades — visar skarpt foto utan blur-lager.",
-          );
-        }
-      }
-      setBusy("compose");
-      const out = await composeShareCard({
-        mode,
-        photo,
-        cutout: cut,
-        meta,
-      });
-      clearPreview();
-      const url = URL.createObjectURL(out);
-      previewObject.current = url;
-      setPreviewUrl(url);
-      setBusy(null);
-      if (!msg) {
-        setMsgOk(true);
-        setMsg("Förhandsvisning klar");
-      }
-    } catch (e) {
-      setBusy(null);
-      setMsgOk(false);
-      setMsg(e instanceof Error ? e.message : "Kunde inte bygga bild");
-    }
-  }
+    if (metaKeyRef.current === metaKey) return;
+    metaKeyRef.current = metaKey;
+    const handle = window.setTimeout(() => {
+      void buildLooks(photoBlob, meta);
+    }, 400);
+    return () => window.clearTimeout(handle);
+  }, [metaKey, meta, photoBlob]);
 
   async function renderCard(): Promise<Blob> {
-    const photo = await ensurePhotoBlob();
+    if (!photoBlob) throw new Error("Välj ett foto först");
     let cut: Blob | null = cutoutBlob;
-    if (needsCutout && !cut) cut = await ensureCutout(photo);
+    if ((mode === "template" || mode === "blur") && !cut) {
+      setBusy("cutout");
+      const { blob } = await removePhotoBackground(photoBlob);
+      cut = blob;
+      if (blob) {
+        if (cutoutObject.current) URL.revokeObjectURL(cutoutObject.current);
+        cutoutObject.current = URL.createObjectURL(blob);
+        setCutoutBlob(blob);
+      }
+    }
     setBusy("compose");
-    const out = await composeShareCard({
+    return composeShareCard({
       mode,
-      photo,
+      photo: photoBlob,
       cutout: cut,
       meta,
     });
-    clearPreview();
-    const url = URL.createObjectURL(out);
-    previewObject.current = url;
-    setPreviewUrl(url);
-    return out;
   }
 
   async function onSave() {
@@ -231,12 +275,15 @@ export function ShareCatchPage() {
     busy === "cutout"
       ? "Jobbar…"
       : busy === "compose"
-        ? "Bygger bild…"
+        ? "Bygger looks…"
         : busy === "save"
           ? "Sparar…"
           : busy === "share"
             ? "Delar…"
             : null;
+
+  const selectedThumb = thumbs[mode] || null;
+  const canExport = !!photoBlob && !!thumbs.photo && !busy;
 
   return (
     <div className="share-catch">
@@ -293,40 +340,6 @@ export function ShareCatchPage() {
             />
           </div>
 
-          <p className="share-catch-label">Look</p>
-          <div className="share-catch-modes" role="radiogroup" aria-label="Look">
-            {(
-              [
-                ["photo", "Eget foto"],
-                ["template", "Malmö-mall"],
-                ["blur", "Blur bakgrund"],
-              ] as const
-            ).map(([id, label]) => (
-              <button
-                key={id}
-                type="button"
-                role="radio"
-                aria-checked={mode === id}
-                className={mode === id ? "chip on" : "chip"}
-                disabled={!!busy}
-                onClick={() => {
-                  setMode(id);
-                  clearPreview();
-                }}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-
-          <p className="share-catch-hint">
-            {mode === "photo" && "Originalfoto + logo och text ovanpå."}
-            {mode === "template" &&
-              "Frilägger dig+fisk och lägger på Malmö kanal-mallen."}
-            {mode === "blur" &&
-              "Frilägger motivet och suddar din egen bakgrund bakom."}
-          </p>
-
           {!fromCatch && (
             <>
               <label className="share-catch-field">
@@ -334,10 +347,7 @@ export function ShareCatchPage() {
                 <select
                   value={species}
                   disabled={!!busy}
-                  onChange={(e) => {
-                    setSpecies(e.target.value);
-                    clearPreview();
-                  }}
+                  onChange={(e) => setSpecies(e.target.value)}
                 >
                   {SPECIES.map((s) => (
                     <option key={s.id} value={s.id}>
@@ -355,10 +365,7 @@ export function ShareCatchPage() {
                     value={lengthCm}
                     disabled={!!busy}
                     placeholder="32"
-                    onChange={(e) => {
-                      setLengthCm(e.target.value);
-                      clearPreview();
-                    }}
+                    onChange={(e) => setLengthCm(e.target.value)}
                   />
                 </label>
                 <label className="share-catch-field">
@@ -368,10 +375,7 @@ export function ShareCatchPage() {
                     value={weightKg}
                     disabled={!!busy}
                     placeholder="0,8"
-                    onChange={(e) => {
-                      setWeightKg(e.target.value);
-                      clearPreview();
-                    }}
+                    onChange={(e) => setWeightKg(e.target.value)}
                   />
                 </label>
               </div>
@@ -383,10 +387,7 @@ export function ShareCatchPage() {
                     value={placeName}
                     disabled={!!busy}
                     placeholder="t.ex. Slottsparken"
-                    onChange={(e) => {
-                      setPlaceName(e.target.value);
-                      clearPreview();
-                    }}
+                    onChange={(e) => setPlaceName(e.target.value)}
                   />
                 </label>
               )}
@@ -398,28 +399,67 @@ export function ShareCatchPage() {
               type="checkbox"
               checked={showPlace}
               disabled={!!busy}
-              onChange={(e) => {
-                setShowPlace(e.target.checked);
-                clearPreview();
-              }}
+              onChange={(e) => setShowPlace(e.target.checked)}
             />
             Visa plats på bilden
             {fromCatch && draft?.isPrivate ? " (fångsten var privat)" : ""}
           </label>
 
+          {photoUrl && (
+            <>
+              <p className="share-catch-label">Välj look</p>
+              <div
+                className="share-catch-looks"
+                role="radiogroup"
+                aria-label="Look"
+              >
+                {LOOKS.map(({ id, label }) => {
+                  const url = thumbs[id];
+                  const waiting =
+                    !url &&
+                    !!busy &&
+                    (id === "photo"
+                      ? busy === "compose" && !thumbs.photo
+                      : true);
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      role="radio"
+                      aria-checked={mode === id}
+                      className={
+                        mode === id
+                          ? "share-catch-look on"
+                          : "share-catch-look"
+                      }
+                      disabled={!url || !!busy}
+                      onClick={() => {
+                        userPickedLook.current = true;
+                        setMode(id);
+                      }}
+                    >
+                      <span className="share-catch-look-frame">
+                        {url ? (
+                          <img src={url} alt="" />
+                        ) : (
+                          <span className="share-catch-look-skel">
+                            {waiting ? "…" : "—"}
+                          </span>
+                        )}
+                      </span>
+                      <span className="share-catch-look-label">{label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          )}
+
           <div className="share-catch-actions">
             <button
               type="button"
               className="chip"
-              disabled={!!busy || !photoUrl}
-              onClick={() => void buildPreview()}
-            >
-              Förhandsvisa
-            </button>
-            <button
-              type="button"
-              className="chip"
-              disabled={!!busy || !photoUrl}
+              disabled={!canExport}
               onClick={() => void onSave()}
             >
               Spara
@@ -427,7 +467,7 @@ export function ShareCatchPage() {
             <button
               type="button"
               className="cta"
-              disabled={!!busy || !photoUrl}
+              disabled={!canExport}
               onClick={() => void onShare()}
             >
               Dela
@@ -446,19 +486,10 @@ export function ShareCatchPage() {
           )}
 
           <div className="share-catch-preview">
-            {previewUrl ? (
-              <img src={previewUrl} alt="Förhandsvisning av delningsbild" />
+            {selectedThumb ? (
+              <img src={selectedThumb} alt="Vald look" />
             ) : photoUrl ? (
-              <div className="share-catch-source">
-                <img src={photoUrl} alt="Valt foto" />
-                {cutoutUrl && mode !== "photo" && (
-                  <img
-                    className="share-catch-cutout-thumb"
-                    src={cutoutUrl}
-                    alt="Frilagt motiv"
-                  />
-                )}
-              </div>
+              <img src={photoUrl} alt="Valt foto" />
             ) : (
               <p className="share-catch-empty">Välj ett foto för att börja.</p>
             )}
