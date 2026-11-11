@@ -445,17 +445,45 @@
 
 .parked-car-popup {
   min-width: 10rem;
+  color: #0a1220;
+}
+
+.parked-car-popup strong {
+  color: #0a1220;
 }
 
 .parked-car-popup p {
   margin: 0.25rem 0 0.55rem;
   font-size: 0.8rem;
+  color: #334155;
 }
 
 .parked-car-popup-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem;
+}
+
+.parked-car-popup-actions button {
+  appearance: none;
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.parked-car-btn {
+  border: 1px solid #94a3b8;
+  background: #f1f5f9;
+  color: #0a1220;
+}
+
+.parked-car-btn-danger {
+  border: 1px solid #f87171;
+  background: #fee2e2;
+  color: #991b1b;
 }
 
 .canal-map.add-cursor {

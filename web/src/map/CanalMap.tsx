@@ -851,7 +851,7 @@ export function CanalMap({
                 <div className="parked-car-popup-actions">
                   <button
                     type="button"
-                    className="chip"
+                    className="parked-car-btn"
                     onClick={() => {
                       const pin = checkIn.fix;
                       if (!pin) {
@@ -873,7 +873,7 @@ export function CanalMap({
                   </button>
                   <button
                     type="button"
-                    className="chip danger"
+                    className="parked-car-btn-danger"
                     onClick={() => {
                       clearParkedCar();
                       setParkedCar(null);
