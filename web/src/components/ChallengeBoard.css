@@ -1,13 +1,154 @@
 .challenge-board {
+  --ch-cyan: #3ef0ff;
+  --ch-cyan-dim: rgba(62, 240, 255, 0.35);
+  --ch-yellow: #f4c430;
+  --ch-ink: #061018;
+  --ch-panel: #07111c;
+  --ch-cut: polygon(
+    14px 0,
+    calc(100% - 14px) 0,
+    100% 14px,
+    100% calc(100% - 14px),
+    calc(100% - 14px) 100%,
+    14px 100%,
+    0 calc(100% - 14px),
+    0 14px
+  );
+  --ch-skew: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
+
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
+  gap: 0.95rem;
+  margin-top: 0;
+  padding: 1rem 0.95rem 1.1rem;
+  color: #eef7fb;
+  background:
+    linear-gradient(135deg, rgba(62, 240, 255, 0.05), transparent 42%),
+    repeating-linear-gradient(
+      -45deg,
+      rgba(255, 255, 255, 0.025) 0 1px,
+      transparent 1px 7px
+    ),
+    var(--ch-panel);
+  border: 1.5px solid var(--ch-cyan);
+  clip-path: var(--ch-cut);
+  box-shadow:
+    0 0 0 1px rgba(62, 240, 255, 0.18),
+    0 0 28px rgba(62, 240, 255, 0.18),
+    0 16px 36px rgba(0, 0, 0, 0.45);
+  position: relative;
+  isolation: isolate;
+}
+
+.challenge-board::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(62, 240, 255, 0.08),
+    transparent 28%
+  );
+  z-index: 0;
+}
+
+.challenge-board > * {
+  position: relative;
+  z-index: 1;
+}
+
+.ch-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(5.5rem, 38%);
+  gap: 0.55rem;
+  align-items: start;
+}
+
+.ch-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.ch-icon-rods {
+  width: 1.7rem;
+  height: 1.7rem;
+  flex: 0 0 auto;
+  filter: drop-shadow(0 0 6px rgba(244, 196, 48, 0.55));
+}
+
+.ch-head h2 {
+  margin: 0;
+  font-size: clamp(1.15rem, 4.6vw, 1.55rem);
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: 0.02em;
+  line-height: 1.05;
+  text-transform: uppercase;
+  color: #f4fbfd;
+  text-shadow: 0 0 18px rgba(62, 240, 255, 0.25);
+}
+
+.ch-head h2 span {
+  color: var(--ch-cyan);
+  text-shadow: 0 0 14px rgba(62, 240, 255, 0.55);
+}
+
+.ch-head-copy p {
+  margin: 0.45rem 0 0;
+  color: rgba(232, 244, 248, 0.82);
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.ch-head-copy a {
+  color: var(--ch-yellow);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.ch-head-copy a:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.ch-hero {
+  justify-self: end;
+  width: min(100%, 9.5rem);
+  aspect-ratio: 4 / 3;
+  margin-top: -0.15rem;
+  border: 1px solid var(--ch-cyan-dim);
+  clip-path: polygon(12% 0, 100% 0, 100% 88%, 88% 100%, 0 100%, 0 12%);
+  box-shadow: 0 0 18px rgba(62, 240, 255, 0.22);
+  overflow: hidden;
+  background: #041018;
+}
+
+.ch-hero img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 70% 45%;
+  display: block;
+  transform: scale(1.08);
+}
+
+.ch-gate {
+  margin: 0;
+  font-size: 0.86rem;
+  color: rgba(232, 244, 248, 0.8);
+}
+
+.ch-gate a {
+  color: var(--ch-yellow);
+  font-weight: 800;
 }
 
 .challenge-form {
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
+  gap: 0.7rem;
 }
 
 .challenge-picker {
@@ -17,20 +158,77 @@
   position: relative;
 }
 
+.ch-search {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2.7rem;
+  padding: 0 0.85rem 0 0.7rem;
+  background:
+    repeating-linear-gradient(
+      -45deg,
+      rgba(62, 240, 255, 0.05) 0 2px,
+      transparent 2px 8px
+    ),
+    rgba(4, 14, 22, 0.92);
+  border: 1.5px solid var(--ch-cyan);
+  clip-path: var(--ch-skew);
+  box-shadow: 0 0 14px rgba(62, 240, 255, 0.12);
+}
+
+.ch-search-icon {
+  width: 1.15rem;
+  height: 1.15rem;
+  color: var(--ch-cyan);
+  display: grid;
+  place-items: center;
+}
+
+.ch-search-icon svg,
+.ch-field-label svg,
+.ch-hours-icon svg,
+.ch-send svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.ch-search input {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: #f4fbfd;
+  font: inherit;
+  font-size: 0.92rem;
+  min-width: 0;
+  width: 100%;
+  padding: 0.55rem 0;
+}
+
+.ch-search input::placeholder {
+  color: rgba(190, 220, 230, 0.55);
+}
+
+.ch-search input:focus {
+  outline: none;
+}
+
 .challenge-picked {
   appearance: none;
-  border: 1px solid rgba(184, 224, 20, 0.4);
-  border-radius: 10px;
-  background: rgba(184, 224, 20, 0.12);
-  color: #f4f7fa;
+  border: 1.5px solid var(--ch-cyan);
+  clip-path: var(--ch-skew);
+  background: rgba(62, 240, 255, 0.1);
+  color: #f4fbfd;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  padding: 0.55rem 0.7rem;
+  padding: 0.65rem 0.9rem;
   font: inherit;
   cursor: pointer;
   text-align: left;
+  box-shadow: 0 0 14px rgba(62, 240, 255, 0.14);
 }
 
 .challenge-picked strong {
@@ -39,21 +237,22 @@
 
 .challenge-picked span {
   font-size: 0.75rem;
-  font-weight: 700;
-  color: #b8e014;
+  font-weight: 800;
+  color: var(--ch-cyan);
 }
 
 .challenge-suggest {
   list-style: none;
   margin: 0;
   padding: 0.3rem;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(8, 14, 22, 0.96);
+  border: 1px solid var(--ch-cyan-dim);
+  background: rgba(5, 14, 22, 0.98);
+  clip-path: var(--ch-cut);
   max-height: 11rem;
   overflow: auto;
   display: grid;
   gap: 0.2rem;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
 }
 
 .challenge-suggest-empty {
@@ -66,7 +265,7 @@
   appearance: none;
   width: 100%;
   border: 0;
-  border-radius: 8px;
+  border-radius: 6px;
   background: transparent;
   color: inherit;
   text-align: left;
@@ -80,7 +279,7 @@
 
 .challenge-suggest button:hover,
 .challenge-suggest button:focus-visible {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(62, 240, 255, 0.1);
   outline: none;
 }
 
@@ -99,18 +298,167 @@
   gap: 0.55rem;
 }
 
-.challenge-hours {
+.ch-field {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 0.28rem;
+  min-width: 0;
+}
+
+.ch-field-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(190, 230, 240, 0.75);
+}
+
+.ch-field-label svg {
+  width: 0.9rem;
+  height: 0.9rem;
+  color: var(--ch-cyan);
+}
+
+.ch-field select {
+  appearance: none;
+  width: 100%;
+  min-height: 2.55rem;
+  border: 1.5px solid var(--ch-cyan);
+  clip-path: var(--ch-skew);
+  background:
+    linear-gradient(135deg, transparent 70%, rgba(62, 240, 255, 0.2) 70% 78%, transparent 78%)
+      right 0.55rem center / 0.7rem 0.7rem no-repeat,
+    rgba(4, 14, 22, 0.95);
+  color: #f4fbfd;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  padding: 0.45rem 1.5rem 0.45rem 0.7rem;
+  box-shadow: 0 0 12px rgba(62, 240, 255, 0.1);
+}
+
+.ch-field select:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(62, 240, 255, 0.35);
+}
+
+.challenge-hours {
+  display: grid;
+  grid-template-columns: auto repeat(3, minmax(0, 1fr));
   gap: 0.35rem;
+  align-items: center;
+}
+
+.ch-hours-icon {
+  width: 2.2rem;
+  height: 2.2rem;
+  display: grid;
+  place-items: center;
+  color: var(--ch-yellow);
+  border: 1.5px solid rgba(244, 196, 48, 0.65);
+  clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%);
+  background: rgba(244, 196, 48, 0.08);
+  box-shadow: 0 0 12px rgba(244, 196, 48, 0.2);
+}
+
+.ch-hours-icon svg {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+.ch-hour {
+  appearance: none;
+  min-height: 2.35rem;
+  border: 1.5px solid rgba(62, 240, 255, 0.35);
+  clip-path: var(--ch-skew);
+  background: rgba(8, 20, 30, 0.9);
+  color: #d7eef5;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ch-hour.on {
+  background: linear-gradient(180deg, #6af6ff, #1fc8e0);
+  border-color: #9cfcff;
+  color: #041018;
+  box-shadow:
+    0 0 0 1px rgba(156, 252, 255, 0.45),
+    0 0 18px rgba(62, 240, 255, 0.45);
+}
+
+.ch-send {
+  appearance: none;
+  margin-top: 0.15rem;
+  min-height: 3rem;
+  border: 0;
+  clip-path: polygon(12px 0, 100% 0, calc(100% - 12px) 100%, 0 100%);
+  background: linear-gradient(100deg, #ffe14a 0%, #f4c430 45%, #e89a12 100%);
+  color: #14200a;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  box-shadow:
+    0 0 0 1px rgba(244, 196, 48, 0.35),
+    0 10px 24px rgba(232, 154, 18, 0.35);
+}
+
+.ch-send svg {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+.ch-send:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.ch-send.compact {
+  min-height: 2.2rem;
+  padding: 0 0.85rem;
+  font-size: 0.78rem;
+  width: auto;
+  align-self: flex-start;
+}
+
+.ch-ghost {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.2rem;
+  padding: 0 0.75rem;
+  border: 1px solid rgba(62, 240, 255, 0.35);
+  clip-path: var(--ch-skew);
+  background: transparent;
+  color: #d7eef5;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
 }
 
 .challenge-block h3 {
   margin: 0 0 0.45rem;
-  font-size: 0.78rem;
-  letter-spacing: 0.06em;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #b8f06e;
+  color: var(--ch-cyan);
 }
 
 .challenge-block ul {
@@ -125,10 +473,10 @@
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
-  padding: 0.55rem 0.65rem;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0.6rem 0.7rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(62, 240, 255, 0.2);
+  clip-path: var(--ch-cut);
 }
 
 .challenge-block li strong {
@@ -150,7 +498,8 @@
 .challenge-msg {
   margin: 0;
   font-size: 0.85rem;
-  color: #f4c430;
+  color: var(--ch-yellow);
+  font-weight: 700;
 }
 
 .challenge-score {
@@ -164,6 +513,17 @@
 }
 
 .challenge-score strong {
-  color: #b8e014;
+  color: var(--ch-cyan);
   font-size: 0.95rem;
+}
+
+@media (max-width: 380px) {
+  .ch-head {
+    grid-template-columns: 1fr;
+  }
+
+  .ch-hero {
+    width: 7.5rem;
+    justify-self: start;
+  }
 }

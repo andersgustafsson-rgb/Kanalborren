@@ -38,6 +38,95 @@ function fmtScore(n: number | null, m: ChallengeMetric) {
   return m === "weight_kg" ? `${n.toFixed(2)} kg` : `${n.toFixed(1)} cm`;
 }
 
+function IconRods() {
+  return (
+    <svg viewBox="0 0 40 40" className="ch-icon-rods" aria-hidden>
+      <path
+        d="M8 32 L28 8"
+        stroke="#f4c430"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+      />
+      <path
+        d="M12 32 L32 8"
+        stroke="#dff56a"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+      />
+      <path
+        d="M28 8c3 0 5 2 5 4M32 8c3 0 5 2 5 4"
+        stroke="#8febf5"
+        strokeWidth="1.6"
+        fill="none"
+        strokeLinecap="round"
+      />
+      <circle cx="8" cy="32" r="2" fill="#f4c430" />
+      <circle cx="12" cy="32" r="2" fill="#dff56a" />
+    </svg>
+  );
+}
+
+function IconSearch() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden>
+      <circle cx="11" cy="11" r="6.5" stroke="currentColor" strokeWidth="2" fill="none" />
+      <path d="M16 16l4.5 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function IconFish() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden>
+      <path
+        d="M3 12c4-5 9-7 14-5 2 .8 3.5 2.2 4.5 4-1 1.8-2.5 3.2-4.5 4-5 2-10 0-14-5z"
+        fill="currentColor"
+      />
+      <circle cx="8.5" cy="11.2" r="1.1" fill="#061018" />
+    </svg>
+  );
+}
+
+function IconRuler() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden>
+      <rect
+        x="3.5"
+        y="8"
+        width="17"
+        height="8"
+        rx="1.5"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        fill="none"
+      />
+      <path
+        d="M7 8v3M10 8v2M13 8v3M16 8v2M19 8v3"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function IconClock() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden>
+      <circle cx="12" cy="12" r="8" stroke="currentColor" strokeWidth="1.8" fill="none" />
+      <path d="M12 8v4.5l3 2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function IconSend() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden>
+      <path d="M4 12l15-7-5 15-2.5-6.5L4 12z" fill="currentColor" />
+    </svg>
+  );
+}
+
 type Props = {
   /** Bump after a catch is saved so scoreboards refresh. */
   reloadToken?: number;
@@ -177,60 +266,77 @@ export function ChallengeBoard({ reloadToken = 0 }: Props) {
     void reload();
   }
 
+  const head = (
+    <header className="ch-head">
+      <div className="ch-head-copy">
+        <div className="ch-title-row">
+          <IconRods />
+          <h2 id="challenge-title">
+            UTMANA <span>FISKARE</span>
+          </h2>
+        </div>
+        <p>
+          Sök upp någon — även hemma får de notis. Folk vid kanalen syns först.
+          Störst {metricLabel(metric)} vinner.{" "}
+          <Link to="/hjalp#utmana">Så funkar det ›</Link>
+        </p>
+      </div>
+      <div className="ch-hero" aria-hidden>
+        <img
+          src="/challenge/challenge-hero-abborre.jpg"
+          alt=""
+          width={280}
+          height={210}
+        />
+      </div>
+    </header>
+  );
+
   if (!auth.configured) {
     return (
-      <section className="home-board challenge-board">
-        <header className="home-board-head">
-          <h2>Utmana fiskare</h2>
-          <p>Molnet saknas — utmaningar kräver inloggning.</p>
-        </header>
+      <section className="challenge-board" aria-labelledby="challenge-title">
+        {head}
+        <p className="ch-gate">Molnet saknas — utmaningar kräver inloggning.</p>
       </section>
     );
   }
 
   if (!auth.user) {
     return (
-      <section className="home-board challenge-board">
-        <header className="home-board-head">
-          <h2>Utmana fiskare</h2>
-          <p>
-            <Link to="/profil#konto">Logga in</Link> för att utmana någon till
-            största fångsten.
-          </p>
-        </header>
+      <section className="challenge-board" aria-labelledby="challenge-title">
+        {head}
+        <p className="ch-gate">
+          <Link to="/profil#konto">Logga in</Link> för att utmana någon till
+          största fångsten.
+        </p>
       </section>
     );
   }
 
   return (
-    <section className="home-board challenge-board" aria-labelledby="challenge-title">
-      <header className="home-board-head">
-        <h2 id="challenge-title">Utmana fiskare</h2>
-        <p>
-          Sök upp någon — även hemma får de notis. Folk vid kanalen syns
-          först. Störst {metricLabel(metric)} vinner.{" "}
-          <Link to="/hjalp#utmana">Så funkar det</Link>
-        </p>
-      </header>
+    <section className="challenge-board" aria-labelledby="challenge-title">
+      {head}
 
       <form className="challenge-form" onSubmit={createChallenge}>
         <div className="challenge-picker">
-          <label className="profile-field">
-            Utmana
-            {pickedName ? (
-              <button
-                type="button"
-                className="challenge-picked"
-                onClick={() => {
-                  setToUserId("");
-                  setPickedName("");
-                  setPickerOpen(true);
-                }}
-              >
-                <strong>{pickedName}</strong>
-                <span>Byt</span>
-              </button>
-            ) : (
+          {pickedName ? (
+            <button
+              type="button"
+              className="challenge-picked"
+              onClick={() => {
+                setToUserId("");
+                setPickedName("");
+                setPickerOpen(true);
+              }}
+            >
+              <strong>{pickedName}</strong>
+              <span>Byt</span>
+            </button>
+          ) : (
+            <label className="ch-search">
+              <span className="ch-search-icon">
+                <IconSearch />
+              </span>
               <input
                 type="search"
                 value={query}
@@ -239,11 +345,12 @@ export function ChallengeBoard({ reloadToken = 0 }: Props) {
                   setPickerOpen(true);
                 }}
                 onFocus={() => setPickerOpen(true)}
-                placeholder="Sök namn…"
+                placeholder="Sök namn..."
                 autoComplete="off"
+                aria-label="Sök fiskare"
               />
-            )}
-          </label>
+            </label>
+          )}
           {pickerOpen && !pickedName && (
             <ul className="challenge-suggest" role="listbox">
               {targets.length === 0 && (
@@ -280,9 +387,12 @@ export function ChallengeBoard({ reloadToken = 0 }: Props) {
             </ul>
           )}
         </div>
+
         <div className="challenge-row">
-          <label className="profile-field">
-            Art
+          <label className="ch-field">
+            <span className="ch-field-label">
+              <IconFish /> Art
+            </span>
             <select
               value={species}
               onChange={(e) => setSpecies(e.target.value)}
@@ -294,8 +404,10 @@ export function ChallengeBoard({ reloadToken = 0 }: Props) {
               ))}
             </select>
           </label>
-          <label className="profile-field">
-            Vinner på
+          <label className="ch-field">
+            <span className="ch-field-label">
+              <IconRuler /> Vinner på
+            </span>
             <select
               value={metric}
               onChange={(e) =>
@@ -307,19 +419,29 @@ export function ChallengeBoard({ reloadToken = 0 }: Props) {
             </select>
           </label>
         </div>
+
         <div className="challenge-hours" role="group" aria-label="Tid">
+          <span className="ch-hours-icon" aria-hidden>
+            <IconClock />
+          </span>
           {HOURS.map((o) => (
             <button
               key={o.h}
               type="button"
-              className={hours === o.h ? "period on" : "period"}
+              className={hours === o.h ? "ch-hour on" : "ch-hour"}
               onClick={() => setHours(o.h)}
             >
               {o.label}
             </button>
           ))}
         </div>
-        <button type="submit" className="cta" disabled={busy || !toUserId}>
+
+        <button
+          type="submit"
+          className="ch-send"
+          disabled={busy || !toUserId}
+        >
+          <IconSend />
           Skicka utmaning
         </button>
       </form>
@@ -337,7 +459,7 @@ export function ChallengeBoard({ reloadToken = 0 }: Props) {
                 <div className="challenge-actions">
                   <button
                     type="button"
-                    className="cta"
+                    className="ch-send compact"
                     disabled={busy}
                     onClick={() => void respond(c.id, true)}
                   >
@@ -345,7 +467,7 @@ export function ChallengeBoard({ reloadToken = 0 }: Props) {
                   </button>
                   <button
                     type="button"
-                    className="chip"
+                    className="ch-ghost"
                     disabled={busy}
                     onClick={() => void respond(c.id, false)}
                   >
@@ -386,7 +508,7 @@ export function ChallengeBoard({ reloadToken = 0 }: Props) {
                   </p>
                   <div className="challenge-actions">
                     <Link
-                      className="chip"
+                      className="ch-ghost"
                       to="/#catch"
                       onClick={() => {
                         try {
@@ -406,7 +528,7 @@ export function ChallengeBoard({ reloadToken = 0 }: Props) {
                     </Link>
                     <button
                       type="button"
-                      className="cta"
+                      className="ch-send compact"
                       disabled={busy}
                       onClick={() => void finish(c.id)}
                     >
