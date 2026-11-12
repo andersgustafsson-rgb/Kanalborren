@@ -860,10 +860,12 @@ export function CatchForm({ onSubmitted }: Props) {
               onClick={(e) => e.stopPropagation()}
             >
               <header className="catch-species-head">
-                <h3 id="catch-species-title">Välj art</h3>
+                <h3 id="catch-species-title">
+                  VÄLJ <span>ART</span>
+                </h3>
                 <button
                   type="button"
-                  className="chip"
+                  className="catch-species-close"
                   onClick={() => setArtOpen(false)}
                 >
                   Stäng
@@ -890,7 +892,7 @@ export function CatchForm({ onSubmitted }: Props) {
                       setArtOpen(false);
                     }}
                   >
-                    <img src={s.img} alt="" width={28} height={28} />
+                    <img src={s.img} alt="" width={36} height={36} />
                     <span>{s.id}</span>
                   </button>
                 ))}

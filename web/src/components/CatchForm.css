@@ -516,3 +516,150 @@
     height: 6.4rem;
   }
 }
+
+/* Species picker overlay (portaled to body) — beat HomePage.css order */
+body .catch-species-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 3200;
+  display: grid;
+  place-items: center;
+  padding: 1.1rem;
+  padding-bottom: calc(1.1rem + env(safe-area-inset-bottom, 0px));
+  background: rgba(3, 8, 14, 0.78);
+  backdrop-filter: blur(8px);
+}
+
+body .catch-species-overlay .catch-species-sheet {
+  --ch-cyan: #3ef0ff;
+  --ch-yellow: #f4c430;
+  width: min(100%, 22rem);
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 1rem 1rem 1.1rem;
+  border-radius: 10px;
+  background:
+    linear-gradient(135deg, rgba(62, 240, 255, 0.06), transparent 42%),
+    repeating-linear-gradient(
+      -45deg,
+      rgba(255, 255, 255, 0.025) 0 1px,
+      transparent 1px 7px
+    ),
+    #07111c;
+  border: 2px solid var(--ch-cyan);
+  box-shadow:
+    0 0 0 1px rgba(62, 240, 255, 0.18),
+    0 0 28px rgba(62, 240, 255, 0.22),
+    0 22px 56px rgba(0, 0, 0, 0.55);
+  color: #f4fbfd;
+  position: relative;
+}
+
+body .catch-species-overlay .catch-species-sheet::before,
+body .catch-species-overlay .catch-species-sheet::after {
+  content: "";
+  position: absolute;
+  width: 0.9rem;
+  height: 0.9rem;
+  pointer-events: none;
+  border-color: var(--ch-cyan);
+  border-style: solid;
+}
+
+body .catch-species-overlay .catch-species-sheet::before {
+  top: 6px;
+  left: 6px;
+  border-width: 2px 0 0 2px;
+}
+
+body .catch-species-overlay .catch-species-sheet::after {
+  right: 6px;
+  bottom: 6px;
+  border-width: 0 2px 2px 0;
+}
+
+body .catch-species-overlay .catch-species-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+body .catch-species-overlay .catch-species-head h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #f4fbfd;
+}
+
+body .catch-species-overlay .catch-species-head h3 span {
+  color: var(--ch-cyan);
+  text-shadow: 0 0 12px rgba(62, 240, 255, 0.5);
+}
+
+body .catch-species-overlay .catch-species-close {
+  appearance: none;
+  border: 2px solid rgba(244, 196, 48, 0.7);
+  border-radius: 6px;
+  background: rgba(244, 196, 48, 0.1);
+  color: var(--ch-yellow);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 850;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.35rem 0.65rem;
+  cursor: pointer;
+}
+
+body .catch-species-overlay .catch-species-popup {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.55rem;
+}
+
+body .catch-species-overlay .catch-species-btn {
+  appearance: none;
+  flex: unset;
+  width: 100%;
+  justify-content: flex-start;
+  gap: 0.55rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 8px;
+  border: 2px solid rgba(62, 240, 255, 0.4);
+  background: rgba(4, 14, 22, 0.95);
+  color: #f4fbfd;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  box-shadow: 0 0 10px rgba(62, 240, 255, 0.08);
+}
+
+body .catch-species-overlay .catch-species-btn img {
+  width: 2.15rem;
+  height: 2.15rem;
+  border-radius: 50%;
+  object-fit: cover;
+  flex: 0 0 auto;
+  border: 2px solid rgba(62, 240, 255, 0.45);
+}
+
+body .catch-species-overlay .catch-species-btn.on {
+  border-color: var(--ch-cyan);
+  background: rgba(62, 240, 255, 0.14);
+  box-shadow:
+    0 0 0 1px rgba(62, 240, 255, 0.35),
+    0 0 16px rgba(62, 240, 255, 0.28);
+  color: #f4fbfd;
+}
+
+body .catch-species-overlay .catch-species-btn:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
