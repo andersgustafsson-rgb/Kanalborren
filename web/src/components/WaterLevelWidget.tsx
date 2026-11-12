@@ -370,14 +370,29 @@ async function fetchCanalConditions(): Promise<Conditions> {
 
     const series = meteo?.timeSeries ?? [];
     const nowMs = Date.now();
+    // SMHI hours are valid FROM that timestamp. Prefer latest hour that has
+    // already started (not the absolute closest, which jumps to the next hour
+    // after xx:30).
+    const started = series.filter((row) => {
+      if (!row.time) return false;
+      const t = Date.parse(row.time);
+      return Number.isFinite(t) && t <= nowMs + 60_000;
+    });
     const current =
-      series.reduce<(typeof series)[number] | null>((best, row) => {
-        if (!row.time) return best;
-        if (!best?.time) return row;
-        const rowDelta = Math.abs(Date.parse(row.time) - nowMs);
-        const bestDelta = Math.abs(Date.parse(best.time) - nowMs);
-        return rowDelta < bestDelta ? row : best;
-      }, null) ?? series[0] ?? null;
+      (started.length
+        ? started.reduce<(typeof series)[number] | null>((best, row) => {
+            if (!best?.time) return row;
+            return Date.parse(row.time!) > Date.parse(best.time)
+              ? row
+              : best;
+          }, null)
+        : series.reduce<(typeof series)[number] | null>((best, row) => {
+            if (!row.time) return best;
+            if (!best?.time) return row;
+            return Date.parse(row.time) < Date.parse(best.time) ? row : best;
+          }, null)) ??
+      series[0] ??
+      null;
     const d = current?.data;
     const windMs = finiteOrNull(d?.wind_speed);
     const code = finiteOrNull(d?.symbol_code) ?? 6;
@@ -646,7 +661,7 @@ export function WaterLevelWidget() {
             </a>
             {data.time && (
               <p className="water-muted conditions-time">
-                Senast uppdaterad {fmtClock(data.time)}
+                Gäller {fmtClock(data.time)}
               </p>
             )}
           </div>
