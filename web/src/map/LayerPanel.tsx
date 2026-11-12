@@ -101,7 +101,7 @@ const IconRules: Icon = () => (
 
 const IconClose: Icon = () => (
   <Svg>
-    <path d="M6 6l12 12M18 6 6 18" />
+    <path d="M5.5 5.5l13 13M18.5 5.5l-13 13" />
   </Svg>
 );
 
