@@ -28,6 +28,87 @@ const PROFILE_TABS: { id: ProfileTab; label: string }[] = [
   { id: "konto", label: "Konto" },
 ];
 
+function IconUser() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden>
+      <circle cx="12" cy="8" r="3.5" fill="none" stroke="currentColor" strokeWidth="1.8" />
+      <path
+        d="M5 19c1.8-3.2 4.2-4.8 7-4.8S17.2 15.8 19 19"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function IconPin() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden>
+      <path
+        d="M12 21s6-5.2 6-10a6 6 0 1 0-12 0c0 4.8 6 10 6 10z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      />
+      <circle cx="12" cy="11" r="2.2" fill="currentColor" />
+    </svg>
+  );
+}
+
+function IconHook() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden>
+      <path
+        d="M12 3v10a4 4 0 1 0 4 4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      <circle cx="12" cy="3.8" r="1.5" fill="currentColor" />
+    </svg>
+  );
+}
+
+function IconDoc() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden>
+      <path
+        d="M7 3.5h7l4 4V20a1.5 1.5 0 0 1-1.5 1.5h-9.5A1.5 1.5 0 0 1 5.5 20V5A1.5 1.5 0 0 1 7 3.5z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.7"
+      />
+      <path d="M14 3.5V8h4.5M8 12h8M8 16h6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function IconMail() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden>
+      <rect x="3.5" y="6" width="17" height="12" rx="2" fill="none" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M4.5 7.5 12 13l7.5-5.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function IconCamera() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden>
+      <path
+        d="M4 8.5h3l1.4-2h7.2l1.4 2H20a1.5 1.5 0 0 1 1.5 1.5v8A1.5 1.5 0 0 1 20 19.5H4A1.5 1.5 0 0 1 2.5 18v-8A1.5 1.5 0 0 1 4 8.5z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+      />
+      <circle cx="12" cy="13.5" r="3" fill="none" stroke="currentColor" strokeWidth="1.6" />
+    </svg>
+  );
+}
+
 function profileTabFromHash(hash: string): ProfileTab | null {
   const h = hash.replace(/^#/, "").toLowerCase();
   if (h === "konto") return "konto";
@@ -143,7 +224,9 @@ export function ProfileStudio() {
             title="Byt profilbild"
           >
             <img src={avatarSrc} alt="" />
-            <span>Byt bild</span>
+            <span>
+              <IconCamera /> Byt bild
+            </span>
           </button>
           <input
             ref={fileRef}
@@ -158,10 +241,14 @@ export function ProfileStudio() {
           />
           <div className="profile-hero-text">
             <h1>{displayName || "Min profil"}</h1>
-            <p>
-              {auth.user?.email
-                ? auth.user.email
-                : city || "Lokal profil i den här webbläsaren"}
+            <p className="profile-hero-mail">
+              {auth.user?.email ? (
+                <>
+                  <IconMail /> {auth.user.email}
+                </>
+              ) : (
+                city || "Lokal profil i den här webbläsaren"
+              )}
             </p>
             {saved && <p className="profile-saved">Sparat</p>}
           </div>
@@ -187,7 +274,9 @@ export function ProfileStudio() {
         {section === "om" && (
         <section className="profile-card">
           <label className="profile-field">
-            Visningsnamn
+            <span className="profile-field-label">
+              <IconUser /> Visningsnamn
+            </span>
             <input
               value={displayName}
               maxLength={32}
@@ -197,7 +286,9 @@ export function ProfileStudio() {
           </label>
 
           <label className="profile-field">
-            Stad / område
+            <span className="profile-field-label">
+              <IconPin /> Stad / område
+            </span>
             <input
               value={city}
               maxLength={60}
@@ -211,7 +302,9 @@ export function ProfileStudio() {
           </label>
 
           <label className="profile-field">
-            Fiskestil
+            <span className="profile-field-label">
+              <IconHook /> Fiskestil
+            </span>
             <input
               value={fishingStyle}
               maxLength={80}
@@ -225,7 +318,9 @@ export function ProfileStudio() {
           </label>
 
           <label className="profile-field">
-            Om dig
+            <span className="profile-field-label">
+              <IconDoc /> Om dig
+            </span>
             <textarea
               value={bio}
               maxLength={280}
@@ -241,7 +336,9 @@ export function ProfileStudio() {
           </label>
 
           <div className="profile-avatar-block">
-            <p className="profile-muted">Avatar som syns vid check-in</p>
+            <p className="profile-muted profile-avatar-title">
+              Avatar som syns vid check-in
+            </p>
             <div className="profile-avatars">
               {AVATARS.map((a) => (
                 <button
