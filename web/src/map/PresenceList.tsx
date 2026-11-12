@@ -8,6 +8,7 @@ import {
   formatZoneActivityLine,
   subscribeZoneActivity,
 } from "../lib/zoneActivity";
+import { HudIconSun } from "./HudIcons";
 
 type Props = {
   open: boolean;
@@ -121,7 +122,8 @@ export function PresenceList({ open, onOpenChange }: Props) {
         aria-controls="presence-sheet"
         onClick={() => onOpenChange(!open)}
       >
-        Ute
+        <HudIconSun />
+        <span>Ute</span>
         {count > 0 && <span className="hud-badge">{count}</span>}
       </button>
       {sheet}

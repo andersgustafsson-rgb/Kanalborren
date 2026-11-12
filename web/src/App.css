@@ -56,14 +56,18 @@
   grid-template-columns: auto repeat(3, minmax(0, 1fr));
   align-items: stretch;
   width: 100%;
-  padding: 0.2rem;
+  padding: 0.22rem;
   border-radius: 999px;
-  background: rgba(8, 14, 22, 0.82);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(5, 12, 20, 0.9);
+  border: 1.5px solid rgba(94, 220, 232, 0.78);
   backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   box-shadow:
-    0 10px 28px rgba(0, 0, 0, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    0 0 18px rgba(94, 220, 232, 0.35),
+    0 0 0 1px rgba(94, 220, 232, 0.18) inset,
+    0 10px 28px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(143, 235, 245, 0.18),
+    inset 0 -1px 0 rgba(94, 220, 232, 0.12);
 }
 
 .map-app.is-admin .hud-rail {
@@ -73,9 +77,21 @@
 .hud-brand {
   display: grid;
   place-items: center;
-  padding: 0.15rem 0.45rem 0.15rem 0.35rem;
+  padding: 0.15rem 0.55rem 0.15rem 0.4rem;
   text-decoration: none;
   min-width: 4.4rem;
+  position: relative;
+}
+
+.hud-brand::after {
+  content: "";
+  position: absolute;
+  top: 22%;
+  bottom: 22%;
+  right: 0;
+  width: 1px;
+  background: rgba(94, 220, 232, 0.55);
+  box-shadow: 0 0 6px rgba(94, 220, 232, 0.45);
 }
 
 .hud-brand-logo {
@@ -84,36 +100,64 @@
   width: auto;
   max-width: 5.6rem;
   object-fit: contain;
-  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.35));
+  filter: drop-shadow(0 0 8px rgba(94, 220, 232, 0.28));
 }
 
 .hud-item {
   appearance: none;
   border: 0;
   background: transparent;
-  color: rgba(244, 247, 250, 0.9);
+  color: #f4f7fa;
   font: inherit;
-  font-size: 0.78rem;
-  font-weight: 750;
+  font-size: 0.8rem;
+  font-weight: 800;
+  font-style: italic;
   letter-spacing: 0.01em;
   text-decoration: none;
   cursor: pointer;
-  min-height: 2.45rem;
-  padding: 0.35rem 0.25rem;
+  min-height: 2.55rem;
+  padding: 0.35rem 0.35rem;
+  margin: 0.08rem;
   border-radius: 999px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.28rem;
+  gap: 0.32rem;
+  position: relative;
   transition:
     background 0.15s ease,
     color 0.15s ease,
-    transform 0.12s ease;
+    transform 0.12s ease,
+    box-shadow 0.15s ease;
 }
 
-.hud-brand + .hud-item,
-.hud-item + .hud-item {
-  box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.08);
+.hud-ico {
+  width: 1.05rem;
+  height: 1.05rem;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.hud-brand + .hud-item::before,
+.hud-item + .hud-item::before {
+  content: "";
+  position: absolute;
+  top: 22%;
+  bottom: 22%;
+  left: -0.08rem;
+  width: 1px;
+  background: rgba(94, 220, 232, 0.45);
+  box-shadow: 0 0 5px rgba(94, 220, 232, 0.35);
+  pointer-events: none;
+}
+
+.hud-item.on::before,
+.hud-item.on + .hud-item::before {
+  opacity: 0;
 }
 
 .hud-item:active {
@@ -121,13 +165,13 @@
 }
 
 .hud-item.on {
-  background: var(--kb-lime);
+  background: #c8e22a;
   color: #0a1220;
-  box-shadow: none;
+  box-shadow: 0 0 14px rgba(200, 226, 42, 0.4);
 }
 
 .hud-item.admin.on {
-  background: var(--kb-orange);
+  background: #c8e22a;
   color: #0a1220;
 }
 
@@ -136,10 +180,11 @@
   height: 1.05rem;
   padding: 0 0.28rem;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.16);
+  background: rgba(94, 220, 232, 0.22);
   color: inherit;
   font-size: 0.65rem;
   font-weight: 800;
+  font-style: normal;
   display: inline-grid;
   place-items: center;
   line-height: 1;
@@ -317,10 +362,11 @@
 
 /* Kvällsläge — soft warm wash only; keep the map readable */
 .map-app.evening .hud-rail {
-  border-color: rgba(255, 176, 96, 0.22);
+  border-color: rgba(255, 176, 96, 0.55);
   box-shadow:
-    0 10px 28px rgba(0, 0, 0, 0.35),
-    inset 0 1px 0 rgba(255, 190, 120, 0.1);
+    0 0 16px rgba(255, 168, 80, 0.28),
+    0 10px 28px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 190, 120, 0.16);
 }
 
 .evening-veil {

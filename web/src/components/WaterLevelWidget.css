@@ -106,22 +106,17 @@
   margin: 0.65rem 0 0;
   padding: 0;
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.5rem;
-}
-
-@media (min-width: 420px) {
-  .wx-tiles {
-    grid-template-columns: repeat(3, 1fr);
-  }
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.4rem;
 }
 
 .wx-tile {
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
-  padding: 0.65rem 0.7rem;
-  border-radius: 14px;
+  gap: 0.12rem;
+  min-width: 0;
+  padding: 0.5rem 0.45rem;
+  border-radius: 12px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
@@ -134,27 +129,68 @@
 .wx-tile-label {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  font-size: 0.68rem;
+  gap: 0.28rem;
+  font-size: 0.62rem;
   font-weight: 750;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   color: #9bb0a4;
 }
 
 .wx-tile strong {
-  font-size: 1.15rem;
+  font-size: 0.95rem;
   color: #b8e014;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
 }
 
 .wx-tile-water strong {
   color: #dff56a;
-  font-size: 1.25rem;
+  font-size: 1rem;
 }
 
 .wx-tile small {
-  font-size: 0.75rem;
+  font-size: 0.68rem;
   color: #9bb0a4;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.wx-gust {
+  display: none;
+}
+
+@media (min-width: 420px) {
+  .wx-tiles {
+    gap: 0.5rem;
+  }
+
+  .wx-tile {
+    padding: 0.65rem 0.7rem;
+    border-radius: 14px;
+  }
+
+  .wx-tile-label {
+    gap: 0.4rem;
+    font-size: 0.68rem;
+    letter-spacing: 0.06em;
+  }
+
+  .wx-tile strong {
+    font-size: 1.15rem;
+  }
+
+  .wx-tile-water strong {
+    font-size: 1.25rem;
+  }
+
+  .wx-tile small {
+    font-size: 0.75rem;
+  }
+
+  .wx-gust {
+    display: inline;
+  }
 }
 
 .wx-compass {

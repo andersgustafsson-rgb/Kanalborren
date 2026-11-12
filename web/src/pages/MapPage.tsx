@@ -7,6 +7,7 @@ import {
   saveEveningPref,
   type EveningPref,
 } from "../map/eveningMode";
+import { HudIconGear, HudIconHome, HudIconLayers } from "../map/HudIcons";
 import { LayerPanel } from "../map/LayerPanel";
 import { PresenceList } from "../map/PresenceList";
 import { useAuth } from "../lib/AuthContext";
@@ -118,7 +119,8 @@ export function MapPage() {
             />
           </Link>
           <Link className="hud-item" to="/">
-            Hem
+            <HudIconHome />
+            <span>Hem</span>
           </Link>
           <PresenceList open={uteOpen} onOpenChange={openUte} />
           <button
@@ -128,7 +130,8 @@ export function MapPage() {
             aria-controls="layer-panel"
             onClick={openLayers}
           >
-            Lager
+            <HudIconLayers />
+            <span>Lager</span>
           </button>
           {auth.isAdmin && (
             <button
@@ -138,7 +141,8 @@ export function MapPage() {
               aria-controls="admin-panel"
               onClick={openAdmin}
             >
-              Admin
+              <HudIconGear />
+              <span>Admin</span>
             </button>
           )}
         </nav>

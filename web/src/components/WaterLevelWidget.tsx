@@ -547,7 +547,9 @@ export function WaterLevelWidget() {
               </strong>
               <small>
                 {compass(data.windDir)} · {windLabel(data.windMs)}
-                {data.gustMs != null ? ` · by ${data.gustMs.toFixed(1)}` : ""}
+                {data.gustMs != null ? (
+                  <span className="wx-gust"> · by {data.gustMs.toFixed(1)}</span>
+                ) : null}
               </small>
             </li>
             <li className="wx-tile">
