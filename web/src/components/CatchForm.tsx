@@ -4,6 +4,12 @@ import { Link } from "react-router-dom";
 import type { FeatureCollection } from "geojson";
 import { useAuth } from "../lib/AuthContext";
 import { submitCatchReport } from "../lib/catchReports";
+import {
+  fetchMyCatches,
+  isLengthPersonalBest,
+  isWeightPersonalBest,
+} from "../lib/myCatches";
+import { loadSpeciesPbs, saveSpeciesPb } from "../lib/profileStorage";
 import { SPECIES } from "../lib/species";
 import { fetchSpots } from "../lib/spotsApi";
 import { saveShareDraft } from "../lib/shareDraft";
@@ -325,6 +331,20 @@ export function CatchForm({ onSubmitted }: Props) {
       ZONES.find((z) => z.id === placeId) ||
       spots.find((s) => s.id === placeId) ||
       ZONES[0];
+    const prior = await fetchMyCatches(400);
+    const declared = loadSpeciesPbs()[species];
+    const lengthPb = isLengthPersonalBest(
+      prior,
+      species,
+      len,
+      declared?.lengthCm,
+    );
+    const weightPb = isWeightPersonalBest(
+      prior,
+      species,
+      w,
+      declared?.weightKg,
+    );
     const { error } = await submitCatchReport(auth.user.id, {
       species,
       lengthCm: len,
@@ -347,12 +367,20 @@ export function CatchForm({ onSubmitted }: Props) {
       );
       return;
     }
+    if (lengthPb || weightPb) {
+      saveSpeciesPb(species, {
+        ...(lengthPb && len != null ? { lengthCm: len } : {}),
+        ...(weightPb && w != null ? { weightKg: w } : {}),
+      });
+    }
     saveShareDraft({
       species,
       lengthCm: len,
       weightKg: w,
       placeName: place.name,
       isPrivate,
+      isLengthPb: lengthPb,
+      isWeightPb: weightPb,
       caughtAt,
       savedAt: new Date().toISOString(),
     });
@@ -361,6 +389,8 @@ export function CatchForm({ onSubmitted }: Props) {
       lengthCm: len,
       weightKg: w,
       placeName: place.name,
+      isLengthPb: lengthPb,
+      isWeightPb: weightPb,
     });
     say(
       isPrivate

@@ -171,6 +171,86 @@ export async function fetchMyTripNotes(limit = 30): Promise<MyTripNote[]> {
     }));
 }
 
+/** Previous personal-best length for a species (null if none logged yet). */
+export function bestLengthForSpecies(
+  rows: MyCatch[],
+  species: string,
+): number | null {
+  let best: number | null = null;
+  const want = species.trim().toLowerCase();
+  for (const r of rows) {
+    if (r.species.trim().toLowerCase() !== want) continue;
+    if (r.lengthCm == null || !Number.isFinite(r.lengthCm)) continue;
+    if (best == null || r.lengthCm > best) best = r.lengthCm;
+  }
+  return best;
+}
+
+/** Previous personal-best weight for a species (null if none logged yet). */
+export function bestWeightForSpecies(
+  rows: MyCatch[],
+  species: string,
+): number | null {
+  let best: number | null = null;
+  const want = species.trim().toLowerCase();
+  for (const r of rows) {
+    if (r.species.trim().toLowerCase() !== want) continue;
+    if (r.weightKg == null || !Number.isFinite(r.weightKg)) continue;
+    if (best == null || r.weightKg > best) best = r.weightKg;
+  }
+  return best;
+}
+
+/**
+ * Baseline to beat for a PB metric:
+ * declared profile PB if set, else biggest value logged in the app.
+ */
+export function resolvePbBaseline(
+  fromApp: number | null,
+  declared?: number | null,
+): number | null {
+  const d =
+    declared != null && Number.isFinite(declared) && declared > 0
+      ? declared
+      : null;
+  if (d != null && fromApp != null) return Math.max(d, fromApp);
+  return d ?? fromApp;
+}
+
+function beatsBaseline(
+  value: number | null | undefined,
+  baseline: number | null,
+): boolean {
+  if (value == null || !Number.isFinite(value) || value <= 0) return false;
+  return baseline == null || value > baseline;
+}
+
+/** True when `lengthCm` beats declared PB and/or previous app catches. */
+export function isLengthPersonalBest(
+  rows: MyCatch[],
+  species: string,
+  lengthCm: number | null | undefined,
+  declaredCm?: number | null,
+): boolean {
+  return beatsBaseline(
+    lengthCm,
+    resolvePbBaseline(bestLengthForSpecies(rows, species), declaredCm),
+  );
+}
+
+/** True when `weightKg` beats declared PB and/or previous app catches. */
+export function isWeightPersonalBest(
+  rows: MyCatch[],
+  species: string,
+  weightKg: number | null | undefined,
+  declaredKg?: number | null,
+): boolean {
+  return beatsBaseline(
+    weightKg,
+    resolvePbBaseline(bestWeightForSpecies(rows, species), declaredKg),
+  );
+}
+
 export function bestCatchMonth(rows: MyCatch[]): {
   label: string;
   count: number;

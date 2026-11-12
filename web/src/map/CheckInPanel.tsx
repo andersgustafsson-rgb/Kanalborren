@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import type { CheckInSession, Visibility } from "./checkinStorage";
 import { formatRemaining, remainingMs } from "./checkinStorage";
+import { formatTripRemaining } from "../lib/fishingTrips";
 import type { ResolvedZone } from "./geo";
 import { AVATARS, type PresetAvatarId } from "./avatars";
 
@@ -35,6 +36,9 @@ type Props = {
   onCheckIn: () => void;
   onExtend: () => void;
   onHide: (tripNote?: string | null) => void;
+  fishingPassExpiresAt?: string | null;
+  onEndFishingPass?: () => void;
+  fishingPassBusy?: boolean;
 };
 
 export function CheckInPanel({
@@ -65,6 +69,9 @@ export function CheckInPanel({
   onCheckIn,
   onExtend,
   onHide,
+  fishingPassExpiresAt = null,
+  onEndFishingPass,
+  fishingPassBusy = false,
 }: Props) {
   const left = session ? remainingMs({ ...session }) : 0;
   const leftLive = session
@@ -73,6 +80,10 @@ export function CheckInPanel({
   const fileRef = useRef<HTMLInputElement>(null);
   const [ending, setEnding] = useState(false);
   const [tripNote, setTripNote] = useState("");
+  const [endingPass, setEndingPass] = useState(false);
+  const passLeft = fishingPassExpiresAt
+    ? formatTripRemaining(fishingPassExpiresAt, now)
+    : null;
 
   return (
     <aside
@@ -95,6 +106,17 @@ export function CheckInPanel({
                 <small>
                   {session.zoneName || "Kanalen"} ·{" "}
                   {formatRemaining(leftLive || left)} kvar
+                  {passLeft ? ` · pass ${passLeft} kvar` : ""}
+                </small>
+              </>
+            ) : passLeft ? (
+              <>
+                <strong>Fiskepass igång</strong>
+                <small>
+                  {passLeft} kvar
+                  {fix
+                    ? ` · ${suggestedZone?.name || "position klar"}`
+                    : ""}
                 </small>
               </>
             ) : (
@@ -159,6 +181,47 @@ export function CheckInPanel({
         </div>
         {uploadError && <p className="checkin-error">{uploadError}</p>}
 
+        {passLeft && onEndFishingPass && (
+          <div className="fishing-pass-box">
+            <div className="fishing-pass-copy">
+              <strong>Fiskepass</strong>
+              <span>Igång · {passLeft} kvar</span>
+            </div>
+            {!endingPass ? (
+              <button
+                type="button"
+                className="chip danger"
+                disabled={fishingPassBusy}
+                onClick={() => setEndingPass(true)}
+              >
+                Avsluta pass
+              </button>
+            ) : (
+              <div className="checkin-actions">
+                <button
+                  type="button"
+                  className="chip"
+                  disabled={fishingPassBusy}
+                  onClick={() => setEndingPass(false)}
+                >
+                  Avbryt
+                </button>
+                <button
+                  type="button"
+                  className="chip danger"
+                  disabled={fishingPassBusy}
+                  onClick={() => {
+                    onEndFishingPass();
+                    setEndingPass(false);
+                  }}
+                >
+                  Avsluta passet
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
         {!session && (
           <div className="checkin-choices">
             <button
@@ -170,7 +233,9 @@ export function CheckInPanel({
               {locating ? "Hämtar din position…" : "Jag är vid kanalen"}
             </button>
             <p className="checkin-meta">
-              Hämtar din plats. Sen trycker du Checka in.
+              {passLeft
+                ? "Hämtar din plats och visar dig enligt valet under Vad andra ser."
+                : "Hämtar din plats. Sen trycker du Checka in."}
             </p>
             <div className="checkin-actions">
               <button
@@ -215,8 +280,8 @@ export function CheckInPanel({
                     ? "Ingen nål — syns i zonlista"
                     : "Ingen ser dig",
                 ],
-                ["zone", "Zon", "Bara området"],
-                ["precise", "Exakt", "Ungefär var du står"],
+                ["zone", "Ungefärlig plats", "Bara zonen på kartan"],
+                ["precise", "Exakt plats", "Nära där du står"],
               ] as const
             ).map(([value, label, hint]) => (
               <button
@@ -254,7 +319,7 @@ export function CheckInPanel({
           />
         </label>
 
-        {!session ? (
+        {!session && !passLeft ? (
           <button
             type="button"
             className="cta"
@@ -263,7 +328,7 @@ export function CheckInPanel({
           >
             Checka in · 4 timmar
           </button>
-        ) : (
+        ) : session ? (
           <div className="checkin-active">
             <p>
               Aktiv: <strong>{session.visibility}</strong>
@@ -323,7 +388,7 @@ export function CheckInPanel({
               </div>
             )}
           </div>
-        )}
+        ) : null}
       </div>
     </aside>
   );

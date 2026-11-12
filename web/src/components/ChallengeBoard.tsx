@@ -11,6 +11,7 @@ import {
   type Challenge,
   type ChallengeMetric,
   type ChallengeScores,
+  type ChallengeTarget,
 } from "../lib/challenges";
 import { SPECIES_IDS as SPECIES } from "../lib/species";
 import "./ChallengeBoard.css";
@@ -46,10 +47,11 @@ export function ChallengeBoard({ reloadToken = 0 }: Props) {
   const auth = useAuth();
   const [rows, setRows] = useState<Challenge[]>([]);
   const [scores, setScores] = useState<Map<string, ChallengeScores>>(new Map());
-  const [targets, setTargets] = useState<{ id: string; displayName: string }[]>(
-    [],
-  );
+  const [targets, setTargets] = useState<ChallengeTarget[]>([]);
   const [toUserId, setToUserId] = useState("");
+  const [pickedName, setPickedName] = useState("");
+  const [query, setQuery] = useState("");
+  const [pickerOpen, setPickerOpen] = useState(false);
   const [species, setSpecies] = useState("Abborre");
   const [metric, setMetric] = useState<ChallengeMetric>("length_cm");
   const [hours, setHours] = useState(12);
@@ -63,12 +65,8 @@ export function ChallengeBoard({ reloadToken = 0 }: Props) {
       setTargets([]);
       return;
     }
-    const [ch, tg] = await Promise.all([
-      listMyChallenges(),
-      listChallengeTargets(),
-    ]);
+    const ch = await listMyChallenges();
     setRows(ch);
-    setTargets(tg);
     const needScores = ch.filter((c) =>
       ["active", "completed"].includes(c.status),
     );
@@ -80,8 +78,21 @@ export function ChallengeBoard({ reloadToken = 0 }: Props) {
   }, [reload, reloadToken]);
 
   useEffect(() => {
-    if (!toUserId && targets[0]) setToUserId(targets[0].id);
-  }, [targets, toUserId]);
+    if (!auth.user) {
+      setTargets([]);
+      return;
+    }
+    let cancelled = false;
+    const handle = window.setTimeout(() => {
+      void listChallengeTargets(query).then((tg) => {
+        if (!cancelled) setTargets(tg);
+      });
+    }, query.trim() ? 180 : 0);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(handle);
+    };
+  }, [auth.user, query, reloadToken]);
 
   const pendingIn = useMemo(
     () =>
@@ -126,7 +137,7 @@ export function ChallengeBoard({ reloadToken = 0 }: Props) {
       species,
       metric,
       hours,
-      message: `Utmaning: störst ${species.toLowerCase()} på ${metricLabel(metric)}`,
+      message: `${hours}h i kanalen · störst ${species.toLowerCase()} på ${metricLabel(metric)}`,
     });
     setBusy(false);
     if (error) {
@@ -134,6 +145,10 @@ export function ChallengeBoard({ reloadToken = 0 }: Props) {
       return;
     }
     setMsg("Utmaning skickad");
+    setToUserId("");
+    setPickedName("");
+    setQuery("");
+    setPickerOpen(false);
     void reload();
   }
 
@@ -192,31 +207,79 @@ export function ChallengeBoard({ reloadToken = 0 }: Props) {
       <header className="home-board-head">
         <h2 id="challenge-title">Utmana fiskare</h2>
         <p>
-          Skicka en duell · båda rapporterar fångst · störst {metricLabel(metric)}{" "}
-          vinner. Efter sluttid avgörs den automatiskt och försvinner inom ett
-          dygn.{" "}
+          Sök upp någon — även hemma får de notis. Folk vid kanalen syns
+          först. Störst {metricLabel(metric)} vinner.{" "}
           <Link to="/hjalp#utmana">Så funkar det</Link>
         </p>
       </header>
 
       <form className="challenge-form" onSubmit={createChallenge}>
-        <label className="profile-field">
-          Utmana
-          <select
-            value={toUserId}
-            onChange={(e) => setToUserId(e.target.value)}
-            required
-          >
-            {targets.length === 0 && (
-              <option value="">Inga andra användare ännu</option>
+        <div className="challenge-picker">
+          <label className="profile-field">
+            Utmana
+            {pickedName ? (
+              <button
+                type="button"
+                className="challenge-picked"
+                onClick={() => {
+                  setToUserId("");
+                  setPickedName("");
+                  setPickerOpen(true);
+                }}
+              >
+                <strong>{pickedName}</strong>
+                <span>Byt</span>
+              </button>
+            ) : (
+              <input
+                type="search"
+                value={query}
+                onChange={(e) => {
+                  setQuery(e.target.value);
+                  setPickerOpen(true);
+                }}
+                onFocus={() => setPickerOpen(true)}
+                placeholder="Sök namn…"
+                autoComplete="off"
+              />
             )}
-            {targets.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.displayName}
-              </option>
-            ))}
-          </select>
-        </label>
+          </label>
+          {pickerOpen && !pickedName && (
+            <ul className="challenge-suggest" role="listbox">
+              {targets.length === 0 && (
+                <li className="challenge-suggest-empty">
+                  {query.trim()
+                    ? "Ingen träff"
+                    : "Ingen ute just nu — sök på namn"}
+                </li>
+              )}
+              {targets.map((t) => (
+                <li key={t.id}>
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={toUserId === t.id}
+                    onClick={() => {
+                      setToUserId(t.id);
+                      setPickedName(t.displayName);
+                      setQuery("");
+                      setPickerOpen(false);
+                    }}
+                  >
+                    <strong>{t.displayName}</strong>
+                    <span>
+                      {t.atCanal
+                        ? t.openForCompany
+                          ? `${t.zoneName || "Kanalen"} · öppen för sällskap`
+                          : `${t.zoneName || "Kanalen"} · ute`
+                        : "Hemma"}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
         <div className="challenge-row">
           <label className="profile-field">
             Art

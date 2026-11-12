@@ -15,7 +15,7 @@ import "./ShareCatchPage.css";
 
 const SAMPLE = "/labb/test-catch.jpg";
 
-const LOOKS: { id: ShareMode; label: string }[] = [
+const BASE_LOOKS: { id: ShareMode; label: string }[] = [
   { id: "photo", label: "Eget foto" },
   { id: "template", label: "Malmö-mall" },
   { id: "blur", label: "Blur" },
@@ -52,6 +52,20 @@ export function ShareCatchPage() {
     () => draft?.caughtAt || new Date().toISOString(),
   );
   const [fromCatch] = useState(() => Boolean(draft));
+  const [preferPb] = useState(
+    () => Boolean(draft?.isLengthPb || draft?.isWeightPb),
+  );
+  const looks = useMemo(
+    () =>
+      preferPb
+        ? [
+            ...BASE_LOOKS.slice(0, 2),
+            { id: "pb" as const, label: "Personligt rekord" },
+            ...BASE_LOOKS.slice(2),
+          ]
+        : BASE_LOOKS,
+    [preferPb],
+  );
   const [thumbs, setThumbs] = useState<ThumbMap>({});
   const [busy, setBusy] = useState<Busy>(null);
   const [msg, setMsg] = useState<string | null>(null);
@@ -146,7 +160,7 @@ export function ShareCatchPage() {
       setCutoutBlob(cut);
 
       setBusy("compose");
-      const [templateThumb, blurThumb] = await Promise.all([
+      const thumbJobs: Promise<Blob>[] = [
         composeShareThumb({
           mode: "template",
           photo,
@@ -159,14 +173,32 @@ export function ShareCatchPage() {
           cutout: cut,
           meta: nextMeta,
         }),
-      ]);
+      ];
+      if (preferPb) {
+        thumbJobs.splice(
+          1,
+          0,
+          composeShareThumb({
+            mode: "pb",
+            photo,
+            cutout: cut,
+            meta: nextMeta,
+          }),
+        );
+      }
+      const thumbsOut = await Promise.all(thumbJobs);
       if (gen !== genRef.current) return;
-      putThumb("template", templateThumb);
-      putThumb("blur", blurThumb);
-      if (!userPickedLook.current) setMode("template");
+      putThumb("template", thumbsOut[0]);
+      if (preferPb) {
+        putThumb("pb", thumbsOut[1]);
+        putThumb("blur", thumbsOut[2]);
+      } else {
+        putThumb("blur", thumbsOut[1]);
+      }
+      if (!userPickedLook.current) setMode(preferPb ? "pb" : "template");
       setBusy(null);
       setMsgOk(true);
-      setMsg("Välj en look");
+      setMsg(preferPb ? "PB-look förvald — byt om du vill" : "Välj en look");
     } catch (e) {
       if (gen !== genRef.current) return;
       setBusy(null);
@@ -216,7 +248,7 @@ export function ShareCatchPage() {
   async function renderCard(): Promise<Blob> {
     if (!photoBlob) throw new Error("Välj ett foto först");
     let cut: Blob | null = cutoutBlob;
-    if ((mode === "template" || mode === "blur") && !cut) {
+    if ((mode === "template" || mode === "pb" || mode === "blur") && !cut) {
       setBusy("cutout");
       const { blob } = await removePhotoBackground(photoBlob);
       cut = blob;
@@ -413,7 +445,7 @@ export function ShareCatchPage() {
                 role="radiogroup"
                 aria-label="Look"
               >
-                {LOOKS.map(({ id, label }) => {
+                {looks.map(({ id, label }) => {
                   const url = thumbs[id];
                   const waiting =
                     !url &&

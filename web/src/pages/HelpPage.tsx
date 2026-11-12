@@ -44,8 +44,9 @@ const SECTIONS = [
     id: "utmana",
     title: "Utmana fiskare",
     body: [
-      "På Hem → fliken Utmana: välj person, art, längd eller vikt, och tid (6–24 tim).",
-      "Mottagaren antar → båda fiskar och rapporterar fångst (rätt art under tiden).",
+      "På Hem → fliken Utmana: sök upp person (även hemma), välj art, längd eller vikt, och tid (6–24 tim).",
+      "Folk som är ute vid kanalen syns först i listan — annars sök på namn.",
+      "Mottagaren får notis och antar → båda fiskar och rapporterar fångst (rätt art under tiden).",
       "Poängen syns i utmaningsrutan (Du / motståndare).",
       "Tryck Avgör nu när ni är klara — eller vänta: efter sluttid avgörs den automatiskt.",
       "Ingen fångst hos någon = oavgjort. Obesvarade utmaningar blir ogiltiga efter tiden.",

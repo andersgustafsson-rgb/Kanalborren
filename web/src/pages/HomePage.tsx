@@ -1,12 +1,18 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { AuthBar } from "../components/AuthBar";
 import { CatchForm } from "../components/CatchForm";
 import { ChallengeBoard } from "../components/ChallengeBoard";
 import { FeedbackForm } from "../components/FeedbackForm";
-import { MyCatchDashboard } from "../components/MyCatchDashboard";
 import { WaterLevelWidget } from "../components/WaterLevelWidget";
 import { useAuth } from "../lib/AuthContext";
+import {
+  endFishingTrip,
+  fetchActiveTrip,
+  formatTripRemaining,
+  isTripExpired,
+  startFishingTrip,
+  type FishingTrip,
+} from "../lib/fishingTrips";
 import {
   fetchHighscores,
   type HighscorePeriod,
@@ -19,6 +25,7 @@ import {
   fetchZoneActivity,
   formatZoneActivityLine,
 } from "../lib/zoneActivity";
+import { ProfileStudio } from "./ProfilePage";
 import "./HomePage.css";
 
 const PERIODS: { id: HighscorePeriod; label: string }[] = [
@@ -59,10 +66,39 @@ export function HomePage() {
   const [reloadToken, setReloadToken] = useState(0);
   const [streak, setStreak] = useState<StreakInfo | null>(null);
   const [activity, setActivity] = useState<RecentCatch[]>([]);
+  const [trip, setTrip] = useState<FishingTrip | null>(null);
+  const [tripBusy, setTripBusy] = useState(false);
+  const [tripMsg, setTripMsg] = useState<string | null>(null);
+  const [nowTick, setNowTick] = useState(() => Date.now());
 
   useEffect(() => {
     setTab(tabFromHash(location.hash));
   }, [location.hash]);
+
+  useEffect(() => {
+    if (!auth.user) {
+      setTrip(null);
+      return;
+    }
+    let cancelled = false;
+    void fetchActiveTrip().then((active) => {
+      if (!cancelled) setTrip(active);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [auth.user]);
+
+  useEffect(() => {
+    if (!trip) return;
+    const id = window.setInterval(() => setNowTick(Date.now()), 15_000);
+    return () => window.clearInterval(id);
+  }, [trip]);
+
+  useEffect(() => {
+    if (!trip || !isTripExpired(trip.expiresAt, nowTick)) return;
+    void endFishingTrip(trip.id).then(() => setTrip(null));
+  }, [trip, nowTick]);
 
   useEffect(() => {
     let cancelled = false;
@@ -110,6 +146,24 @@ export function HomePage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
+  async function onStartPass() {
+    setTripMsg(null);
+    if (!auth.user) {
+      setTripMsg("Logga in under Profil för att starta fiskepass");
+      openTab("profil");
+      return;
+    }
+    setTripBusy(true);
+    const { trip: next, error } = await startFishingTrip();
+    setTripBusy(false);
+    if (error || !next) {
+      setTripMsg(error || "Kunde inte starta fiskepass");
+      return;
+    }
+    setTrip(next);
+    setNowTick(Date.now());
+  }
+
   return (
     <div className="home">
       <img
@@ -130,11 +184,35 @@ export function HomePage() {
             height={150}
             decoding="async"
           />
-          <div className="home-cta-row">
-            <Link className="home-cta home-cta-main" to="/karta">
-              Till kanalen
-            </Link>
-          </div>
+          {trip ? (
+            <div className="home-cta-row">
+              <Link className="home-cta home-cta-solo" to="/karta">
+                Till kanalen
+              </Link>
+              <p className="home-pass-status" role="status">
+                Pass igång · {formatTripRemaining(trip.expiresAt, nowTick)} kvar ·
+                avsluta från kartmenyn
+              </p>
+            </div>
+          ) : (
+            <div className="home-cta-row">
+              <div className="home-cta-seg" role="group" aria-label="Gå ut">
+                <button
+                  type="button"
+                  className="home-cta-seg-btn home-cta-seg-start"
+                  disabled={tripBusy}
+                  onClick={() => void onStartPass()}
+                >
+                  {tripBusy ? "Startar…" : "Starta fiskepass"}
+                </button>
+                <span className="home-cta-seg-divider" aria-hidden />
+                <Link className="home-cta-seg-btn home-cta-seg-map" to="/karta">
+                  Till kanalen
+                </Link>
+              </div>
+            </div>
+          )}
+          {tripMsg && <p className="home-cta-msg">{tripMsg}</p>}
         </header>
 
         <nav className="home-tabs" role="tablist" aria-label="Startsida">
@@ -275,13 +353,7 @@ export function HomePage() {
 
         {tab === "profil" && (
           <div className="home-panel" role="tabpanel">
-            <AuthBar />
-            <MyCatchDashboard />
-            <p className="home-profile-more">
-              <Link className="home-cta ghost" to="/profil">
-                Öppna hela profilen
-              </Link>
-            </p>
+            <ProfileStudio />
           </div>
         )}
 

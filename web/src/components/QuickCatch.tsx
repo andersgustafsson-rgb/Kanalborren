@@ -18,6 +18,8 @@ import {
   saveLastSpecies,
   type LastQuickCatch,
 } from "../lib/quickCatchPrefs";
+import { fetchMyCatches, isLengthPersonalBest } from "../lib/myCatches";
+import { loadSpeciesPbs, saveSpeciesPb } from "../lib/profileStorage";
 import { saveShareDraft } from "../lib/shareDraft";
 import { QUICK_ZONES, SPECIES } from "../lib/species";
 import { loadSession } from "../map/checkinStorage";
@@ -172,6 +174,8 @@ export function QuickCatch() {
       weightKg: null,
       placeName: place.name,
       isPrivate: privateFlag,
+      isLengthPb: false,
+      isWeightPb: false,
       caughtAt: saved.at,
       savedAt: saved.at,
     });
@@ -184,6 +188,8 @@ export function QuickCatch() {
     setSharePrompt({
       species: nextSpecies,
       placeName: place.name,
+      isLengthPb: false,
+      isWeightPb: false,
     });
   }
 
@@ -239,6 +245,16 @@ export function QuickCatch() {
       return;
     }
     setBusy(true);
+    const prior = await fetchMyCatches(400);
+    // Exclude the just-saved catch (no length yet) from PB comparison.
+    const others = prior.filter((r) => r.id !== toast.id);
+    const declared = loadSpeciesPbs()[toast.species];
+    const lengthPb = isLengthPersonalBest(
+      others,
+      toast.species,
+      n,
+      declared?.lengthCm,
+    );
     const { error: err } = await updateCatchMeasures(toast.id, {
       lengthCm: n,
       weightKg: null,
@@ -248,14 +264,25 @@ export function QuickCatch() {
       setError(err);
       return;
     }
+    if (lengthPb) saveSpeciesPb(toast.species, { lengthCm: n });
+    const at = new Date().toISOString();
     saveShareDraft({
       species: toast.species,
       lengthCm: n,
       weightKg: null,
       placeName: toast.zoneName,
       isPrivate: loadLastPrivate(),
-      caughtAt: new Date().toISOString(),
-      savedAt: new Date().toISOString(),
+      isLengthPb: lengthPb,
+      isWeightPb: false,
+      caughtAt: at,
+      savedAt: at,
+    });
+    setSharePrompt({
+      species: toast.species,
+      lengthCm: n,
+      placeName: toast.zoneName,
+      isLengthPb: lengthPb,
+      isWeightPb: false,
     });
     setToast(null);
     setAddingLength(false);

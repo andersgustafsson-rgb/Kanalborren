@@ -218,6 +218,7 @@ export function MapPage() {
         adminOpen={adminOpen}
         basemap={basemap}
         evening={evening}
+        onToggleParking={() => toggle("parking")}
       />
     </div>
   );

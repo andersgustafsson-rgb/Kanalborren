@@ -1,7 +1,7 @@
 export const SHARE_W = 1080;
 export const SHARE_H = 1350;
 
-export type ShareMode = "photo" | "template" | "blur";
+export type ShareMode = "photo" | "template" | "pb" | "blur";
 
 export type ShareCatchMeta = {
   species: string;
@@ -13,6 +13,7 @@ export type ShareCatchMeta = {
 };
 
 const TEMPLATE_SRC = "/share/templates/malmo-kanal-dusk.jpg";
+const PB_TEMPLATE_SRC = "/share/templates/pb-malmo-firande.jpg";
 const LOGO_SRC = "/brand/kanalhugget-logo.png";
 
 /** Prefer bitmap via fetch — avoids crossOrigin cache failures when switching looks. */
@@ -374,8 +375,10 @@ export async function composeShareCard(input: {
       ctx.drawImage(logoImg, (SHARE_W - lw) / 2, 48, lw, lh);
     }
     drawMeta(ctx, input.meta, { bottomSafe: 48, withScrim: true });
-  } else if (input.mode === "template") {
-    const tpl = await loadBitmap(TEMPLATE_SRC);
+  } else if (input.mode === "template" || input.mode === "pb") {
+    const tpl = await loadBitmap(
+      input.mode === "pb" ? PB_TEMPLATE_SRC : TEMPLATE_SRC,
+    );
     try {
       drawCover(ctx, tpl, 0, 0, SHARE_W, SHARE_H, tpl.width, tpl.height);
       if (input.cutout) {
@@ -402,7 +405,10 @@ export async function composeShareCard(input: {
         );
         ctx.restore();
       }
-      drawMeta(ctx, input.meta, { bottomSafe: 120, withScrim: false });
+      drawMeta(ctx, input.meta, {
+        bottomSafe: input.mode === "pb" ? 140 : 120,
+        withScrim: false,
+      });
     } finally {
       tpl.close();
     }

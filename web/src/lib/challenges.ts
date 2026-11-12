@@ -1,3 +1,4 @@
+import { listPublicSessions } from "./fishingSessions";
 import { isSupabaseConfigured, supabase } from "./supabase";
 
 export type ChallengeMetric = "length_cm" | "weight_kg";
@@ -182,26 +183,74 @@ export async function resolveChallenge(
   return { error: null, winnerId: (data as string | null) ?? null };
 }
 
-export async function listChallengeTargets(): Promise<
-  { id: string; displayName: string }[]
-> {
-  if (!supabase) return [];
+export type ChallengeTarget = {
+  id: string;
+  displayName: string;
+  zoneName: string | null;
+  atCanal: boolean;
+  openForCompany: boolean;
+};
+
+/**
+ * Searchable challenge targets.
+ * Empty query → only people currently at the canal (collapsed).
+ * With query → name search across profiles.
+ */
+export async function listChallengeTargets(
+  query = "",
+): Promise<ChallengeTarget[]> {
+  if (!isSupabaseConfigured() || !supabase) return [];
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return [];
-  const { data, error } = await supabase
+
+  const sessions = await listPublicSessions(user.id);
+  const sessionByUser = new Map(
+    sessions
+      .filter((s) => s.userId)
+      .map((s) => [
+        s.userId,
+        {
+          zoneName: s.zoneName,
+          openForCompany: s.openForCompany,
+        },
+      ]),
+  );
+
+  const trimmed = query.trim();
+  let q = supabase
     .from("profiles")
     .select("id,display_name")
     .is("banned_at", null)
     .neq("id", user.id)
-    .order("display_name")
-    .limit(50);
-  if (error || !data) return [];
-  return data.map((p) => ({
-    id: p.id as string,
-    displayName: (p.display_name as string) || "Fiskare",
-  }));
+    .order("display_name");
+
+  if (trimmed.length >= 1) {
+    q = q.ilike("display_name", `%${trimmed}%`).limit(20);
+  } else {
+    const atIds = [...sessionByUser.keys()];
+    if (atIds.length === 0) return [];
+    q = q.in("id", atIds).limit(12);
+  }
+
+  const { data, error } = await q;
+  if (error || !data) {
+    console.warn("listChallengeTargets", error);
+    return [];
+  }
+
+  return data.map((p) => {
+    const id = p.id as string;
+    const sess = sessionByUser.get(id);
+    return {
+      id,
+      displayName: (p.display_name as string) || "Fiskare",
+      zoneName: sess?.zoneName ?? null,
+      atCanal: Boolean(sess),
+      openForCompany: Boolean(sess?.openForCompany),
+    };
+  });
 }
 
 export type ChallengeScores = {

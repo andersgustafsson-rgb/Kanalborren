@@ -8,9 +8,11 @@ import {
   formatRemaining,
   INITIAL_DURATION_MS,
   loadSession,
+  loadVisibilityPref,
   markCheckInNudged,
   MAX_SESSION_MS,
   saveSession,
+  saveVisibilityPref,
   TWO_HOUR_REMINDER_MS,
   wasCheckInNudged,
   type CheckInSession,
@@ -50,7 +52,9 @@ export function useCheckIn(
   const [fix, setFix] = useState<Fix | null>(null);
   const [locating, setLocating] = useState(false);
   const [locateError, setLocateError] = useState<string | null>(null);
-  const [visibility, setVisibility] = useState<Visibility>("zone");
+  const [visibility, setVisibility] = useState<Visibility>(() =>
+    loadVisibilityPref(),
+  );
   const [openForCompany, setOpenForCompany] = useState(false);
   const [note, setNote] = useState("");
   const [now, setNow] = useState(() => Date.now());
@@ -239,7 +243,8 @@ export function useCheckIn(
     setSimulated(false);
     setLocateError(null);
     setSpectator(true);
-    setVisibility("ghost");
+    // Keep last preferred visibility for the next check-in (default exakt).
+    setVisibility(loadVisibilityPref());
     setOpenForCompany(false);
     await endSession(remoteId, identity.userId);
   }, [session?.remoteId, identity.userId]);
@@ -370,6 +375,7 @@ export function useCheckIn(
   const setVisibilityAndSync = useCallback(
     (value: Visibility) => {
       setVisibility(value);
+      saveVisibilityPref(value);
       if (!session || !fix || !spots || !zones) return;
 
       const zone = resolveZone(fix.lat, fix.lng, spots, zones);

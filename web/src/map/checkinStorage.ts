@@ -1,5 +1,26 @@
 export type Visibility = "ghost" | "zone" | "precise";
 
+/** Remember last visibility for the next check-in. Default: exakt plats. */
+const VISIBILITY_PREF_KEY = "kanalhugget.checkin.visibility.v2";
+
+export function loadVisibilityPref(): Visibility {
+  try {
+    const raw = localStorage.getItem(VISIBILITY_PREF_KEY);
+    if (raw === "ghost" || raw === "zone" || raw === "precise") return raw;
+  } catch {
+    /* ignore */
+  }
+  return "precise";
+}
+
+export function saveVisibilityPref(value: Visibility) {
+  try {
+    localStorage.setItem(VISIBILITY_PREF_KEY, value);
+  } catch {
+    /* ignore */
+  }
+}
+
 export type CheckInSession = {
   visibility: Visibility;
   openForCompany: boolean;

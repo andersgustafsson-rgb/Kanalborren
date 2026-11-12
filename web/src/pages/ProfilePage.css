@@ -54,10 +54,53 @@
   font-size: 0.9rem;
 }
 
+.profile-studio {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.profile-subtabs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.28rem;
+  padding: 0.22rem;
+  border-radius: 14px;
+  background: rgba(8, 14, 22, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.profile-subtab {
+  appearance: none;
+  border: 0;
+  border-radius: 10px;
+  padding: 0.48rem 0.2rem;
+  background: transparent;
+  color: rgba(244, 247, 250, 0.78);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.profile-subtab.on {
+  background: linear-gradient(100deg, #b8e014 0%, #d4f03a 70%);
+  color: #0a1220;
+}
+
 .profile-hero {
   display: flex;
   gap: 0.9rem;
   align-items: center;
+  padding: 0.15rem 0.1rem 0.2rem;
+}
+
+.profile-avatar-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding-top: 0.35rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .profile-photo {
@@ -172,6 +215,39 @@
   font-weight: 400;
   color: rgba(244, 247, 250, 0.5);
   align-self: flex-end;
+}
+
+.profile-pb-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.profile-pb-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.45rem 0.55rem;
+  align-items: end;
+}
+
+.profile-pb-row > strong {
+  font-size: 0.88rem;
+  padding-bottom: 0.55rem;
+}
+
+.profile-pb-field input {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 420px) {
+  .profile-pb-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .profile-pb-row > strong {
+    grid-column: 1 / -1;
+    padding-bottom: 0;
+  }
 }
 
 .profile-avatars {

@@ -8,6 +8,8 @@ export type ShareAfterCatchInfo = {
   lengthCm?: number | null;
   weightKg?: number | null;
   placeName?: string | null;
+  isLengthPb?: boolean;
+  isWeightPb?: boolean;
 };
 
 type Props = {
@@ -58,11 +60,21 @@ export function ShareAfterCatchModal({ open, info, onClose }: Props) {
         aria-labelledby="share-after-title"
         onClick={(e) => e.stopPropagation()}
       >
-        <p className="share-after-kicker">Sparad</p>
+        <p className="share-after-kicker">
+          {info.isLengthPb || info.isWeightPb
+            ? info.isLengthPb && info.isWeightPb
+              ? "Längd- och viktrekord!"
+              : info.isLengthPb
+                ? "Längdrekord!"
+                : "Viktrekord!"
+            : "Sparad"}
+        </p>
         <h2 id="share-after-title">Vill du dela bilden?</h2>
         <p className="share-after-summary">{summary(info)}</p>
         <p className="share-after-hint">
-          Välj foto och look — art, mått och plats följer med.
+          {info.isLengthPb || info.isWeightPb
+            ? "Ny PB-look finns i delningen — välj foto och firande-bakgrund."
+            : "Välj foto och look — art, mått och plats följer med."}
         </p>
         <div className="share-after-actions">
           <Link className="cta share-after-cta" to="/dela" onClick={onClose}>

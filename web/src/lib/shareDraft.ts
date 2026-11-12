@@ -9,6 +9,10 @@ export type ShareDraft = {
   placeName: string | null;
   /** If catch was private, default showPlace to false */
   isPrivate: boolean;
+  /** Length beat the angler's previous best for this species */
+  isLengthPb: boolean;
+  /** Weight beat the angler's previous best for this species */
+  isWeightPb: boolean;
   caughtAt: string;
   savedAt: string;
 };
@@ -40,6 +44,8 @@ export function loadShareDraft(): ShareDraft | null {
           : null,
       placeName: parsed.placeName ? String(parsed.placeName) : null,
       isPrivate: Boolean(parsed.isPrivate),
+      isLengthPb: Boolean(parsed.isLengthPb),
+      isWeightPb: Boolean(parsed.isWeightPb),
       caughtAt: String(parsed.caughtAt),
       savedAt: String(parsed.savedAt || parsed.caughtAt),
     };

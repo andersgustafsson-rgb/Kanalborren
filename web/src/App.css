@@ -358,13 +358,23 @@
 .map-float-actions {
   position: absolute;
   z-index: 1100;
-  /* Left of the “Logga fisk” FAB so they never stack */
-  right: 8.6rem;
-  bottom: calc(var(--sheet-peek) + 1.05rem + var(--safe-b));
+  /* Mobile: left, above Sällskap — keeps clear of check-in toast / Logga fisk */
+  left: max(0.55rem, env(safe-area-inset-left, 0px));
+  right: auto;
+  bottom: calc(var(--sheet-peek) + 3.85rem + var(--safe-b));
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: flex-start;
   gap: 0.4rem;
+}
+
+@media (min-width: 720px) {
+  .map-float-actions {
+    left: auto;
+    right: 8.6rem;
+    bottom: calc(var(--sheet-peek) + 1.05rem + var(--safe-b));
+    align-items: flex-end;
+  }
 }
 
 /* Check-in sheet is expanded — hide locate so it doesn't sit on the form */
@@ -404,24 +414,101 @@
   background: radial-gradient(circle, var(--kb-lime) 0 2.5px, transparent 3px);
 }
 
-.car-fab-label {
+/* Classic EU parking sign: blue square, white P */
+.parking-sign {
+  display: grid;
+  place-items: center;
+  width: 1.45rem;
+  height: 1.45rem;
+  border-radius: 0.22rem;
+  background: #0057b8;
+  color: #fff;
   font-size: 0.95rem;
   font-weight: 900;
-  letter-spacing: 0.02em;
-  color: #0a1220;
+  line-height: 1;
+  letter-spacing: 0;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px rgba(0, 40, 90, 0.35);
 }
 
 .car-fab {
-  background: linear-gradient(145deg, #d4f03a, #b8e014);
-  border-color: rgba(10, 18, 32, 0.2);
+  background: rgba(8, 14, 22, 0.94);
+  border-color: rgba(255, 255, 255, 0.22);
 }
 
 .car-fab.on {
-  background: linear-gradient(145deg, #38bdf8, #0ea5e9);
+  border-color: rgba(0, 87, 184, 0.65);
+  box-shadow:
+    0 8px 20px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(0, 87, 184, 0.35);
 }
 
-.car-fab.on .car-fab-label {
-  color: #041018;
+.parking-fab-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.parking-menu {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 0.45rem);
+  z-index: 1200;
+  min-width: 12.5rem;
+  padding: 0.3rem;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(8, 14, 22, 0.96);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(14px);
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.parking-menu-item {
+  appearance: none;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #f4f7fa;
+  text-align: left;
+  padding: 0.55rem 0.65rem;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+  font: inherit;
+}
+
+.parking-menu-item:hover,
+.parking-menu-item:focus-visible {
+  background: rgba(255, 255, 255, 0.08);
+  outline: none;
+}
+
+.parking-menu-item.on {
+  background: rgba(0, 87, 184, 0.22);
+}
+
+.parking-menu-item.danger .parking-menu-label {
+  color: #fca5a5;
+}
+
+.parking-menu-item:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.parking-menu-label {
+  font-size: 0.86rem;
+  font-weight: 750;
+}
+
+.parking-menu-hint {
+  font-size: 0.7rem;
+  color: var(--kb-muted);
 }
 
 .parked-car-marker {
@@ -434,13 +521,15 @@
   place-items: center;
   width: 34px;
   height: 34px;
-  border-radius: 50%;
-  background: #0ea5e9;
-  color: #041018;
+  border-radius: 6px;
+  background: #0057b8;
+  color: #fff;
   font-weight: 900;
-  font-size: 0.95rem;
-  border: 2px solid #f4f7fa;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45);
+  font-size: 1.05rem;
+  border: 2.5px solid #fff;
+  box-shadow:
+    0 0 0 1.5px rgba(0, 40, 90, 0.5),
+    0 6px 16px rgba(0, 0, 0, 0.45);
 }
 
 .parked-car-popup {
@@ -780,6 +869,34 @@
 
 .checkin-sheet.open .sheet-body {
   display: flex;
+}
+
+.fishing-pass-box {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.55rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 12px;
+  border: 1px solid rgba(184, 224, 20, 0.35);
+  background: rgba(184, 224, 20, 0.08);
+}
+
+.fishing-pass-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.fishing-pass-copy strong {
+  font-size: 0.9rem;
+}
+
+.fishing-pass-copy span {
+  font-size: 0.78rem;
+  color: var(--kb-muted);
 }
 
 .avatar-picker {

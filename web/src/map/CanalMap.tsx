@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   CircleMarker,
@@ -67,6 +67,12 @@ import {
   saveParkedCar,
   type ParkedCar,
 } from "./carParkingStorage";
+import {
+  endFishingTrip,
+  fetchActiveTrip,
+  isTripExpired,
+  type FishingTrip,
+} from "../lib/fishingTrips";
 
 const CAR_ICON = L.divIcon({
   className: "parked-car-marker",
@@ -282,6 +288,7 @@ type Props = {
   adminOpen?: boolean;
   basemap?: MapBasemap;
   evening?: boolean;
+  onToggleParking?: () => void;
 };
 
 const BASEMAPS: Record<
@@ -313,6 +320,7 @@ export function CanalMap({
   adminOpen = false,
   basemap = "street",
   evening = false,
+  onToggleParking,
 }: Props) {
   const [canalData, setCanalData] = useState<FeatureCollection>(EMPTY);
   const [zonesData, setZonesData] = useState<FeatureCollection>(EMPTY);
@@ -323,6 +331,8 @@ export function CanalMap({
     loadParkedCar(),
   );
   const [carFocusSeq, setCarFocusSeq] = useState(0);
+  const [parkingMenuOpen, setParkingMenuOpen] = useState(false);
+  const parkingMenuRef = useRef<HTMLDivElement | null>(null);
   const [rulesData, setRulesData] = useState<FeatureCollection>(EMPTY);
   const [spotsData, setSpotsData] = useState<FeatureCollection>(EMPTY);
   const [seedSpots, setSeedSpots] = useState<FeatureCollection>(EMPTY);
@@ -338,6 +348,8 @@ export function CanalMap({
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [canalFocusSeq, setCanalFocusSeq] = useState(0);
+  const [fishingTrip, setFishingTrip] = useState<FishingTrip | null>(null);
+  const [fishingPassBusy, setFishingPassBusy] = useState(false);
   const avatarSrc = resolveAvatarSrc(avatarChoice);
 
   useEffect(() => {
@@ -381,6 +393,23 @@ export function CanalMap({
     if (!ready) return;
     saveSpots(spotsData);
   }, [spotsData, ready]);
+
+  useEffect(() => {
+    if (!parkingMenuOpen) return;
+    function onDoc(e: MouseEvent | TouchEvent) {
+      const root = parkingMenuRef.current;
+      if (!root) return;
+      if (e.target instanceof Node && !root.contains(e.target)) {
+        setParkingMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("touchstart", onDoc);
+    return () => {
+      document.removeEventListener("mousedown", onDoc);
+      document.removeEventListener("touchstart", onDoc);
+    };
+  }, [parkingMenuOpen]);
 
   useEffect(() => {
     if (!toggles.parking || parkingData) return;
@@ -458,6 +487,42 @@ export function CanalMap({
     displayName: auth.displayName,
     avatarId: avatarChoice.id === "custom" ? "veteran" : avatarChoice.id,
   });
+
+  useEffect(() => {
+    if (!auth.user) {
+      setFishingTrip(null);
+      return;
+    }
+    let cancelled = false;
+    void fetchActiveTrip().then((trip) => {
+      if (!cancelled) setFishingTrip(trip);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [auth.user, sheetOpen]);
+
+  // With an active fishing pass, getting a position also checks you in (synlig default).
+  useEffect(() => {
+    if (!fishingTrip || checkIn.session || !checkIn.fix) return;
+    let cancelled = false;
+    void checkIn.checkIn().then(() => {
+      if (cancelled) return;
+      setStatus("Synlig på kartan");
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [fishingTrip, checkIn.session, checkIn.fix, checkIn.checkIn]);
+
+  useEffect(() => {
+    if (!fishingTrip) return;
+    if (!isTripExpired(fishingTrip.expiresAt, checkIn.now)) return;
+    void endFishingTrip(fishingTrip.id).then(() => {
+      setFishingTrip(null);
+      setStatus("Fiskapasset löpte ut efter 4 timmar");
+    });
+  }, [fishingTrip, checkIn.now]);
 
   useEffect(() => {
     if (!mapAdmin && editMode !== "off") setEditMode("off");
@@ -720,57 +785,128 @@ export function CanalMap({
       )}
 
       <div className="map-float-actions">
-        <button
-          type="button"
-          className={parkedCar ? "locate-me car-fab on" : "locate-me car-fab"}
-          aria-label={parkedCar ? "Hitta bilen" : "Spara bil här"}
-          title={parkedCar ? "Hitta bilen" : "Spara bil här"}
-          disabled={checkIn.locating}
-          onClick={() => {
-            if (parkedCar) {
-              setCarFocusSeq((n) => n + 1);
-              setStatus("Zoomar till bilen");
-              return;
+        <div className="parking-fab-wrap" ref={parkingMenuRef}>
+          {parkingMenuOpen && (
+            <div className="parking-menu" role="menu" aria-label="Parkering">
+              <button
+                type="button"
+                role="menuitemcheckbox"
+                aria-checked={toggles.parking}
+                className={
+                  toggles.parking
+                    ? "parking-menu-item on"
+                    : "parking-menu-item"
+                }
+                onClick={() => {
+                  onToggleParking?.();
+                  setStatus(
+                    toggles.parking
+                      ? "Parkeringslager av"
+                      : "Visar parkeringar",
+                  );
+                  setParkingMenuOpen(false);
+                }}
+              >
+                <span className="parking-menu-label">
+                  {toggles.parking ? "Dölj parkeringar" : "Visa parkeringar"}
+                </span>
+                <span className="parking-menu-hint">Malmö avgiftszoner</span>
+              </button>
+              <button
+                type="button"
+                role="menuitem"
+                className="parking-menu-item"
+                disabled={checkIn.locating}
+                onClick={() => {
+                  setParkingMenuOpen(false);
+                  if (parkedCar) {
+                    setCarFocusSeq((n) => n + 1);
+                    setStatus("Zoomar till bilen");
+                    return;
+                  }
+                  const pin = checkIn.fix;
+                  if (pin) {
+                    const next = {
+                      lat: pin.lat,
+                      lng: pin.lng,
+                      savedAt: new Date().toISOString(),
+                    };
+                    saveParkedCar(next);
+                    setParkedCar(next);
+                    setCarFocusSeq((n) => n + 1);
+                    setStatus("Bilen sparad här");
+                    return;
+                  }
+                  if (!navigator.geolocation) {
+                    setStatus(
+                      "GPS saknas — aktivera plats eller checka in först",
+                    );
+                    return;
+                  }
+                  setStatus("Hämtar plats för bilen…");
+                  navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                      const next = {
+                        lat: pos.coords.latitude,
+                        lng: pos.coords.longitude,
+                        savedAt: new Date().toISOString(),
+                      };
+                      saveParkedCar(next);
+                      setParkedCar(next);
+                      setCarFocusSeq((n) => n + 1);
+                      setStatus("Bilen sparad här");
+                    },
+                    () => setStatus("Kunde inte hämta plats för bilen"),
+                    {
+                      enableHighAccuracy: true,
+                      timeout: 15000,
+                      maximumAge: 10000,
+                    },
+                  );
+                }}
+              >
+                <span className="parking-menu-label">
+                  {parkedCar ? "Hitta min bil" : "Parkera bilen"}
+                </span>
+                <span className="parking-menu-hint">
+                  {parkedCar ? "Zooma till sparad pin" : "Spara pin där du står"}
+                </span>
+              </button>
+              {parkedCar && (
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="parking-menu-item danger"
+                  onClick={() => {
+                    clearParkedCar();
+                    setParkedCar(null);
+                    setParkingMenuOpen(false);
+                    setStatus("Bilpin borttagen");
+                  }}
+                >
+                  <span className="parking-menu-label">Ta bort bilpin</span>
+                </button>
+              )}
+            </div>
+          )}
+          <button
+            type="button"
+            className={
+              parkingMenuOpen || toggles.parking || parkedCar
+                ? "locate-me car-fab on"
+                : "locate-me car-fab"
             }
-            const pin = checkIn.fix;
-            if (pin) {
-              const next = {
-                lat: pin.lat,
-                lng: pin.lng,
-                savedAt: new Date().toISOString(),
-              };
-              saveParkedCar(next);
-              setParkedCar(next);
-              setCarFocusSeq((n) => n + 1);
-              setStatus("Bilen sparad här");
-              return;
-            }
-            if (!navigator.geolocation) {
-              setStatus("GPS saknas — aktivera plats eller checka in först");
-              return;
-            }
-            setStatus("Hämtar plats för bilen…");
-            navigator.geolocation.getCurrentPosition(
-              (pos) => {
-                const next = {
-                  lat: pos.coords.latitude,
-                  lng: pos.coords.longitude,
-                  savedAt: new Date().toISOString(),
-                };
-                saveParkedCar(next);
-                setParkedCar(next);
-                setCarFocusSeq((n) => n + 1);
-                setStatus("Bilen sparad här");
-              },
-              () => setStatus("Kunde inte hämta plats för bilen"),
-              { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 },
-            );
-          }}
-        >
-          <span className="car-fab-label" aria-hidden>
-            P
-          </span>
-        </button>
+            aria-label="Parkering"
+            aria-expanded={parkingMenuOpen}
+            aria-haspopup="menu"
+            title="Parkering"
+            onClick={() => setParkingMenuOpen((v) => !v)}
+          >
+            <span className="parking-sign" aria-hidden>
+              P
+            </span>
+          </button>
+        </div>
         <button
           type="button"
           className="locate-me"
@@ -1072,6 +1208,21 @@ export function CanalMap({
         }}
         onExtend={() => void checkIn.extend()}
         onHide={(tripNote) => void checkIn.hide(tripNote)}
+        fishingPassExpiresAt={fishingTrip?.expiresAt ?? null}
+        fishingPassBusy={fishingPassBusy}
+        onEndFishingPass={() => {
+          if (!fishingTrip) return;
+          setFishingPassBusy(true);
+          void endFishingTrip(fishingTrip.id).then(({ error }) => {
+            setFishingPassBusy(false);
+            if (error) {
+              setStatus(error);
+              return;
+            }
+            setFishingTrip(null);
+            setStatus("Fiskapasset avslutat");
+          });
+        }}
       />
     </div>
   );
