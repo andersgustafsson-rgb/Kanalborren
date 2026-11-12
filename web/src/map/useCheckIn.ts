@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { FeatureCollection } from "geojson";
 import {
   CHECKIN_STORAGE_KEY,
@@ -74,10 +74,20 @@ export function useCheckIn(
     return () => window.clearInterval(t);
   }, [session]);
 
+  // One-shot: if local storage says we're not checked in, clear any orphaned
+  // remote "Ute"-row (HUD showed out while the sheet said Checka in).
+  const reconciledOrphan = useRef(false);
+  useEffect(() => {
+    if (!identity.userId || reconciledOrphan.current) return;
+    reconciledOrphan.current = true;
+    if (loadSession()) return;
+    void endSession(null, identity.userId);
+  }, [identity.userId]);
+
   useEffect(() => {
     if (!session) return;
     if (Date.parse(session.expiresAt) <= Date.now()) {
-      void endSession(session.remoteId, identity.userId);
+      void endSession(null, identity.userId);
       clearSession();
       setSession(null);
       setReminder(null);
@@ -236,7 +246,6 @@ export function useCheckIn(
   }, []);
 
   const enterSpectator = useCallback(async () => {
-    const remoteId = session?.remoteId;
     clearSession();
     setSession(null);
     setFix(null);
@@ -246,8 +255,8 @@ export function useCheckIn(
     // Keep last preferred visibility for the next check-in (default exakt).
     setVisibility(loadVisibilityPref());
     setOpenForCompany(false);
-    await endSession(remoteId, identity.userId);
-  }, [session?.remoteId, identity.userId]);
+    await endSession(null, identity.userId);
+  }, [identity.userId]);
 
   const checkIn = useCallback(async () => {
     if (!fix || !spots || !zones) return;
@@ -319,13 +328,12 @@ export function useCheckIn(
 
   const hide = useCallback(
     async (tripNote?: string | null) => {
-      const remoteId = session?.remoteId;
       clearSession();
       setSession(null);
       setReminder(null);
-      await endSession(remoteId, identity.userId, tripNote);
+      await endSession(null, identity.userId, tripNote);
     },
-    [session?.remoteId, identity.userId],
+    [identity.userId],
   );
 
   const republishActive = useCallback(

@@ -12,20 +12,39 @@ type SkyKind =
   | "thunder"
   | "wind";
 
+type WaterTrend = "rising" | "falling" | "stable" | "unknown";
+
+type FishingScore = {
+  score: number;
+  label: string;
+  why: string;
+};
+
 type Conditions = {
   waterCm: number | null;
+  waterTrend: WaterTrend;
+  /** cm change over ~last 3 hours (latest − ~3h ago). */
+  waterDelta3hCm: number | null;
   waterTempC: number | null;
   waterStation: string;
   tempC: number | null;
+  feelsLikeC: number | null;
   windMs: number | null;
   gustMs: number | null;
   windDir: number | null;
   precipMm: number | null;
+  pressureHpa: number | null;
+  pressureTrend: "rising" | "falling" | "stable" | "unknown";
   sky: SkyKind;
   skyLabel: string;
+  photo: string;
+  fishing: FishingScore;
   time: string | null;
   error: string | null;
 };
+
+const LEVEL_MIN_CM = -50;
+const LEVEL_MAX_CM = 100;
 
 function compass(deg: number | null): string {
   if (deg == null || !Number.isFinite(deg)) return "–";
@@ -43,22 +62,54 @@ function windLabel(ms: number | null): string {
   return "hård";
 }
 
-function skyFromCode(code: number, windMs: number | null): {
+/** SMHI Wsymb2 / SNOW symbol_code (1–27). */
+function skyFromSmhiSymbol(
+  code: number,
+  windMs: number | null,
+): {
   sky: SkyKind;
   skyLabel: string;
 } {
-  if (code === 0) return { sky: "sun", skyLabel: "Klart" };
-  if (code === 1 || code === 2) return { sky: "partly", skyLabel: "Växlande" };
-  if (code === 3) return { sky: "cloud", skyLabel: "Mulet" };
-  if (code === 45 || code === 48) return { sky: "fog", skyLabel: "Dimma" };
-  if (code >= 51 && code <= 57) return { sky: "drizzle", skyLabel: "Duggregn" };
-  if ((code >= 61 && code <= 67) || (code >= 80 && code <= 82))
-    return { sky: "rain", skyLabel: "Regn" };
-  if ((code >= 71 && code <= 77) || (code >= 85 && code <= 86))
+  if (code === 1) return { sky: "sun", skyLabel: "Klart" };
+  if (code === 2) return { sky: "sun", skyLabel: "Nästan klart" };
+  if (code === 3 || code === 4) return { sky: "partly", skyLabel: "Växlande" };
+  if (code === 5) return { sky: "cloud", skyLabel: "Molnigt" };
+  if (code === 6) return { sky: "cloud", skyLabel: "Mulet" };
+  if (code === 7) return { sky: "fog", skyLabel: "Dimma" };
+  if (code === 8) return { sky: "drizzle", skyLabel: "Lätta regnskurar" };
+  if (code === 9) return { sky: "rain", skyLabel: "Regnskurar" };
+  if (code === 10) return { sky: "rain", skyLabel: "Kraftiga skurar" };
+  if (code === 11) return { sky: "thunder", skyLabel: "Åska" };
+  if (code === 12 || code === 13 || code === 14)
+    return { sky: "rain", skyLabel: "Snöblandat regn" };
+  if (code === 15) return { sky: "snow", skyLabel: "Snöbyar" };
+  if (code === 18) return { sky: "rain", skyLabel: "Regn" };
+  if (code === 19) return { sky: "rain", skyLabel: "Måttligt regn" };
+  if (code === 20) return { sky: "rain", skyLabel: "Kraftigt regn" };
+  if (code === 21) return { sky: "thunder", skyLabel: "Åska" };
+  if (code === 22 || code === 23 || code === 24)
+    return { sky: "snow", skyLabel: "Snöblandat regn" };
+  if (code === 25 || code === 26 || code === 27)
     return { sky: "snow", skyLabel: "Snö" };
-  if (code >= 95) return { sky: "thunder", skyLabel: "Åska" };
+  if (code === 16 || code === 17) return { sky: "snow", skyLabel: "Snö" };
   if (windMs != null && windMs >= 8) return { sky: "wind", skyLabel: "Blåsigt" };
   return { sky: "cloud", skyLabel: "Mulet" };
+}
+
+function feelsLikeC(tempC: number | null, windMs: number | null): number | null {
+  if (tempC == null || !Number.isFinite(tempC)) return null;
+  if (windMs == null || windMs < 1.3 || tempC > 10) return Math.round(tempC);
+  const vKmh = windMs * 3.6;
+  const chill =
+    13.12 +
+    0.6215 * tempC -
+    11.37 * vKmh ** 0.16 +
+    0.3965 * tempC * vKmh ** 0.16;
+  return Math.round(chill);
+}
+
+function finiteOrNull(n: unknown): number | null {
+  return typeof n === "number" && Number.isFinite(n) && n !== 9999 ? n : null;
 }
 
 function parseSmhiNumber(raw: number | string): number | null {
@@ -67,54 +118,213 @@ function parseSmhiNumber(raw: number | string): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-function lastValue(json: {
+function smhiSeries(json: {
   value?: { value: number | string; date: number | string }[];
-}): { value: number | null; time: string | null } {
-  const last = json.value?.[json.value.length - 1];
-  if (!last) return { value: null, time: null };
-  const time =
-    last.date == null
-      ? null
-      : typeof last.date === "number"
-        ? new Date(last.date).toISOString()
-        : String(last.date);
-  return {
-    value: parseSmhiNumber(last.value),
-    time,
-  };
+}): { value: number; time: string | null }[] {
+  if (!json.value?.length) return [];
+  return json.value
+    .map((row) => {
+      const value = parseSmhiNumber(row.value);
+      if (value == null) return null;
+      const time =
+        row.date == null
+          ? null
+          : typeof row.date === "number"
+            ? new Date(row.date).toISOString()
+            : String(row.date);
+      return { value, time };
+    })
+    .filter((row): row is { value: number; time: string | null } => row != null);
 }
 
-const SKY_EMOJI: Record<SkyKind, string> = {
-  sun: "☀️",
-  partly: "⛅",
-  cloud: "☁️",
-  fog: "🌫️",
-  drizzle: "🌦️",
-  rain: "🌧️",
-  snow: "🌨️",
-  thunder: "⛈️",
-  wind: "💨",
-};
+function trendFromSeries(
+  values: number[],
+  threshold = 1,
+): WaterTrend | "rising" | "falling" | "stable" | "unknown" {
+  if (values.length < 2) return "unknown";
+  const first = values[0];
+  const last = values[values.length - 1];
+  const delta = last - first;
+  if (Math.abs(delta) < threshold) return "stable";
+  return delta > 0 ? "rising" : "falling";
+}
 
-function WeatherIcon({ kind, large = false }: { kind: SkyKind; large?: boolean }) {
-  return (
-    <span
-      className={large ? "wx-emoji wx-emoji-lg" : "wx-emoji"}
-      aria-hidden
-    >
-      {SKY_EMOJI[kind]}
-    </span>
-  );
+function isSunsetHour(date = new Date()): boolean {
+  const month = date.getMonth();
+  const hour = date.getHours();
+  const summer = month >= 3 && month <= 8;
+  if (summer) return hour >= 19 && hour <= 22;
+  return hour >= 16 && hour <= 20;
+}
+
+function weatherPhoto(sky: SkyKind, at = new Date()): string {
+  if (
+    (sky === "sun" || sky === "partly") &&
+    isSunsetHour(at)
+  ) {
+    return "/weather/solnedgang.jpg";
+  }
+  switch (sky) {
+    case "sun":
+    case "partly":
+      return "/weather/soligt.jpg";
+    case "snow":
+      return "/weather/sno.jpg";
+    case "drizzle":
+    case "rain":
+    case "thunder":
+      return "/weather/regn.jpg";
+    case "cloud":
+    case "fog":
+    case "wind":
+    default:
+      return "/weather/mulet.jpg";
+  }
+}
+
+function levelMeterPct(cm: number | null): number {
+  if (cm == null || !Number.isFinite(cm)) return 0;
+  const pct =
+    ((cm - LEVEL_MIN_CM) / (LEVEL_MAX_CM - LEVEL_MIN_CM)) * 100;
+  return Math.max(0, Math.min(100, pct));
+}
+
+function deltaAround3h(
+  series: { value: number; time: string | null }[],
+): number | null {
+  if (series.length < 2) return null;
+  const last = series[series.length - 1];
+  const lastMs = last.time ? Date.parse(last.time) : NaN;
+  if (!Number.isFinite(lastMs)) {
+    return last.value - series[0].value;
+  }
+  const target = lastMs - 3 * 60 * 60 * 1000;
+  let best = series[0];
+  let bestDelta = Math.abs((best.time ? Date.parse(best.time) : 0) - target);
+  for (const row of series) {
+    if (!row.time) continue;
+    const t = Date.parse(row.time);
+    if (!Number.isFinite(t)) continue;
+    const d = Math.abs(t - target);
+    if (d < bestDelta) {
+      best = row;
+      bestDelta = d;
+    }
+  }
+  // Need a point that is at least ~90 min back to call it a 3h change.
+  if (!best.time || lastMs - Date.parse(best.time) < 90 * 60 * 1000) {
+    return null;
+  }
+  return last.value - best.value;
+}
+
+function fishingScore(input: {
+  windMs: number | null;
+  waterTempC: number | null;
+  precipMm: number | null;
+  sky: SkyKind;
+  pressureTrend: Conditions["pressureTrend"];
+}): FishingScore {
+  let score = 6;
+  const reasons: string[] = [];
+
+  if (input.windMs != null) {
+    if (input.windMs >= 2 && input.windMs <= 7) {
+      score += 2;
+      reasons.push("lagom vind");
+    } else if (input.windMs > 7 && input.windMs < 11) {
+      reasons.push("lite blåsigt");
+    } else if (input.windMs >= 11) {
+      score -= 2;
+      reasons.push("hård vind");
+    } else if (input.windMs < 1) {
+      score -= 1;
+      reasons.push("stiltje");
+    }
+  }
+
+  if (input.waterTempC != null) {
+    if (input.waterTempC >= 8 && input.waterTempC <= 18) {
+      score += 2;
+      reasons.push("bra vattentemp");
+    } else if (input.waterTempC >= 5 && input.waterTempC < 8) {
+      score += 1;
+      reasons.push("sval vattentemp");
+    } else if (input.waterTempC > 18 && input.waterTempC <= 22) {
+      reasons.push("varmt vatten");
+    } else {
+      score -= 1;
+      reasons.push("ogynnsam vattentemp");
+    }
+  }
+
+  if (input.precipMm != null && input.precipMm > 0.5) {
+    score -= 1;
+    reasons.push("nederbörd");
+  }
+  if (input.sky === "thunder") {
+    score -= 2;
+    reasons.push("åska");
+  } else if (input.sky === "rain" || input.sky === "drizzle") {
+    score -= 1;
+    if (!reasons.includes("nederbörd")) reasons.push("regn");
+  }
+
+  if (input.pressureTrend === "rising") {
+    score += 1;
+    reasons.push("stigande lufttryck");
+  } else if (input.pressureTrend === "falling") {
+    score -= 1;
+    reasons.push("fallande lufttryck");
+  }
+
+  score = Math.max(1, Math.min(10, Math.round(score)));
+
+  let label = "Okej";
+  if (score <= 3) label = "Svårt";
+  else if (score <= 5) label = "Okej";
+  else if (score <= 7) label = "Intressanta förhållanden";
+  else label = "Lovande";
+
+  const why =
+    reasons.length > 0
+      ? reasons.slice(0, 3).join(" · ")
+      : "baserat på vind, vatten och tryck";
+
+  return { score, label, why };
 }
 
 async function fetchCanalConditions(): Promise<Conditions> {
+  const empty: Conditions = {
+    waterCm: null,
+    waterTrend: "unknown",
+    waterDelta3hCm: null,
+    waterTempC: null,
+    waterStation: "Malmö Hamn",
+    tempC: null,
+    feelsLikeC: null,
+    windMs: null,
+    gustMs: null,
+    windDir: null,
+    precipMm: null,
+    pressureHpa: null,
+    pressureTrend: "unknown",
+    sky: "cloud",
+    skyLabel: "–",
+    photo: "/weather/mulet.jpg",
+    fishing: { score: 5, label: "Okej", why: "baserat på vind, vatten och tryck" },
+    time: null,
+    error: null,
+  };
+
   try {
     const levelUrl =
       "https://opendata-download-ocobs.smhi.se/api/version/1.0/parameter/6/station/35152/period/latest-day/data.json";
     const waterTempUrl =
       "https://opendata-download-ocobs.smhi.se/api/version/1.0/parameter/5/station/35152/period/latest-day/data.json";
+    // Same SMHI forecast product as smhi.se (SNOW1g — replaced old pmp3g).
     const meteoUrl =
-      "https://api.open-meteo.com/v1/forecast?latitude=55.605&longitude=12.995&current=temperature_2m,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,precipitation&wind_speed_unit=ms&timezone=Europe%2FStockholm";
+      "https://opendata-download-metfcst.smhi.se/api/category/snow1g/version/1/geotype/point/lon/12.995000/lat/55.605000/data.json?timeseries=4&parameters=air_temperature,wind_speed,wind_from_direction,wind_speed_of_gust,precipitation_amount_mean,air_pressure_at_mean_sea_level,symbol_code";
 
     const [levelRes, waterTempRes, meteoRes] = await Promise.all([
       fetch(levelUrl),
@@ -129,68 +339,155 @@ async function fetchCanalConditions(): Promise<Conditions> {
     const waterTemp = waterTempRes.ok ? await waterTempRes.json() : null;
     const meteo = meteoRes.ok
       ? ((await meteoRes.json()) as {
-          current?: {
+          timeSeries?: {
             time?: string;
-            temperature_2m?: number;
-            weather_code?: number;
-            wind_speed_10m?: number;
-            wind_direction_10m?: number;
-            wind_gusts_10m?: number;
-            precipitation?: number;
-          };
+            data?: {
+              air_temperature?: number;
+              wind_speed?: number;
+              wind_from_direction?: number;
+              wind_speed_of_gust?: number;
+              precipitation_amount_mean?: number;
+              air_pressure_at_mean_sea_level?: number;
+              symbol_code?: number;
+            };
+          }[];
         })
       : null;
 
-    const w = level ? lastValue(level) : { value: null, time: null };
-    const wt = waterTemp ? lastValue(waterTemp) : { value: null, time: null };
-    const c = meteo?.current;
-    const windMs = typeof c?.wind_speed_10m === "number" ? c.wind_speed_10m : null;
-    const code = typeof c?.weather_code === "number" ? c.weather_code : 3;
-    let { sky, skyLabel } = skyFromCode(code, windMs);
-    if (windMs != null && windMs >= 10 && sky === "sun") {
+    const levelSeries = level ? smhiSeries(level) : [];
+    const waterTempSeries = waterTemp ? smhiSeries(waterTemp) : [];
+    const lastLevel = levelSeries[levelSeries.length - 1] ?? null;
+    const lastWaterTemp = waterTempSeries[waterTempSeries.length - 1] ?? null;
+    const waterDelta3hCm = deltaAround3h(levelSeries);
+    const waterTrend: WaterTrend =
+      waterDelta3hCm == null
+        ? "unknown"
+        : Math.abs(waterDelta3hCm) < 1.5
+          ? "stable"
+          : waterDelta3hCm > 0
+            ? "rising"
+            : "falling";
+
+    const series = meteo?.timeSeries ?? [];
+    const nowMs = Date.now();
+    const current =
+      series.reduce<(typeof series)[number] | null>((best, row) => {
+        if (!row.time) return best;
+        if (!best?.time) return row;
+        const rowDelta = Math.abs(Date.parse(row.time) - nowMs);
+        const bestDelta = Math.abs(Date.parse(best.time) - nowMs);
+        return rowDelta < bestDelta ? row : best;
+      }, null) ?? series[0] ?? null;
+    const d = current?.data;
+    const windMs = finiteOrNull(d?.wind_speed);
+    const code = finiteOrNull(d?.symbol_code) ?? 6;
+    let { sky, skyLabel } = skyFromSmhiSymbol(code, windMs);
+    if (windMs != null && windMs >= 10 && (sky === "sun" || sky === "partly")) {
       sky = "wind";
       skyLabel = "Blåsigt";
     }
 
-    return {
-      waterCm: w.value,
-      waterTempC: wt.value,
-      waterStation: "Malmö Hamn",
-      tempC: typeof c?.temperature_2m === "number" ? c.temperature_2m : null,
+    const pressures = series
+      .map((row) => finiteOrNull(row.data?.air_pressure_at_mean_sea_level))
+      .filter((n): n is number => n != null);
+    const pressureTrend = trendFromSeries(
+      pressures,
+      0.4,
+    ) as Conditions["pressureTrend"];
+
+    const waterTempC = lastWaterTemp?.value ?? null;
+    const precipMm = finiteOrNull(d?.precipitation_amount_mean);
+    const tempC = finiteOrNull(d?.air_temperature);
+    const fishing = fishingScore({
       windMs,
-      gustMs: typeof c?.wind_gusts_10m === "number" ? c.wind_gusts_10m : null,
-      windDir:
-        typeof c?.wind_direction_10m === "number" ? c.wind_direction_10m : null,
-      precipMm: typeof c?.precipitation === "number" ? c.precipitation : null,
+      waterTempC,
+      precipMm,
+      sky,
+      pressureTrend,
+    });
+
+    const stamp = current?.time ? new Date(current.time) : new Date();
+
+    return {
+      waterCm: lastLevel?.value ?? null,
+      waterTrend,
+      waterDelta3hCm,
+      waterTempC,
+      waterStation: "Malmö Hamn",
+      tempC,
+      feelsLikeC: feelsLikeC(tempC, windMs),
+      windMs,
+      gustMs: finiteOrNull(d?.wind_speed_of_gust),
+      windDir: finiteOrNull(d?.wind_from_direction),
+      precipMm,
+      pressureHpa: finiteOrNull(d?.air_pressure_at_mean_sea_level),
+      pressureTrend,
       sky,
       skyLabel,
-      time: c?.time ? new Date(c.time).toISOString() : w.time || wt.time,
+      photo: weatherPhoto(sky, stamp),
+      fishing,
+      time: current?.time
+        ? new Date(current.time).toISOString()
+        : lastLevel?.time || lastWaterTemp?.time || null,
       error: null,
     };
   } catch (e) {
     return {
-      waterCm: null,
-      waterTempC: null,
-      waterStation: "Malmö Hamn",
-      tempC: null,
-      windMs: null,
-      gustMs: null,
-      windDir: null,
-      precipMm: null,
-      sky: "cloud",
-      skyLabel: "–",
-      time: null,
+      ...empty,
       error: e instanceof Error ? e.message : "Fel",
     };
   }
 }
 
-function fmtTime(iso: string | null) {
+function fmtClock(iso: string | null) {
   if (!iso) return "";
-  return new Date(iso).toLocaleString("sv-SE", {
-    dateStyle: "short",
-    timeStyle: "short",
+  return new Date(iso).toLocaleTimeString("sv-SE", {
+    hour: "2-digit",
+    minute: "2-digit",
   });
+}
+
+function waterChangeLabel(deltaCm: number | null, trend: WaterTrend): string {
+  if (deltaCm == null || !Number.isFinite(deltaCm)) {
+    if (trend === "rising") return "Stigande";
+    if (trend === "falling") return "Sjunkande";
+    if (trend === "stable") return "Stabilt";
+    return "–";
+  }
+  if (Math.abs(deltaCm) < 0.5) return "±0 cm / 3 h";
+  const sign = deltaCm > 0 ? "+" : "";
+  return `${sign}${deltaCm.toFixed(1)} cm / 3 h`;
+}
+
+function fishingTone(score: number): "low" | "mid" | "good" | "high" {
+  if (score <= 3) return "low";
+  if (score <= 5) return "mid";
+  if (score <= 7) return "good";
+  return "high";
+}
+
+function WindCompass({ deg }: { deg: number | null }) {
+  // Meteorological wind_from_direction: arrow points where the wind comes from.
+  const rotation = deg != null && Number.isFinite(deg) ? deg : 0;
+  const ready = deg != null && Number.isFinite(deg);
+  return (
+    <span
+      className={`wx-compass${ready ? "" : " wx-compass-empty"}`}
+      aria-hidden
+      title={ready ? `Vind från ${Math.round(deg)}°` : undefined}
+    >
+      <svg
+        className="wx-compass-arrow"
+        viewBox="0 0 24 24"
+        style={{ transform: `rotate(${rotation}deg)` }}
+      >
+        <path
+          d="M12 3.2 16.2 12.5H13.1V20.8H10.9V12.5H7.8L12 3.2Z"
+          fill="currentColor"
+        />
+      </svg>
+    </span>
+  );
 }
 
 export function WaterLevelWidget() {
@@ -208,36 +505,41 @@ export function WaterLevelWidget() {
 
   return (
     <section className="home-board water-widget" aria-label="Väder och vatten">
-      <header className="home-board-head conditions-head">
-        <div>
-          <h2>Väder & vatten</h2>
-          <p>Malmö · luft via Open-Meteo · vatten via SMHI Öresund (Hamnen)</p>
-        </div>
-        {data && !data.error && (
-          <div className="conditions-sky" title={data.skyLabel}>
-            <WeatherIcon kind={data.sky} large />
-            <span>{data.skyLabel}</span>
-          </div>
-        )}
+      <header className="wx-head">
+        <h2>Väder & vatten</h2>
+        <span className="wx-place">Malmö</span>
       </header>
+
       {!data && <p className="water-muted">Hämtar…</p>}
       {data?.error && <p className="water-muted">{data.error}</p>}
+
       {data && !data.error && (
         <>
-          <ul className="conditions-grid">
-            <li>
-              <span className="conditions-label">
-                <WeatherIcon kind={data.sky} />
-                Luft
-              </span>
-              <strong>
-                {data.tempC != null ? `${data.tempC.toFixed(1)} °C` : "–"}
-              </strong>
-              <small>{data.skyLabel}</small>
-            </li>
-            <li>
-              <span className="conditions-label">
-                <WeatherIcon kind="wind" />
+          <div className="wx-hero">
+            <img
+              className="wx-hero-photo"
+              src={data.photo}
+              alt=""
+              loading="lazy"
+            />
+            <div className="wx-hero-fade" aria-hidden />
+            <div className="wx-hero-copy">
+              <p className="wx-temp">
+                {data.tempC != null ? `${data.tempC.toFixed(1)}°` : "–"}
+              </p>
+              <p className="wx-sky">{data.skyLabel}</p>
+              <p className="wx-feels">
+                {data.feelsLikeC != null
+                  ? `Känns som ${data.feelsLikeC.toFixed(0)}° · Lufttemperatur`
+                  : "Lufttemperatur"}
+              </p>
+            </div>
+          </div>
+
+          <ul className="wx-tiles">
+            <li className="wx-tile">
+              <span className="wx-tile-label">
+                <WindCompass deg={data.windDir} />
                 Vind
               </span>
               <strong>
@@ -248,28 +550,17 @@ export function WaterLevelWidget() {
                 {data.gustMs != null ? ` · by ${data.gustMs.toFixed(1)}` : ""}
               </small>
             </li>
-            <li>
-              <span className="conditions-label">
-                <WeatherIcon
-                  kind={
-                    data.sky === "rain" ||
-                    data.sky === "drizzle" ||
-                    data.sky === "thunder"
-                      ? data.sky
-                      : data.precipMm && data.precipMm > 0
-                        ? "rain"
-                        : "cloud"
-                  }
-                />
-                Nederbörd
-              </span>
+            <li className="wx-tile">
+              <span className="wx-tile-label">Nederbörd</span>
               <strong>
-                {data.precipMm != null ? `${data.precipMm.toFixed(1)} mm` : "–"}
+                {data.precipMm != null
+                  ? `${data.precipMm.toFixed(1)} mm`
+                  : "–"}
               </strong>
-              <small>just nu</small>
+              <small>Just nu</small>
             </li>
-            <li>
-              <span className="conditions-label">🌊 Vattentemp</span>
+            <li className="wx-tile wx-tile-water">
+              <span className="wx-tile-label">Vattentemp</span>
               <strong>
                 {data.waterTempC != null
                   ? `${data.waterTempC.toFixed(1)} °C`
@@ -277,14 +568,71 @@ export function WaterLevelWidget() {
               </strong>
               <small>{data.waterStation}</small>
             </li>
-            <li>
-              <span className="conditions-label">Vattenstånd</span>
-              <strong>
-                {data.waterCm != null ? `${data.waterCm.toFixed(1)} cm` : "–"}
-              </strong>
-              <small>Öresund · {data.waterStation}</small>
-            </li>
           </ul>
+
+          <div className="wx-level">
+            <div className="wx-level-top">
+              <span className="wx-tile-label">Vattenstånd</span>
+              <strong>
+                {data.waterCm != null
+                  ? `${data.waterCm.toFixed(1)} cm`
+                  : "–"}
+              </strong>
+            </div>
+            <div
+              className="wx-level-track"
+              role="meter"
+              aria-valuemin={LEVEL_MIN_CM}
+              aria-valuemax={LEVEL_MAX_CM}
+              aria-valuenow={data.waterCm ?? undefined}
+              aria-label="Vattenstånd Öresund"
+            >
+              <span
+                className="wx-level-fill"
+                style={{ width: `${levelMeterPct(data.waterCm)}%` }}
+              />
+            </div>
+            <div className="wx-level-meta">
+              <small>
+                Öresund · {data.waterStation}
+              </small>
+              <small className={`wx-trend wx-trend-${data.waterTrend}`}>
+                {waterChangeLabel(data.waterDelta3hCm, data.waterTrend)}
+              </small>
+            </div>
+          </div>
+
+          <div
+            className={`wx-fishing wx-fishing-${fishingTone(data.fishing.score)}`}
+            aria-label="Fiskeförhållanden"
+          >
+            <div className="wx-fishing-top">
+              <span className="wx-tile-label">Fiskeförhållanden</span>
+              <strong className="wx-fishing-num">
+                {data.fishing.score}/10
+              </strong>
+            </div>
+            <div
+              className="wx-fishing-track"
+              role="meter"
+              aria-valuemin={1}
+              aria-valuemax={10}
+              aria-valuenow={data.fishing.score}
+              aria-label="Fiskebetyg"
+            >
+              <span
+                className="wx-fishing-fill"
+                style={{ width: `${(data.fishing.score / 10) * 100}%` }}
+              />
+            </div>
+            <p className="wx-fishing-score">
+              <span>{data.fishing.label}</span>
+            </p>
+            <p className="wx-fishing-why">
+              Därför: {data.fishing.why}
+            </p>
+          </div>
+
           <div className="conditions-actions">
             <a
               className="conditions-smhi"
@@ -296,7 +644,7 @@ export function WaterLevelWidget() {
             </a>
             {data.time && (
               <p className="water-muted conditions-time">
-                Uppdaterad {fmtTime(data.time)}
+                Senast uppdaterad {fmtClock(data.time)}
               </p>
             )}
           </div>

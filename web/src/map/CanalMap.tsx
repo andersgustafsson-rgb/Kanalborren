@@ -520,9 +520,10 @@ export function CanalMap({
     if (!isTripExpired(fishingTrip.expiresAt, checkIn.now)) return;
     void endFishingTrip(fishingTrip.id).then(() => {
       setFishingTrip(null);
+      void checkIn.hide();
       setStatus("Fiskapasset löpte ut efter 4 timmar");
     });
-  }, [fishingTrip, checkIn.now]);
+  }, [fishingTrip, checkIn.now, checkIn.hide]);
 
   useEffect(() => {
     if (!mapAdmin && editMode !== "off") setEditMode("off");
@@ -1213,14 +1214,15 @@ export function CanalMap({
         onEndFishingPass={() => {
           if (!fishingTrip) return;
           setFishingPassBusy(true);
-          void endFishingTrip(fishingTrip.id).then(({ error }) => {
+          void endFishingTrip(fishingTrip.id).then(async ({ error }) => {
             setFishingPassBusy(false);
             if (error) {
               setStatus(error);
               return;
             }
             setFishingTrip(null);
-            setStatus("Fiskapasset avslutat");
+            await checkIn.hide();
+            setStatus("Fiskapasset avslutat · du syns inte längre");
           });
         }}
       />

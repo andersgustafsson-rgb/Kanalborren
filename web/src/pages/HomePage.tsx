@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactElement } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { CatchForm } from "../components/CatchForm";
 import { ChallengeBoard } from "../components/ChallengeBoard";
 import { FeedbackForm } from "../components/FeedbackForm";
+import { KanalToppen } from "../components/KanalToppen";
 import { WaterLevelWidget } from "../components/WaterLevelWidget";
 import { useAuth } from "../lib/AuthContext";
 import {
@@ -28,20 +29,151 @@ import {
 import { ProfileStudio } from "./ProfilePage";
 import "./HomePage.css";
 
-const PERIODS: { id: HighscorePeriod; label: string }[] = [
-  { id: "week", label: "Vecka" },
-  { id: "month", label: "Månad" },
-  { id: "year", label: "År" },
-];
-
 type HomeTab = "hem" | "fangst" | "utmana" | "tips" | "profil";
 
-const TABS: { id: HomeTab; label: string; hash?: string }[] = [
-  { id: "hem", label: "Hem" },
-  { id: "fangst", label: "Fångst", hash: "catch" },
-  { id: "utmana", label: "Utmana" },
-  { id: "tips", label: "Tips" },
-  { id: "profil", label: "Profil" },
+type IconProps = { className?: string };
+
+function IconFish({ className }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" aria-hidden>
+      <path
+        d="M3.5 12c2.8-3.2 6.2-4.8 10.2-4.8 2.4 0 4.5.7 6.3 2.1L22 12l-2 2.7c-1.8 1.4-3.9 2.1-6.3 2.1-4 0-7.4-1.6-10.2-4.8Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M3.5 12 7 9.6v4.8L3.5 12Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinejoin="round"
+      />
+      <circle cx="15.2" cy="11.2" r="0.9" fill="currentColor" />
+    </svg>
+  );
+}
+
+function IconPin({ className }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" aria-hidden>
+      <path
+        d="M12 21s6-5.2 6-10.2A6 6 0 0 0 6 10.8C6 15.8 12 21 12 21Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinejoin="round"
+      />
+      <circle
+        cx="12"
+        cy="10.5"
+        r="2.2"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.7"
+      />
+    </svg>
+  );
+}
+
+function IconHome({ className }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" aria-hidden>
+      <path
+        d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5.2v-5.5H10.2V21H5a1 1 0 0 1-1-1v-9.5Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function IconTrophy({ className }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" aria-hidden>
+      <path
+        d="M8 4h8v5.2a4 4 0 0 1-8 0V4Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M8 6H5.5A2.5 2.5 0 0 0 8 9.8M16 6h2.5A2.5 2.5 0 0 1 16 9.8"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+      />
+      <path
+        d="M10 13.2h4L13.2 16H10.8L10 13.2ZM9.5 20h5M12 16v4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function IconBulb({ className }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" aria-hidden>
+      <path
+        d="M9.2 14.6c.3 1 .9 1.6 1.5 2V18h2.6v-1.4c.6-.4 1.2-1 1.5-2 .8-1.4.7-3.1-.4-4.3A3.8 3.8 0 0 0 8.8 10c-.9 1.1-1.1 2.8-.4 4.2.2.3.5.5.8.4Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M10.2 20h3.6M12 4.5V6"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function IconUser({ className }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" aria-hidden>
+      <circle
+        cx="12"
+        cy="8.2"
+        r="3.2"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.7"
+      />
+      <path
+        d="M5.5 19.2c1.2-3 3.4-4.5 6.5-4.5s5.3 1.5 6.5 4.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+const TABS: {
+  id: HomeTab;
+  label: string;
+  Icon: (props: IconProps) => ReactElement;
+  hash?: string;
+}[] = [
+  { id: "hem", label: "Hem", Icon: IconHome },
+  { id: "fangst", label: "Fångst", Icon: IconFish, hash: "catch" },
+  { id: "utmana", label: "Utmana", Icon: IconTrophy },
+  { id: "tips", label: "Tips", Icon: IconBulb },
+  { id: "profil", label: "Profil", Icon: IconUser },
 ];
 
 function tabFromHash(hash: string): HomeTab {
@@ -176,6 +308,7 @@ export function HomePage() {
 
       <div className="home-stack">
         <header className="home-top">
+          <p className="home-kicker">Malmö · fiske · gemenskap</p>
           <img
             className="home-logo"
             src="/brand/kanalhugget-logo.png"
@@ -186,7 +319,8 @@ export function HomePage() {
           />
           {trip ? (
             <div className="home-cta-row">
-              <Link className="home-cta home-cta-solo" to="/karta">
+              <Link className="home-cta home-cta-map" to="/karta">
+                <IconPin className="home-cta-icon" />
                 Till kanalen
               </Link>
               <p className="home-pass-status" role="status">
@@ -195,21 +329,20 @@ export function HomePage() {
               </p>
             </div>
           ) : (
-            <div className="home-cta-row">
-              <div className="home-cta-seg" role="group" aria-label="Gå ut">
-                <button
-                  type="button"
-                  className="home-cta-seg-btn home-cta-seg-start"
-                  disabled={tripBusy}
-                  onClick={() => void onStartPass()}
-                >
-                  {tripBusy ? "Startar…" : "Starta fiskepass"}
-                </button>
-                <span className="home-cta-seg-divider" aria-hidden />
-                <Link className="home-cta-seg-btn home-cta-seg-map" to="/karta">
-                  Till kanalen
-                </Link>
-              </div>
+            <div className="home-cta-row home-cta-pair" role="group" aria-label="Gå ut">
+              <button
+                type="button"
+                className="home-cta home-cta-start"
+                disabled={tripBusy}
+                onClick={() => void onStartPass()}
+              >
+                <IconFish className="home-cta-icon" />
+                {tripBusy ? "Startar…" : "Starta fiskepass"}
+              </button>
+              <Link className="home-cta home-cta-map" to="/karta">
+                <IconPin className="home-cta-icon" />
+                Till kanalen
+              </Link>
             </div>
           )}
           {tripMsg && <p className="home-cta-msg">{tripMsg}</p>}
@@ -225,7 +358,8 @@ export function HomePage() {
               className={tab === t.id ? "home-tab on" : "home-tab"}
               onClick={() => openTab(t.id)}
             >
-              {t.label}
+              <t.Icon className="home-tab-icon" />
+              <span className="home-tab-label">{t.label}</span>
             </button>
           ))}
         </nav>
@@ -267,65 +401,12 @@ export function HomePage() {
               </section>
             )}
 
-            <section className="home-board" aria-labelledby="highscore-title">
-              <header className="home-board-head">
-                <h1 id="highscore-title">Kanal-toppen</h1>
-                <p>Största fångster · vecka · månad · år</p>
-              </header>
-
-              <div className="period-tabs" role="tablist" aria-label="Period">
-                {PERIODS.map((p) => (
-                  <button
-                    key={p.id}
-                    type="button"
-                    role="tab"
-                    aria-selected={period === p.id}
-                    className={period === p.id ? "period on" : "period"}
-                    onClick={() => setPeriod(p.id)}
-                  >
-                    {p.label}
-                  </button>
-                ))}
-              </div>
-
-              <ol className="score-list" aria-live="polite">
-                {loading && <li className="score-empty">Hämtar topplista…</li>}
-                {!loading && rows.length === 0 && (
-                  <li className="score-empty">
-                    Inga fångster den här{" "}
-                    {period === "week"
-                      ? "veckan"
-                      : period === "month"
-                        ? "månaden"
-                        : "året"}{" "}
-                    än.
-                    <span>
-                      Gå till fliken <strong>Fångst</strong> och rapportera.
-                    </span>
-                  </li>
-                )}
-                {!loading &&
-                  rows.map((r, i) => (
-                    <li key={r.id} className="score-row">
-                      <span className="score-rank">{i + 1}</span>
-                      <span className="score-main">
-                        <strong>{r.displayName}</strong>
-                        <small>
-                          {r.species}
-                          {r.lengthCm != null ? ` · ${r.lengthCm} cm` : ""}
-                          {r.weightKg != null ? ` · ${r.weightKg} kg` : ""}
-                          {r.zoneName ? ` · ${r.zoneName}` : ""}
-                          {" · "}
-                          {new Date(r.caughtAt).toLocaleString("sv-SE", {
-                            dateStyle: "short",
-                            timeStyle: "short",
-                          })}
-                        </small>
-                      </span>
-                    </li>
-                  ))}
-              </ol>
-            </section>
+            <KanalToppen
+              period={period}
+              onPeriod={setPeriod}
+              rows={rows}
+              loading={loading}
+            />
           </div>
         )}
 

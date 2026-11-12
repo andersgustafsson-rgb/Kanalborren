@@ -1,6 +1,6 @@
 import { isSupabaseConfigured, supabase } from "./supabase";
 
-export type HighscorePeriod = "week" | "month" | "year";
+export type HighscorePeriod = "week" | "month" | "year" | "all";
 
 export type HighscoreRow = {
   id: string;
@@ -12,7 +12,8 @@ export type HighscoreRow = {
   caughtAt: string;
 };
 
-function periodStart(period: HighscorePeriod): string {
+function periodStart(period: HighscorePeriod): string | null {
+  if (period === "all") return null;
   const d = new Date();
   if (period === "week") d.setDate(d.getDate() - 7);
   else if (period === "month") d.setMonth(d.getMonth() - 1);
@@ -37,19 +38,22 @@ function sortKey(r: HighscoreRow): number {
   return 0;
 }
 
+/** All measured public catches in the period, best first. */
 export async function fetchHighscores(
   period: HighscorePeriod,
 ): Promise<HighscoreRow[]> {
   if (!isSupabaseConfigured() || !supabase) return [];
 
-  const { data, error } = await supabase
+  let q = supabase
     .from("catch_reports")
     .select(
       "id,species,length_cm,weight_kg,zone_name,caught_at,profiles(display_name)",
     )
-    .eq("is_private", false)
-    .gte("caught_at", periodStart(period))
-    .limit(40);
+    .eq("is_private", false);
+  const since = periodStart(period);
+  if (since) q = q.gte("caught_at", since);
+
+  const { data, error } = await q.limit(300);
 
   if (error || !data) {
     console.warn("fetchHighscores", error);
@@ -70,6 +74,5 @@ export async function fetchHighscores(
       };
     })
     .filter((r) => r.lengthCm != null || r.weightKg != null)
-    .sort((a, b) => sortKey(b) - sortKey(a))
-    .slice(0, 20);
+    .sort((a, b) => sortKey(b) - sortKey(a));
 }

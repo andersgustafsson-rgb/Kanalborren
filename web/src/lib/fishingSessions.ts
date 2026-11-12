@@ -132,13 +132,13 @@ export async function endSession(
     ended_at: new Date().toISOString(),
   };
   if (note) patch.trip_note = note;
-  const q = supabase
+  // Always end every active session for this user — don't rely on a
+  // possibly stale local remoteId (that left people stuck in "Ute").
+  await supabase
     .from("fishing_sessions")
     .update(patch)
     .eq("user_id", userId)
     .is("ended_at", null);
-  if (remoteId) q.eq("id", remoteId);
-  await q;
   localEnd(remoteId);
 }
 
