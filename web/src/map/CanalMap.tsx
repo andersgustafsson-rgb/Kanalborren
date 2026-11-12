@@ -130,6 +130,67 @@ function CompactAttribution() {
 
 const EMPTY: FeatureCollection = { type: "FeatureCollection", features: [] };
 
+const FORBIDDEN_STYLE: PathOptions = {
+  color: "#c77dff",
+  weight: 2.2,
+  dashArray: "9 6",
+  fillColor: "#c77dff",
+  fillOpacity: 0.2,
+  className: "kh-zone-forbidden",
+};
+
+function isForbiddenArea(f: Feature): boolean {
+  const kind = (f.properties as CanalProperties | null)?.kind;
+  return (
+    (kind === "moat" || kind === "forbidden") &&
+    (f.geometry?.type === "Polygon" || f.geometry?.type === "MultiPolygon")
+  );
+}
+
+const NOFISH_ICON = L.divIcon({
+  className: "nofish-marker",
+  html: '<div class="nofish-pin"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M7.5 12c1.5-1.8 3.2-2.6 5.2-2.6 1.2 0 2.3.4 3.2 1.1L17 12l-1.1 1.5c-.9.7-2 1.1-3.2 1.1-2 0-3.7-.8-5.2-2.6Z"/><path d="M5.3 5.3l13.4 13.4" class="nofish-slash"/></svg></div>',
+  iconSize: [0, 0],
+  iconAnchor: [0, 0],
+});
+
+/** Labels collapse to icon-only pins when zoomed out, via a class on the map container. */
+function ZoomClass({ threshold }: { threshold: number }) {
+  const map = useMap();
+  useEffect(() => {
+    const el = map.getContainer();
+    const apply = () => {
+      el.classList.toggle("map-zoom-far", map.getZoom() < threshold);
+    };
+    apply();
+    map.on("zoomend", apply);
+    return () => {
+      map.off("zoomend", apply);
+    };
+  }, [map, threshold]);
+  return null;
+}
+
+function ForbiddenMarkers({ features }: { features: Feature[] }) {
+  return (
+    <>
+      {features.filter(isForbiddenArea).map((f, i) => {
+        const center = L.geoJSON(f as Feature).getBounds().getCenter();
+        const props = (f.properties || {}) as CanalProperties;
+        return (
+          <Marker
+            key={props.id || props.name || i}
+            position={center}
+            icon={NOFISH_ICON}
+            interactive={false}
+            keyboard={false}
+          />
+        );
+      })}
+    </>
+  );
+}
+
 function styleFor(props: CanalProperties): PathOptions {
   switch (props.kind) {
     case "canal":
@@ -140,13 +201,7 @@ function styleFor(props: CanalProperties): PathOptions {
         fillOpacity: 0.72,
       };
     case "moat":
-      return {
-        color: "#7a1f1f",
-        weight: 2,
-        fillColor: "#c0392b",
-        fillOpacity: 0.55,
-        dashArray: "4 3",
-      };
+      return FORBIDDEN_STYLE;
     case "basin":
       return {
         color: "#355c7d",
@@ -158,26 +213,22 @@ function styleFor(props: CanalProperties): PathOptions {
       return { color: "#0b4f6c", weight: 3, opacity: 0.85 };
     case "social_zone":
       return {
-        color: "#2d6a4f",
-        weight: 2,
-        fillColor: "#52b788",
-        fillOpacity: 0.28,
-        dashArray: "6 4",
+        color: "#5edce8",
+        weight: 1.5,
+        fillColor: "#5edce8",
+        fillOpacity: 0.12,
+        dashArray: "6 5",
       };
     case "allowed_fishing":
       return {
-        color: "#1b4332",
+        color: "#5edce8",
         weight: 1,
-        fillColor: "#95d5b2",
-        fillOpacity: 0.12,
+        opacity: 0.55,
+        fillColor: "#5edce8",
+        fillOpacity: 0.06,
       };
     case "forbidden":
-      return {
-        color: "#9b2226",
-        weight: 2,
-        fillColor: "#e5383b",
-        fillOpacity: 0.25,
-      };
+      return FORBIDDEN_STYLE;
     default:
       return { color: "#555", weight: 1, fillOpacity: 0.2 };
   }
@@ -923,6 +974,21 @@ export function CanalMap({
         </button>
       </div>
 
+      <svg className="kh-map-defs" width="0" height="0" aria-hidden focusable="false">
+        <defs>
+          <pattern
+            id="kh-hatch-forbidden"
+            width="9"
+            height="9"
+            patternUnits="userSpaceOnUse"
+            patternTransform="rotate(45)"
+          >
+            <rect width="9" height="9" fill="rgba(199,125,255,0.16)" />
+            <line x1="0" y1="0" x2="0" y2="9" stroke="rgba(199,125,255,0.75)" strokeWidth="2.2" />
+          </pattern>
+        </defs>
+      </svg>
+
       <MapContainer
         center={CENTER}
         zoom={15}
@@ -933,6 +999,7 @@ export function CanalMap({
       >
         <ZoomControl position="topright" />
         <CompactAttribution />
+        <ZoomClass threshold={15} />
         <CollapseSheetOnMapMove
           enabled={sheetOpen}
           onCollapse={() => setSheetOpen(false)}
@@ -1054,6 +1121,7 @@ export function CanalMap({
               onEachFeature={onEachFeature}
             />
           ))}
+        {toggles.rules && <ForbiddenMarkers features={ruleFeatures.features} />}
 
         {toggles.zones && (
           <GeoJSON
@@ -1097,6 +1165,7 @@ export function CanalMap({
               }
               onEachFeature={onEachFeature}
             />
+            <ForbiddenMarkers features={waterPolys.features} />
           </>
         )}
 

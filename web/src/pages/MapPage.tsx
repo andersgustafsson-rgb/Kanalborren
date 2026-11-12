@@ -7,6 +7,7 @@ import {
   saveEveningPref,
   type EveningPref,
 } from "../map/eveningMode";
+import { LayerPanel } from "../map/LayerPanel";
 import { PresenceList } from "../map/PresenceList";
 import { useAuth } from "../lib/AuthContext";
 import type { LayerToggles, MapBasemap } from "../map/types";
@@ -20,12 +21,6 @@ const INITIAL: LayerToggles = {
   catches: false,
   parking: false,
 };
-
-const BASEMAPS: { id: MapBasemap; label: string }[] = [
-  { id: "street", label: "Karta" },
-  { id: "satellite", label: "Satellit" },
-  { id: "hybrid", label: "Hybrid" },
-];
 
 const BASEMAP_STORAGE_KEY = "kanalhugget.basemap.v1";
 
@@ -150,67 +145,16 @@ export function MapPage() {
       </header>
 
       {layersOpen && (
-        <div
-          id="layer-panel"
-          className="layer-sheet"
-          role="group"
-          aria-label="Kartlager"
-        >
-          <p className="layer-sheet-label">Vy</p>
-          <div className="layer-sheet-row" role="radiogroup" aria-label="Kartvy">
-            {BASEMAPS.map((b) => (
-              <button
-                key={b.id}
-                type="button"
-                role="radio"
-                aria-checked={basemap === b.id}
-                className={basemap === b.id ? "chip on" : "chip"}
-                onClick={() => chooseBasemap(b.id)}
-              >
-                {b.label}
-              </button>
-            ))}
-            <button
-              type="button"
-              className={evening ? "chip on evening-chip" : "chip evening-chip"}
-              aria-pressed={evening}
-              onClick={toggleEvening}
-              title={
-                eveningPref === "auto"
-                  ? "Auto efter skymning — tryck för att låsa"
-                  : evening
-                    ? "Kvällsläge på"
-                    : "Kvällsläge av"
-              }
-            >
-              Kväll
-            </button>
-          </div>
-          <p className="layer-sheet-label">Lager</p>
-          <div className="layer-sheet-row">
-            {(
-              [
-                ["canal", "Kanal"],
-                ["spots", "Platser"],
-                ["zones", "Zoner"],
-                ["parking", "Parkering"],
-                ["catches", "Fångster (7d)"],
-                ["bridges", "Broar"],
-                ["rules", "Regler"],
-              ] as const
-            ).map(([key, label]) => (
-              <button
-                key={key}
-                type="button"
-                className={toggles[key] ? "chip on" : "chip"}
-                aria-pressed={toggles[key]}
-                onClick={() => toggle(key)}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
+        <LayerPanel
+          basemap={basemap}
+          onBasemap={chooseBasemap}
+          evening={evening}
+          eveningAuto={eveningPref === "auto"}
+          onToggleEvening={toggleEvening}
+          toggles={toggles}
+          onToggle={toggle}
+          onClose={() => setLayersOpen(false)}
+        />
       )}
 
       <CanalMap
