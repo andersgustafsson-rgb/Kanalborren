@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../lib/AuthContext";
 import {
+  deleteMyChat,
   listChatMessages,
   listMyCompanyRequests,
   respondCompanyRequest,
@@ -200,6 +201,31 @@ export function CompanySection({
     setMessages(await listChatMessages(activeChatId));
   }
 
+  async function removeChat(chatId: string, name: string) {
+    if (
+      !window.confirm(
+        `Radera chatten med ${name}? Meddelandena försvinner för er båda.`,
+      )
+    ) {
+      return;
+    }
+    setBusy(true);
+    setMsg(null);
+    const { error } = await deleteMyChat(chatId);
+    setBusy(false);
+    if (error) {
+      setMsg(error);
+      return;
+    }
+    if (activeChatId === chatId) {
+      setActiveChatId(null);
+      setMessages([]);
+      setChatDraft("");
+    }
+    setMsg(`Chatten med ${name} är raderad`);
+    void refreshRequests();
+  }
+
   if (!auth.user) {
     return (
       <section className="company-section company-embed" aria-label="Sällskap">
@@ -224,6 +250,14 @@ export function CompanySection({
             ← Tillbaka
           </button>
           <strong>{activeName}</strong>
+          <button
+            type="button"
+            className="company-btn danger company-chat-delete"
+            disabled={busy}
+            onClick={() => void removeChat(activeChatId, activeName)}
+          >
+            Radera
+          </button>
         </div>
         <div className="company-chat-log" aria-live="polite">
           {messages.length === 0 && (
@@ -403,7 +437,7 @@ export function CompanySection({
                 (r.fromUserId === auth.user!.id ? r.toName : r.fromName) ||
                 "Fiskare";
               return (
-                <li key={r.id}>
+                <li key={r.id} className="company-chat-row">
                   <button
                     type="button"
                     className="company-person"
@@ -411,6 +445,15 @@ export function CompanySection({
                   >
                     <strong>{name}</strong>
                     <span>Öppna chatt</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="company-btn ghost danger"
+                    disabled={busy}
+                    aria-label={`Radera chatt med ${name}`}
+                    onClick={() => void removeChat(r.chatId!, name)}
+                  >
+                    Radera
                   </button>
                 </li>
               );

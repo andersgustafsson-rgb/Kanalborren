@@ -199,6 +199,23 @@ export async function sendChatMessage(
   return { error: error?.message ?? null };
 }
 
+/** Deletes chat + messages for either participant; marks the request cancelled. */
+export async function deleteMyChat(
+  chatId: string,
+): Promise<{ error: string | null }> {
+  if (!isSupabaseConfigured() || !supabase) {
+    return { error: "Molnet är inte inkopplat" };
+  }
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Logga in först" };
+  const { error } = await supabase.rpc("delete_my_chat", {
+    p_chat_id: chatId,
+  });
+  return { error: error?.message ?? null };
+}
+
 export function subscribeCompanyInbox(
   userId: string,
   onChange: () => void,

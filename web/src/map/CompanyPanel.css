@@ -158,10 +158,32 @@
   border: 1px solid rgba(255, 255, 255, 0.18);
 }
 
+.company-btn.danger {
+  background: rgba(180, 60, 50, 0.9);
+  color: #fff5f3;
+}
+
+.company-btn.ghost.danger {
+  background: transparent;
+  color: #f0a8a0;
+  border-color: rgba(240, 120, 110, 0.35);
+}
+
 .company-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem;
+}
+
+.company-chat-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.company-chat-row .company-btn {
+  margin-top: 0;
 }
 
 .company-chat-head {
@@ -176,6 +198,12 @@
 
 .company-chat-head strong {
   font-size: 0.9rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.company-chat-delete {
+  flex: 0 0 auto;
 }
 
 .company-chat-log {
