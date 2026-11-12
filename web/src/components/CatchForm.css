@@ -1,0 +1,518 @@
+.catch-board {
+  --ch-cyan: #3ef0ff;
+  --ch-cyan-dim: rgba(62, 240, 255, 0.45);
+  --ch-yellow: #f4c430;
+  --ch-panel: #07111c;
+
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin-top: 0;
+  padding: 1rem 0.95rem 1.1rem;
+  color: #eef7fb;
+  background:
+    linear-gradient(135deg, rgba(62, 240, 255, 0.05), transparent 42%),
+    repeating-linear-gradient(
+      -45deg,
+      rgba(255, 255, 255, 0.025) 0 1px,
+      transparent 1px 7px
+    ),
+    var(--ch-panel);
+  border: 2px solid var(--ch-cyan);
+  border-radius: 8px;
+  box-shadow:
+    0 0 0 1px rgba(62, 240, 255, 0.18),
+    0 0 28px rgba(62, 240, 255, 0.2),
+    0 16px 36px rgba(0, 0, 0, 0.45);
+  position: relative;
+  isolation: isolate;
+}
+
+.catch-board::before,
+.catch-board::after {
+  content: "";
+  position: absolute;
+  width: 0.95rem;
+  height: 0.95rem;
+  pointer-events: none;
+  z-index: 2;
+  border-color: var(--ch-cyan);
+  border-style: solid;
+}
+
+.catch-board::before {
+  top: 6px;
+  left: 6px;
+  border-width: 2px 0 0 2px;
+}
+
+.catch-board::after {
+  right: 6px;
+  bottom: 6px;
+  border-width: 0 2px 2px 0;
+}
+
+.catch-board > * {
+  position: relative;
+  z-index: 1;
+}
+
+.catch-board .ch-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.catch-board .ch-head h2 {
+  margin: 0;
+  font-size: clamp(1.15rem, 4.6vw, 1.55rem);
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: 0.02em;
+  line-height: 1.05;
+  text-transform: uppercase;
+  color: #f4fbfd;
+}
+
+.catch-board .ch-head h2 span {
+  color: var(--ch-cyan);
+  text-shadow: 0 0 14px rgba(62, 240, 255, 0.55);
+}
+
+.catch-board .ch-head-copy p {
+  margin: 0.45rem 0 0;
+  color: rgba(232, 244, 248, 0.82);
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.catch-board .ch-head-copy a {
+  color: var(--ch-yellow);
+  font-weight: 800;
+}
+
+.catch-board .ch-hero {
+  width: 7.6rem;
+  height: 7.6rem;
+  flex: 0 0 auto;
+  border: 2px solid var(--ch-cyan);
+  border-radius: 6px;
+  box-shadow: 0 0 16px rgba(62, 240, 255, 0.28);
+  overflow: hidden;
+  background: #041018;
+}
+
+.catch-board .ch-hero img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 58% 48%;
+  display: block;
+}
+
+.catch-board .ch-gate {
+  margin: 0;
+  font-size: 0.86rem;
+  color: rgba(232, 244, 248, 0.8);
+}
+
+.catch-board .ch-gate a {
+  color: var(--ch-yellow);
+  font-weight: 800;
+}
+
+.catch-board .catch-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0;
+}
+
+.catch-board .catch-preview {
+  appearance: none;
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.7rem;
+  align-items: center;
+  padding: 0.75rem 0.8rem;
+  border-radius: 8px;
+  background: rgba(4, 14, 22, 0.92);
+  border: 2px solid var(--ch-cyan);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 0 0 14px rgba(62, 240, 255, 0.14);
+}
+
+.catch-board .catch-preview-copy strong {
+  display: block;
+  font-size: 1.12rem;
+  font-weight: 850;
+}
+
+.catch-board .catch-preview-copy small {
+  display: block;
+  margin-top: 0.15rem;
+  color: rgba(244, 247, 250, 0.72);
+  font-size: 0.78rem;
+}
+
+.catch-board .catch-preview-byt {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 6px;
+  background: rgba(244, 196, 48, 0.08);
+  border: 2px solid rgba(244, 196, 48, 0.7);
+  color: var(--ch-yellow);
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.catch-board .catch-preview-byt svg {
+  width: 0.85rem;
+  height: 0.85rem;
+}
+
+.catch-board .catch-swatch-img {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--ch-cyan);
+  box-shadow: 0 0 12px rgba(62, 240, 255, 0.25);
+}
+
+.catch-board .catch-block {
+  margin: 0;
+  padding: 0.7rem 0.75rem 0.8rem;
+  border: 2px solid rgba(62, 240, 255, 0.35);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.catch-board .catch-block legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0 0.25rem;
+  font-size: 0.84rem;
+  font-weight: 850;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #c9f6ff;
+}
+
+.catch-board .catch-block legend svg {
+  width: 1.05rem;
+  height: 1.05rem;
+  color: var(--ch-cyan);
+}
+
+.catch-board .catch-hint {
+  margin: -0.15rem 0 0;
+  font-size: 0.75rem;
+  color: rgba(244, 247, 250, 0.55);
+}
+
+.catch-board .catch-measures {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.55rem;
+}
+
+.catch-board .catch-measure {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  gap: 0.2rem 0.35rem;
+  padding: 0.5rem 0.6rem 0.55rem;
+  border-radius: 8px;
+  background: rgba(4, 14, 22, 0.9);
+  border: 2px solid var(--ch-cyan);
+  box-shadow: 0 0 12px rgba(62, 240, 255, 0.12);
+}
+
+.catch-board .catch-measure span {
+  grid-column: 1 / -1;
+  font-size: 0.78rem;
+  font-weight: 750;
+  color: rgba(244, 247, 250, 0.7);
+}
+
+.catch-board .catch-measure input {
+  border: 0 !important;
+  background: transparent !important;
+  padding: 0.15rem 0 !important;
+  font-size: 1.4rem !important;
+  font-weight: 850;
+  width: 100%;
+  min-width: 0;
+  color: #f4fbfd !important;
+}
+
+.catch-board .catch-measure em {
+  align-self: end;
+  font-style: normal;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--ch-cyan);
+  padding-bottom: 0.25rem;
+}
+
+.catch-board .catch-place-current {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.35rem 0.5rem;
+  align-items: center;
+  min-height: 4.2rem;
+  padding: 0.75rem 0.8rem;
+  border-radius: 8px;
+  border: 2px solid var(--ch-cyan);
+  overflow: hidden;
+  background:
+    linear-gradient(100deg, rgba(4, 14, 22, 0.88) 35%, rgba(4, 14, 22, 0.45)),
+    url("/share/templates/pb-malmo-firande.jpg") center / cover no-repeat;
+  box-shadow: 0 0 14px rgba(62, 240, 255, 0.14);
+}
+
+.catch-board .catch-place-current strong {
+  font-size: 1.05rem;
+  grid-column: 1;
+}
+
+.catch-board .catch-place-current span {
+  grid-column: 1;
+  font-size: 0.75rem;
+  color: rgba(232, 244, 248, 0.75);
+}
+
+.catch-board .catch-place-current .catch-inline {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  color: var(--ch-yellow);
+  border: 1px solid rgba(244, 196, 48, 0.45);
+  border-radius: 999px;
+  padding: 0.28rem 0.55rem;
+  background: rgba(8, 14, 22, 0.55);
+}
+
+.catch-board .catch-place-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.catch-board .catch-place-btn {
+  appearance: none;
+  min-height: 2.45rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border: 2px solid rgba(62, 240, 255, 0.5);
+  border-radius: 6px;
+  background: rgba(4, 14, 22, 0.85);
+  color: #e8f7fb;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.catch-board .catch-place-btn svg {
+  width: 0.95rem;
+  height: 0.95rem;
+  color: var(--ch-cyan);
+}
+
+.catch-board .catch-place-btn.on {
+  border-color: var(--ch-cyan);
+  background: rgba(62, 240, 255, 0.12);
+  box-shadow: 0 0 12px rgba(62, 240, 255, 0.2);
+}
+
+.catch-board .catch-place select {
+  border: 2px solid var(--ch-cyan);
+  border-radius: 6px;
+  padding: 0.55rem 0.7rem;
+  font: inherit;
+  background: rgba(4, 14, 22, 0.95);
+  color: #f4fbfd;
+}
+
+.catch-board .catch-fold {
+  border: 2px solid rgba(62, 240, 255, 0.35);
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.catch-board .catch-fold-btn {
+  width: 100%;
+  text-align: left;
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: #f4f7fa;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 750;
+  padding: 0.75rem 0.85rem;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.catch-board .catch-fold-btn::after {
+  content: "▾";
+  color: var(--ch-cyan);
+  font-size: 0.9rem;
+}
+
+.catch-board .catch-fold-btn[aria-expanded="true"]::after {
+  content: "▴";
+}
+
+.catch-board .catch-fold .catch-when-row,
+.catch-board .catch-extra {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0 0.75rem 0.8rem;
+}
+
+.catch-board .catch-form .profile-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.82rem;
+  font-weight: 650;
+}
+
+.catch-board .catch-form .profile-field input {
+  border: 2px solid rgba(62, 240, 255, 0.45);
+  border-radius: 6px;
+  padding: 0.5rem 0.65rem;
+  font: inherit;
+  background: rgba(4, 14, 22, 0.95);
+  color: #f4fbfd;
+}
+
+.catch-board .catch-inline {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--ch-yellow);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 750;
+  cursor: pointer;
+  padding: 0.15rem 0;
+  justify-self: start;
+}
+
+.catch-board .catch-private {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.55rem;
+  align-items: start;
+  padding: 0.7rem 0.75rem;
+  border-radius: 8px;
+  border: 2px solid rgba(62, 240, 255, 0.35);
+  background: rgba(255, 255, 255, 0.03);
+  cursor: pointer;
+}
+
+.catch-board .catch-private input {
+  margin-top: 0.2rem;
+  width: 1.05rem;
+  height: 1.05rem;
+  accent-color: var(--ch-cyan);
+}
+
+.catch-board .catch-private strong {
+  display: block;
+  font-size: 0.92rem;
+}
+
+.catch-board .catch-private small {
+  display: block;
+  margin-top: 0.2rem;
+  color: rgba(244, 247, 250, 0.62);
+  font-size: 0.75rem;
+  line-height: 1.35;
+  font-weight: 500;
+}
+
+.catch-board .catch-submit,
+.catch-board .ch-send {
+  appearance: none;
+  margin-top: 0.1rem;
+  min-height: 3rem;
+  border: 2px solid #ffe14a;
+  border-radius: 6px;
+  background: linear-gradient(100deg, #ffe14a 0%, #f4c430 45%, #e89a12 100%);
+  color: #14200a;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  box-shadow:
+    0 0 0 1px rgba(244, 196, 48, 0.35),
+    0 10px 24px rgba(232, 154, 18, 0.35);
+}
+
+.catch-board .catch-submit svg,
+.catch-board .ch-send svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.catch-board .catch-submit:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.catch-board .catch-msg {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #ffb4b6;
+  font-weight: 700;
+}
+
+.catch-board .catch-msg.ok {
+  color: #d7f07a;
+}
+
+@media (max-width: 380px) {
+  .catch-board .ch-head {
+    grid-template-columns: 1fr;
+  }
+
+  .catch-board .ch-hero {
+    width: 6.4rem;
+    height: 6.4rem;
+  }
+}

@@ -20,6 +20,109 @@ import {
   ShareAfterCatchModal,
   type ShareAfterCatchInfo,
 } from "./ShareAfterCatchModal";
+import "./CatchForm.css";
+
+function IconRuler() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden>
+      <rect
+        x="3.5"
+        y="8"
+        width="17"
+        height="8"
+        rx="1.5"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        fill="none"
+      />
+      <path
+        d="M7 8v3M10 8v2M13 8v3M16 8v2M19 8v3"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function IconPin() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden>
+      <path
+        d="M12 21s6-5.2 6-10a6 6 0 1 0-12 0c0 4.8 6 10 6 10z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      />
+      <circle cx="12" cy="11" r="2.2" fill="currentColor" />
+    </svg>
+  );
+}
+
+function IconList() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden>
+      <path
+        d="M8 7h12M8 12h12M8 17h12M4 7h.01M4 12h.01M4 17h.01"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function IconMap() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden>
+      <path
+        d="M9 4l6 2 5-2v16l-5 2-6-2-5 2V6l5-2z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+      <path d="M9 4v16M15 6v16" stroke="currentColor" strokeWidth="1.5" />
+    </svg>
+  );
+}
+
+function IconRefresh() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden>
+      <path
+        d="M20 12a8 8 0 1 1-2.2-5.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      <path
+        d="M20 4v5h-5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function IconHook() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden>
+      <path
+        d="M12 3v10a4 4 0 1 0 4 4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+      />
+      <circle cx="12" cy="3.8" r="1.6" fill="currentColor" />
+    </svg>
+  );
+}
 
 const ZONES = [
   { id: "slottsparken", name: "Slottsparken" },
@@ -406,31 +509,45 @@ export function CatchForm({ onSubmitted }: Props) {
     onSubmitted?.();
   }
 
+  const head = (
+    <header className="ch-head">
+      <div className="ch-head-copy">
+        <h2 id="catch-title">
+          RAPPORTERA <span>FÅNGST</span>
+        </h2>
+        <p>Välj art, fyll i längd eller vikt, kolla platsen.</p>
+      </div>
+      <div className="ch-hero" aria-hidden>
+        <img
+          src="/challenge/challenge-hero-abborre.jpg"
+          alt=""
+          width={512}
+          height={512}
+        />
+      </div>
+    </header>
+  );
+
   if (!auth.configured) {
     return (
-      <section className="home-board catch-board">
-        <header className="home-board-head">
-          <h2>Rapportera fångst</h2>
-          <p>
-            Molnet är inte inkopplat ännu — fångster kan inte sparas. Kolla att
-            miljövariablerna finns på Render och gör en ny deploy.
-          </p>
-        </header>
+      <section className="catch-board" aria-labelledby="catch-title">
+        {head}
+        <p className="ch-gate">
+          Molnet är inte inkopplat ännu — fångster kan inte sparas. Kolla att
+          miljövariablerna finns på Render och gör en ny deploy.
+        </p>
       </section>
     );
   }
 
   if (!auth.user) {
     return (
-      <section className="home-board catch-board">
-        <header className="home-board-head">
-          <h2>Rapportera fångst</h2>
-          <p>
-            <Link to="/profil#konto">Logga in med e-post</Link> under Profil →
-            Konto. Visningsnamnet ovan räcker inte — det är bara en lokal
-            profil.
-          </p>
-        </header>
+      <section className="catch-board" aria-labelledby="catch-title">
+        {head}
+        <p className="ch-gate">
+          <Link to="/profil#konto">Logga in med e-post</Link> under Profil →
+          Konto. Visningsnamnet ovan räcker inte — det är bara en lokal profil.
+        </p>
       </section>
     );
   }
@@ -455,11 +572,8 @@ export function CatchForm({ onSubmitted }: Props) {
     : "Just nu";
 
   return (
-    <section className="home-board catch-board" aria-labelledby="catch-title">
-      <header className="home-board-head">
-        <h2 id="catch-title">Rapportera fångst</h2>
-        <p>Välj art, fyll i längd eller vikt, kolla platsen.</p>
-      </header>
+    <section className="catch-board" aria-labelledby="catch-title">
+      {head}
       <form className="catch-form" onSubmit={onSubmit}>
         <button
           type="button"
@@ -491,11 +605,15 @@ export function CatchForm({ onSubmitted }: Props) {
               {gpsBusy ? "hämtar plats…" : placeName}
             </small>
           </div>
-          <span className="catch-preview-byt">Byt art</span>
+          <span className="catch-preview-byt">
+            <IconRefresh /> Byt art
+          </span>
         </button>
 
         <fieldset className="catch-block">
-          <legend>Mått</legend>
+          <legend>
+            <IconRuler /> Mått
+          </legend>
           <p className="catch-hint">Ett av fälten räcker.</p>
           <div className="catch-measures">
             <label className="catch-measure">
@@ -524,7 +642,9 @@ export function CatchForm({ onSubmitted }: Props) {
         </fieldset>
 
         <fieldset className="catch-block catch-place">
-          <legend>Plats</legend>
+          <legend>
+            <IconPin /> Plats
+          </legend>
           <div className="catch-place-current" aria-live="polite">
             {gpsBusy ? (
               <strong>Hämtar din position…</strong>
@@ -550,14 +670,14 @@ export function CatchForm({ onSubmitted }: Props) {
               onClick={() => setListOpen((v) => !v)}
               aria-expanded={listOpen}
             >
-              Välj i lista
+              <IconList /> Välj i lista
             </button>
             <button
               type="button"
               className="catch-place-btn"
               onClick={() => setMapOpen(true)}
             >
-              Välj på kartan
+              <IconMap /> Välj på kartan
             </button>
           </div>
           {listOpen && (
@@ -704,12 +824,15 @@ export function CatchForm({ onSubmitted }: Props) {
           </span>
         </label>
 
-        <button type="submit" className="cta catch-submit" disabled={busy}>
-          {busy
-            ? "Sparar…"
-            : isPrivate
-              ? "Spara privat fångst"
-              : "Spara fångst"}
+        <button type="submit" className="catch-submit" disabled={busy}>
+          {busy ? (
+            "Sparar…"
+          ) : (
+            <>
+              <IconHook />
+              {isPrivate ? "Spara privat fångst" : "Spara fångst"}
+            </>
+          )}
         </button>
         {msg && (
           <p className={msgOk ? "catch-msg ok" : "catch-msg"} role="status">
