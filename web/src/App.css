@@ -846,18 +846,9 @@
   background: transparent;
   color: inherit;
   width: 100%;
-  padding: 0.45rem 0.9rem 0.55rem;
+  padding: 0.55rem 0.9rem 0.55rem;
   cursor: pointer;
   text-align: left;
-}
-
-.sheet-grip {
-  display: block;
-  width: 2.4rem;
-  height: 0.28rem;
-  margin: 0 auto 0.55rem;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.28);
 }
 
 .sheet-peek {
@@ -904,10 +895,17 @@
   gap: 0.35rem;
 }
 
-.sheet-chevron {
+.sheet-toggle {
+  flex: 0 0 auto;
+  padding: 0.28rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid rgba(200, 226, 42, 0.45);
+  background: rgba(200, 226, 42, 0.14);
   color: var(--kb-lime);
-  font-size: 1rem;
-  font-weight: 700;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  line-height: 1.1;
 }
 
 .sheet-body {

@@ -103,9 +103,9 @@ export function CheckInPanel({
         type="button"
         className="sheet-handle"
         aria-expanded={open}
+        aria-label={open ? "Stäng check-in" : "Öppna check-in"}
         onClick={() => onOpenChange(!open)}
       >
-        <span className="sheet-grip" aria-hidden />
         <span className="sheet-peek">
           <img className="sheet-avatar-img" src={avatarSrc} alt="" />
           <span className="sheet-peek-text">
@@ -153,9 +153,7 @@ export function CheckInPanel({
                 {companyState.badge}
               </span>
             )}
-            <span className="sheet-chevron" aria-hidden>
-              {open ? "▾" : "▴"}
-            </span>
+            <span className="sheet-toggle">{open ? "Stäng" : "Öppna"}</span>
           </span>
         </span>
       </button>
