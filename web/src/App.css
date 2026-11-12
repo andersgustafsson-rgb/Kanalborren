@@ -898,6 +898,12 @@
   text-overflow: ellipsis;
 }
 
+.sheet-peek-end {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
 .sheet-chevron {
   color: var(--kb-lime);
   font-size: 1rem;

@@ -49,9 +49,10 @@ const SECTIONS = [
     id: "sallskap",
     title: "Fiskesällskap",
     body: [
-      "Knappen Sällskap nere till vänster på kartan samlar allt på ett ställe.",
-      "Fråga om sällskap → mottagaren trycker Acceptera & chatta.",
-      "Slå på chatt-notiser i rutan om du vill ha ping vid nya meddelanden.",
+      "Sällskap ligger i check-in-rutan längst ner — inte som en egen ruta ovanpå parkering.",
+      "Bocka i Vill ha sällskap när du är ute. Då syns du under Vill ha sällskap nu för andra.",
+      "Du behöver inte chatta först. Se vem som vill träffas → Fråga om sällskap → de accepterar → sen öppnas chatten.",
+      "Peek-raden visar om någon vill chatta eller om någon vill ha sällskap. Slå på notiser i rutan om du vill ha ping.",
     ],
   },
   {

@@ -1,9 +1,10 @@
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import type { CheckInSession, Visibility } from "./checkinStorage";
 import { formatRemaining, remainingMs } from "./checkinStorage";
 import { formatTripRemaining } from "../lib/fishingTrips";
 import type { ResolvedZone } from "./geo";
 import { AVATARS, type PresetAvatarId } from "./avatars";
+import { CompanySection, type CompanyState } from "./CompanyPanel";
 
 type Props = {
   open: boolean;
@@ -81,6 +82,14 @@ export function CheckInPanel({
   const [ending, setEnding] = useState(false);
   const [tripNote, setTripNote] = useState("");
   const [endingPass, setEndingPass] = useState(false);
+  const [companyState, setCompanyState] = useState<CompanyState>({
+    badge: 0,
+    openPeopleCount: 0,
+    pendingInCount: 0,
+  });
+  const onCompanyBadge = useCallback((next: CompanyState) => {
+    setCompanyState(next);
+  }, []);
   const passLeft = fishingPassExpiresAt
     ? formatTripRemaining(fishingPassExpiresAt, now)
     : null;
@@ -102,11 +111,19 @@ export function CheckInPanel({
           <span className="sheet-peek-text">
             {session ? (
               <>
-                <strong>Du är ute</strong>
+                <strong>
+                  Du är ute
+                  {companyState.pendingInCount > 0
+                    ? ` · ${companyState.pendingInCount} vill chatta`
+                    : companyState.openPeopleCount > 0
+                      ? ` · ${companyState.openPeopleCount} vill ha sällskap`
+                      : ""}
+                </strong>
                 <small>
                   {session.zoneName || "Kanalen"} ·{" "}
                   {formatRemaining(leftLive || left)} kvar
                   {passLeft ? ` · pass ${passLeft} kvar` : ""}
+                  {session.openForCompany ? " · öppen för sällskap" : ""}
                 </small>
               </>
             ) : passLeft ? (
@@ -130,8 +147,15 @@ export function CheckInPanel({
               </>
             )}
           </span>
-          <span className="sheet-chevron" aria-hidden>
-            {open ? "▾" : "▴"}
+          <span className="sheet-peek-end">
+            {companyState.badge > 0 && (
+              <span className="sheet-company-badge" aria-label="Sällskap">
+                {companyState.badge}
+              </span>
+            )}
+            <span className="sheet-chevron" aria-hidden>
+              {open ? "▾" : "▴"}
+            </span>
           </span>
         </span>
       </button>
@@ -304,7 +328,7 @@ export function CheckInPanel({
             checked={openForCompany}
             onChange={(e) => onOpenForCompany(e.target.checked)}
           />
-          Öppen för fiskesällskap
+          Vill ha sällskap
           {visibility === "ghost" ? " (utan kartnål)" : ""}
         </label>
 
@@ -318,6 +342,12 @@ export function CheckInPanel({
             onChange={(e) => onNote(e.target.value)}
           />
         </label>
+
+        <CompanySection
+          checkedIn={Boolean(session)}
+          openForCompany={openForCompany}
+          onBadgeChange={onCompanyBadge}
+        />
 
         {!session && !passLeft ? (
           <button

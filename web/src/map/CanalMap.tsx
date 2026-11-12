@@ -27,7 +27,6 @@ import { CheckInPanel } from "./CheckInPanel";
 import { SessionMarkers } from "./SessionMarkers";
 import { OthersMarkers } from "./OthersMarkers";
 import { CatchMarkers } from "./CatchMarkers";
-import { CompanyPanel } from "./CompanyPanel";
 import { ZoneActivityToast } from "./ZoneActivityToast";
 import { Recenter } from "./Recenter";
 import { useCheckIn } from "./useCheckIn";
@@ -1220,7 +1219,6 @@ export function CanalMap({
       </div>
 
       <ZoneActivityToast />
-      <CompanyPanel />
 
       <CheckInPanel
         open={sheetOpen}
