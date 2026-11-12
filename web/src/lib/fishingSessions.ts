@@ -50,12 +50,21 @@ export async function listPublicSessions(
     return localListPublic();
   }
 
-  return data
-    .filter((r) => r.user_id !== excludeUserId)
-    .map((r) => {
-      const profile = r.profiles as { display_name?: string } | null;
-      return mapRow(r as unknown as Record<string, unknown>, profile?.display_name);
-    });
+  // One row per user — stale sessions sometimes linger after republish races.
+  const byUser = new Map<string, PublicFishingSession>();
+  for (const r of data) {
+    if (r.user_id === excludeUserId) continue;
+    const profile = r.profiles as { display_name?: string } | null;
+    const row = mapRow(
+      r as unknown as Record<string, unknown>,
+      profile?.display_name,
+    );
+    const prev = byUser.get(row.userId);
+    if (!prev || Date.parse(row.expiresAt) >= Date.parse(prev.expiresAt)) {
+      byUser.set(row.userId, row);
+    }
+  }
+  return [...byUser.values()];
 }
 
 export async function publishSession(

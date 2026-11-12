@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { useAuth } from "../lib/AuthContext";
 import { subscribePublicSessions } from "../lib/fishingSessions";
@@ -33,13 +33,24 @@ export function PresenceList({ open, onOpenChange }: Props) {
     setSheetHost(document.querySelector(".map-app"));
   }, []);
 
+  const unique = useMemo(() => {
+    const byUser = new Map<string, PublicFishingSession>();
+    for (const r of rows) {
+      const prev = byUser.get(r.userId);
+      if (!prev || Date.parse(r.expiresAt) >= Date.parse(prev.expiresAt)) {
+        byUser.set(r.userId, r);
+      }
+    }
+    return [...byUser.values()];
+  }, [rows]);
+
   const mine = auth.user
-    ? rows.find((r) => r.userId === auth.user!.id)
+    ? unique.find((r) => r.userId === auth.user!.id)
     : undefined;
   const others = auth.user
-    ? rows.filter((r) => r.userId !== auth.user!.id)
-    : rows;
-  const count = rows.length;
+    ? unique.filter((r) => r.userId !== auth.user!.id)
+    : unique;
+  const count = unique.length;
   const feed = activity.slice(0, 6);
 
   const sheet =
@@ -67,7 +78,7 @@ export function PresenceList({ open, onOpenChange }: Props) {
                 </li>
               )}
               {others.map((r) => (
-                <li key={r.id}>
+                <li key={r.userId}>
                   <strong>{r.displayName}</strong>
                   <span>
                     {r.visibility === "ghost"

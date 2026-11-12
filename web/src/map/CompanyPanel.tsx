@@ -106,25 +106,10 @@ export function CompanySection({
     [requests],
   );
 
-  const chattingIds = useMemo(() => {
-    const ids = new Set<string>();
-    for (const r of myChats) {
-      if (auth.user) {
-        ids.add(
-          r.fromUserId === auth.user.id ? r.toUserId : r.fromUserId,
-        );
-      }
-    }
-    return ids;
-  }, [myChats, auth.user]);
-
-  /** People who ticked “vill ha sällskap” and are not already in a chat with you. */
+  /** Everyone who ticked “vill ha sällskap” (including people you already chat with). */
   const openPeople = useMemo(
-    () =>
-      others.filter(
-        (r) => r.openForCompany && !chattingIds.has(r.userId),
-      ),
-    [others, chattingIds],
+    () => others.filter((r) => r.openForCompany),
+    [others],
   );
 
   const badge = pendingIn.length + myChats.length;
@@ -368,8 +353,12 @@ export function CompanySection({
           )}
           {openPeople.map((p) => {
             const already = pendingOut.some((r) => r.toUserId === p.userId);
+            const chatting = myChats.find(
+              (r) =>
+                r.fromUserId === p.userId || r.toUserId === p.userId,
+            );
             return (
-              <li key={p.id} className="company-open-card">
+              <li key={p.userId} className="company-open-card">
                 <div className="company-row">
                   <strong>{p.displayName}</strong>
                   <span className="company-pill">Vill ha sällskap</span>
@@ -379,7 +368,15 @@ export function CompanySection({
                   {p.visibility === "ghost" ? " · dold på kartan" : ""}
                   {p.note ? ` · ${p.note}` : ""}
                 </p>
-                {already ? (
+                {chatting?.chatId ? (
+                  <button
+                    type="button"
+                    className="company-btn"
+                    onClick={() => openChat(chatting.chatId!, p.displayName)}
+                  >
+                    Öppna chatt
+                  </button>
+                ) : already ? (
                   <p className="company-status">Väntar på svar…</p>
                 ) : (
                   <button
