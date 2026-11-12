@@ -285,8 +285,8 @@ export function ChallengeBoard({ reloadToken = 0 }: Props) {
         <img
           src="/challenge/challenge-hero-abborre.jpg"
           alt=""
-          width={280}
-          height={210}
+          width={320}
+          height={320}
         />
       </div>
     </header>
