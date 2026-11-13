@@ -1,11 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
-  <circle cx="32" cy="32" r="32" fill="#1c2c38"/>
-  <path d="M8 34c10-11 22-15 34-12 6 1 10 5 14 9-4 5-8 8-14 9-12 2-24-1-34-6z" fill="#7a90a4"/>
-  <path d="M50 31l10-6v16l-10-6z" fill="#5d7386"/>
-  <path d="M22 24l5-9 3 8" fill="#9aafc0"/>
-  <path d="M30 24l4-7 2 6" fill="#8aa0b4"/>
-  <path d="M34 42l4 8 2-7" fill="#9aafc0"/>
-  <circle cx="18" cy="31" r="1.6" fill="#0a1220"/>
-  <path d="M24 36c5 2 12 2 18 0" stroke="#4a6072" stroke-width="1.4" stroke-linecap="round"/>
-  <path d="M14 33h4" stroke="#c5d2dc" stroke-width="1.5" stroke-linecap="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180" role="img" aria-labelledby="title">
+<title id="title">Torsk</title>
+<defs><linearGradient id="b" x1="0" y1="0" x2=".2" y2="1"><stop stop-color="#D9F0D8"/><stop offset=".32" stop-color="#A6B8A2"/><stop offset=".72" stop-color="#176477"/><stop offset="1" stop-color="#082B3A"/></linearGradient></defs>
+<g stroke="#071F2B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M35 92Q62 53 151 52Q226 51 278 91L299 104 271 118Q204 145 126 132Q58 119 35 92Z" fill="url(#b)"/><path d="M65 68Q85 35 111 58Q132 28 157 57Q181 32 202 66Z" fill="#286F7A"/><path d="M94 126L107 151 129 132M160 136L177 158 193 137M222 126L239 146 249 118M269 88L301 73 290 101 303 123 269 112Z" fill="#C58A4C"/><path d="M47 85Q30 77 19 91Q31 104 49 98Z" fill="#B4D0C6"/><circle cx="49" cy="85" r="6" fill="#F4D36A"/><circle cx="50" cy="85" r="2.5" fill="#071F2B"/><path d="M48 111Q56 124 63 132" fill="none" stroke="#E1D6B4" stroke-width="3"/></g>
 </svg>

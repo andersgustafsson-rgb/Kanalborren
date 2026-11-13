@@ -1,12 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
-  <circle cx="32" cy="32" r="32" fill="#2a2418"/>
-  <ellipse cx="32" cy="34" rx="22" ry="13" fill="#b08a4a"/>
-  <ellipse cx="32" cy="34" rx="18" ry="9" fill="#c9a15c" opacity=".55"/>
-  <path d="M50 34l10-4v10l-10-4z" fill="#8a6a34"/>
-  <circle cx="18" cy="30" r="1.5" fill="#0a1220"/>
-  <circle cx="22" cy="28" r="1.2" fill="#0a1220"/>
-  <circle cx="28" cy="31" r="1.1" fill="#6a4e28" opacity=".7"/>
-  <circle cx="34" cy="36" r="1.3" fill="#6a4e28" opacity=".65"/>
-  <circle cx="40" cy="32" r="1" fill="#6a4e28" opacity=".7"/>
-  <path d="M24 40c6 3 14 3 20 0" stroke="#8a6a34" stroke-width="1.4" stroke-linecap="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180" role="img" aria-labelledby="title">
+<title id="title">Skrubba</title>
+<defs><linearGradient id="b" x1="0" y1="0" x2=".2" y2="1"><stop stop-color="#D9F0D8"/><stop offset=".32" stop-color="#A98B57"/><stop offset=".72" stop-color="#176477"/><stop offset="1" stop-color="#082B3A"/></linearGradient></defs>
+<g stroke="#071F2B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M31 92Q52 51 160 49Q249 49 291 92Q249 135 160 139Q55 139 31 92Z" fill="url(#b)"/><path d="M49 95Q133 129 279 97Q230 137 160 139Q65 137 49 95Z" fill="#C4B58B"/><path d="M52 65Q44 50 39 39M69 57L62 37M88 52L87 32M110 49L115 30M135 48L145 31M162 49L176 34M190 52L205 40M218 59L234 51M244 69L260 64" fill="none" stroke="#D7C18B" stroke-width="3"/><g fill="#E3D09A"><circle cx="91" cy="77" r="4"/><circle cx="120" cy="66" r="3"/><circle cx="149" cy="81" r="4"/><circle cx="181" cy="68" r="4"/><circle cx="211" cy="82" r="4"/><circle cx="239" cy="94" r="3"/><circle cx="179" cy="108" r="4"/><circle cx="137" cy="111" r="3"/></g><path d="M279 82L307 69 296 94 307 116 277 104Z" fill="#C58A4C"/><path d="M43 86Q26 79 16 91Q28 103 45 98Z" fill="#B4D0C6"/><circle cx="49" cy="79" r="6" fill="#F4D36A"/><circle cx="50" cy="79" r="2.5" fill="#071F2B"/><circle cx="62" cy="83" r="5" fill="#F4D36A"/><circle cx="63" cy="83" r="2" fill="#071F2B"/></g>
 </svg>

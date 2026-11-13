@@ -22,6 +22,9 @@ import {
 } from "./ShareAfterCatchModal";
 import "./CatchForm.css";
 
+const MAIN_SPECIES = SPECIES.filter((s) => s.id !== "Annan");
+const OTHER_SPECIES = SPECIES.find((s) => s.id === "Annan");
+
 function IconRuler() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden>
@@ -201,6 +204,7 @@ export function CatchForm({ onSubmitted }: Props) {
     null,
   );
   const [artOpen, setArtOpen] = useState(false);
+  const [artDraft, setArtDraft] = useState("Abborre");
 
   function say(text: string | null, ok = false) {
     setMsg(text);
@@ -580,7 +584,10 @@ export function CatchForm({ onSubmitted }: Props) {
           className="catch-preview"
           aria-expanded={artOpen}
           aria-haspopup="dialog"
-          onClick={() => setArtOpen(true)}
+          onClick={() => {
+            setArtDraft(species);
+            setArtOpen(true);
+          }}
         >
           <img
             className="catch-swatch-img"
@@ -861,41 +868,105 @@ export function CatchForm({ onSubmitted }: Props) {
             >
               <header className="catch-species-head">
                 <h3 id="catch-species-title">
+                  <span className="catch-species-hook" aria-hidden>
+                    <svg viewBox="0 0 24 24">
+                      <path
+                        d="M12 3v10.2a3.4 3.4 0 1 0 3.4-3.4"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                      />
+                      <circle cx="12" cy="3.6" r="1.5" fill="currentColor" />
+                    </svg>
+                  </span>
                   VÄLJ <span>ART</span>
                 </h3>
                 <button
                   type="button"
-                  className="catch-species-close"
+                  className="catch-species-x"
+                  aria-label="Stäng"
                   onClick={() => setArtOpen(false)}
                 >
-                  Stäng
+                  ✕
                 </button>
               </header>
+
               <div
-                className="catch-species catch-species-popup"
+                className="catch-species-grid"
                 role="radiogroup"
                 aria-label="Art"
               >
-                {SPECIES.map((s) => (
-                  <button
-                    key={s.id}
-                    type="button"
-                    role="radio"
-                    aria-checked={species === s.id}
-                    className={
-                      species === s.id
-                        ? "catch-species-btn on"
-                        : "catch-species-btn"
-                    }
-                    onClick={() => {
-                      setSpecies(s.id);
-                      setArtOpen(false);
-                    }}
-                  >
-                    <img src={s.img} alt="" width={36} height={36} />
-                    <span>{s.id}</span>
-                  </button>
-                ))}
+                {MAIN_SPECIES.map((s) => {
+                  const on = artDraft === s.id;
+                  return (
+                    <button
+                      key={s.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={on}
+                      className={
+                        on ? "catch-species-card on" : "catch-species-card"
+                      }
+                      onClick={() => setArtDraft(s.id)}
+                    >
+                      {on ? (
+                        <span className="catch-species-check" aria-hidden>
+                          ✓
+                        </span>
+                      ) : null}
+                      <img src={s.img} alt="" width={160} height={90} />
+                      <span className="catch-species-name">{s.id}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {OTHER_SPECIES ? (
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={artDraft === OTHER_SPECIES.id}
+                  className={
+                    artDraft === OTHER_SPECIES.id
+                      ? "catch-species-other on"
+                      : "catch-species-other"
+                  }
+                  onClick={() => setArtDraft(OTHER_SPECIES.id)}
+                >
+                  <img
+                    src={OTHER_SPECIES.img}
+                    alt=""
+                    width={48}
+                    height={28}
+                  />
+                  <span>
+                    Annan <small>(ange art själv)</small>
+                  </span>
+                  <span className="catch-species-chevron" aria-hidden>
+                    ›
+                  </span>
+                </button>
+              ) : null}
+
+              <div className="catch-species-actions">
+                <button
+                  type="button"
+                  className="catch-species-pick"
+                  onClick={() => {
+                    setSpecies(artDraft);
+                    setArtOpen(false);
+                  }}
+                >
+                  ✓ Välj
+                </button>
+                <button
+                  type="button"
+                  className="catch-species-cancel"
+                  onClick={() => setArtOpen(false)}
+                >
+                  ✕ Stäng
+                </button>
               </div>
             </div>
           </div>,

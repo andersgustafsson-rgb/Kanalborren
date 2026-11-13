@@ -182,10 +182,12 @@
 }
 
 .catch-board .catch-swatch-img {
-  width: 2.75rem;
-  height: 2.75rem;
-  border-radius: 50%;
-  object-fit: cover;
+  width: 3.4rem;
+  height: 2rem;
+  border-radius: 8px;
+  object-fit: contain;
+  padding: 0.15rem;
+  background: rgba(4, 14, 22, 0.85);
   border: 2px solid var(--ch-cyan);
   box-shadow: 0 0 12px rgba(62, 240, 255, 0.25);
 }
@@ -526,34 +528,31 @@ body .catch-species-overlay {
   place-items: center;
   padding: 1.1rem;
   padding-bottom: calc(1.1rem + env(safe-area-inset-bottom, 0px));
-  background: rgba(3, 8, 14, 0.78);
-  backdrop-filter: blur(8px);
+  background: rgba(3, 8, 14, 0.82);
+  backdrop-filter: blur(10px);
 }
 
 body .catch-species-overlay .catch-species-sheet {
   --ch-cyan: #3ef0ff;
   --ch-yellow: #f4c430;
-  width: min(100%, 22rem);
+  width: min(100%, 22.5rem);
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
-  padding: 1rem 1rem 1.1rem;
-  border-radius: 10px;
+  gap: 0.75rem;
+  padding: 1rem 1rem 1.05rem;
+  border-radius: 14px;
   background:
-    linear-gradient(135deg, rgba(62, 240, 255, 0.06), transparent 42%),
-    repeating-linear-gradient(
-      -45deg,
-      rgba(255, 255, 255, 0.025) 0 1px,
-      transparent 1px 7px
-    ),
-    #07111c;
+    radial-gradient(ellipse at 85% 8%, rgba(62, 240, 255, 0.12), transparent 42%),
+    radial-gradient(ellipse at 10% 90%, rgba(244, 196, 48, 0.06), transparent 40%),
+    linear-gradient(165deg, #0a1824 0%, #071018 100%);
   border: 2px solid var(--ch-cyan);
   box-shadow:
     0 0 0 1px rgba(62, 240, 255, 0.18),
-    0 0 28px rgba(62, 240, 255, 0.22),
+    0 0 32px rgba(62, 240, 255, 0.22),
     0 22px 56px rgba(0, 0, 0, 0.55);
   color: #f4fbfd;
   position: relative;
+  overflow: hidden;
 }
 
 body .catch-species-overlay .catch-species-sheet::before,
@@ -584,11 +583,16 @@ body .catch-species-overlay .catch-species-head {
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
+  position: relative;
+  z-index: 1;
 }
 
 body .catch-species-overlay .catch-species-head h3 {
   margin: 0;
-  font-size: 1.2rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 1.25rem;
   font-weight: 900;
   font-style: italic;
   letter-spacing: 0.03em;
@@ -596,70 +600,196 @@ body .catch-species-overlay .catch-species-head h3 {
   color: #f4fbfd;
 }
 
-body .catch-species-overlay .catch-species-head h3 span {
+body .catch-species-overlay .catch-species-hook {
+  display: inline-flex;
+  color: var(--ch-cyan);
+  filter: drop-shadow(0 0 8px rgba(62, 240, 255, 0.55));
+}
+
+body .catch-species-overlay .catch-species-hook svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+body .catch-species-overlay .catch-species-head h3 span:last-child {
   color: var(--ch-cyan);
   text-shadow: 0 0 12px rgba(62, 240, 255, 0.5);
 }
 
-body .catch-species-overlay .catch-species-close {
+body .catch-species-overlay .catch-species-x {
   appearance: none;
-  border: 2px solid rgba(244, 196, 48, 0.7);
+  width: 2rem;
+  height: 2rem;
+  display: grid;
+  place-items: center;
+  border: 1.5px solid rgba(62, 240, 255, 0.45);
   border-radius: 6px;
-  background: rgba(244, 196, 48, 0.1);
-  color: var(--ch-yellow);
+  background: rgba(4, 14, 22, 0.85);
+  color: #d7f7ff;
   font: inherit;
-  font-size: 0.78rem;
-  font-weight: 850;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  padding: 0.35rem 0.65rem;
+  font-size: 0.85rem;
+  font-weight: 800;
   cursor: pointer;
 }
 
-body .catch-species-overlay .catch-species-popup {
+body .catch-species-overlay .catch-species-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.55rem;
+  position: relative;
+  z-index: 1;
 }
 
-body .catch-species-overlay .catch-species-btn {
+body .catch-species-overlay .catch-species-card {
   appearance: none;
-  flex: unset;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.35rem;
+  min-height: 7.4rem;
+  padding: 0.55rem 0.45rem 0.55rem;
+  border-radius: 12px;
+  border: 2px solid rgba(62, 240, 255, 0.42);
+  background:
+    radial-gradient(ellipse at 50% 35%, rgba(62, 240, 255, 0.1), transparent 62%),
+    rgba(4, 14, 22, 0.95);
+  color: #f4fbfd;
+  font: inherit;
+  cursor: pointer;
+  box-shadow: 0 0 12px rgba(62, 240, 255, 0.08);
+  overflow: hidden;
+}
+
+body .catch-species-overlay .catch-species-card img {
+  width: 92%;
+  max-width: 9.5rem;
+  height: auto;
+  aspect-ratio: 320 / 180;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.35));
+}
+
+body .catch-species-overlay .catch-species-name {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 4.6rem;
+  padding: 0.22rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(6, 16, 24, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+body .catch-species-overlay .catch-species-check {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.4rem;
+  width: 1.35rem;
+  height: 1.35rem;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--ch-yellow);
+  color: #0a1220;
+  font-size: 0.75rem;
+  font-weight: 900;
+  box-shadow: 0 0 10px rgba(244, 196, 48, 0.55);
+}
+
+body .catch-species-overlay .catch-species-card.on {
+  border-color: var(--ch-yellow);
+  box-shadow:
+    0 0 0 1px rgba(244, 196, 48, 0.45),
+    0 0 22px rgba(244, 196, 48, 0.35);
+}
+
+body .catch-species-overlay .catch-species-card.on .catch-species-name {
+  background: var(--ch-yellow);
+  border-color: transparent;
+  color: #0a1220;
+}
+
+body .catch-species-overlay .catch-species-other {
+  appearance: none;
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.65rem;
   width: 100%;
-  justify-content: flex-start;
-  gap: 0.55rem;
-  padding: 0.55rem 0.65rem;
-  border-radius: 8px;
-  border: 2px solid rgba(62, 240, 255, 0.4);
+  padding: 0.7rem 0.85rem;
+  border-radius: 12px;
+  border: 2px solid rgba(62, 240, 255, 0.42);
   background: rgba(4, 14, 22, 0.95);
   color: #f4fbfd;
   font: inherit;
-  font-size: 0.95rem;
+  font-size: 0.92rem;
   font-weight: 800;
+  text-align: left;
   cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  box-shadow: 0 0 10px rgba(62, 240, 255, 0.08);
 }
 
-body .catch-species-overlay .catch-species-btn img {
-  width: 2.15rem;
-  height: 2.15rem;
-  border-radius: 50%;
-  object-fit: cover;
-  flex: 0 0 auto;
+body .catch-species-overlay .catch-species-other img {
+  width: 2.6rem;
+  height: 1.45rem;
+  object-fit: contain;
+}
+
+body .catch-species-overlay .catch-species-other small {
+  display: block;
+  margin-top: 0.1rem;
+  font-size: 0.7rem;
+  font-weight: 650;
+  color: #9bb8c4;
+}
+
+body .catch-species-overlay .catch-species-chevron {
+  color: var(--ch-cyan);
+  font-size: 1.35rem;
+  font-weight: 400;
+  line-height: 1;
+}
+
+body .catch-species-overlay .catch-species-other.on {
+  border-color: var(--ch-yellow);
+  box-shadow: 0 0 16px rgba(244, 196, 48, 0.28);
+}
+
+body .catch-species-overlay .catch-species-actions {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr;
+  gap: 0.55rem;
+  position: relative;
+  z-index: 1;
+  margin-top: 0.15rem;
+}
+
+body .catch-species-overlay .catch-species-pick,
+body .catch-species-overlay .catch-species-cancel {
+  appearance: none;
+  min-height: 2.85rem;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+body .catch-species-overlay .catch-species-pick {
+  border: 0;
+  background: linear-gradient(100deg, #ffe14a 0%, #f4c430 55%, #e8a812 100%);
+  color: #0a1220;
+  box-shadow: 0 8px 20px rgba(244, 196, 48, 0.28);
+}
+
+body .catch-species-overlay .catch-species-cancel {
   border: 2px solid rgba(62, 240, 255, 0.45);
-}
-
-body .catch-species-overlay .catch-species-btn.on {
-  border-color: var(--ch-cyan);
-  background: rgba(62, 240, 255, 0.14);
-  box-shadow:
-    0 0 0 1px rgba(62, 240, 255, 0.35),
-    0 0 16px rgba(62, 240, 255, 0.28);
-  color: #f4fbfd;
-}
-
-body .catch-species-overlay .catch-species-btn:last-child:nth-child(odd) {
-  grid-column: 1 / -1;
+  background: rgba(4, 14, 22, 0.9);
+  color: #d7f7ff;
 }

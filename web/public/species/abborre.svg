@@ -1,9 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
-  <circle cx="32" cy="32" r="32" fill="#1f3a24"/>
-  <path d="M10 34c8-10 18-14 28-12 7 1 12 5 16 10-4 5-9 9-16 10-10 2-20-2-28-8z" fill="#7db03a"/>
-  <path d="M18 30h4M24 28h4M30 27h4M36 28h4" stroke="#d6e35a" stroke-width="2" stroke-linecap="round"/>
-  <path d="M48 30l10-6v16l-10-6z" fill="#5a8a28"/>
-  <circle cx="20" cy="30" r="1.6" fill="#0a1220"/>
-  <path d="M28 22l4-8 3 7" fill="#9ccc4a"/>
-  <path d="M34 42l3 7 2-6" fill="#9ccc4a"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180" role="img" aria-labelledby="title">
+<title id="title">Abborre</title>
+<defs><linearGradient id="b" x1="0" y1="0" x2=".2" y2="1"><stop stop-color="#D9F0D8"/><stop offset=".32" stop-color="#D5B64B"/><stop offset=".72" stop-color="#176477"/><stop offset="1" stop-color="#082B3A"/></linearGradient></defs>
+<g stroke="#071F2B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M34 91Q70 48 171 55Q240 58 281 91L302 105 273 119Q207 151 112 126Q57 113 34 91Z" fill="url(#b)"/><path d="M69 68L80 37 96 59 111 27 125 58 143 31 155 60 174 40 187 68Z" fill="#176477"/><path d="M81 119L93 151 119 130M151 135L171 159 187 137M212 126L232 149 242 119" fill="#D96D3E"/><path d="M270 87L302 73 289 101 304 123 269 111Z" fill="#D96D3E"/><path d="M83 63L91 120M112 56L120 130M143 55L148 135M174 60L176 137M202 66L201 132" stroke="#092C38" stroke-width="7"/><path d="M47 86Q28 78 17 91Q30 104 49 98Z" fill="#9BC8C0"/><circle cx="54" cy="84" r="6" fill="#F4D36A"/><circle cx="55" cy="84" r="2.5" fill="#071F2B"/></g>
 </svg>
