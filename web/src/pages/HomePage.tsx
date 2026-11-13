@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactElement } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { CatchForm } from "../components/CatchForm";
 import { ChallengeBoard } from "../components/ChallengeBoard";
@@ -77,103 +77,17 @@ function IconPin({ className }: IconProps) {
   );
 }
 
-function IconHome({ className }: IconProps) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" aria-hidden>
-      <path
-        d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5.2v-5.5H10.2V21H5a1 1 0 0 1-1-1v-9.5Z"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.7"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function IconTrophy({ className }: IconProps) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" aria-hidden>
-      <path
-        d="M8 4h8v5.2a4 4 0 0 1-8 0V4Z"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.7"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M8 6H5.5A2.5 2.5 0 0 0 8 9.8M16 6h2.5A2.5 2.5 0 0 1 16 9.8"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.7"
-        strokeLinecap="round"
-      />
-      <path
-        d="M10 13.2h4L13.2 16H10.8L10 13.2ZM9.5 20h5M12 16v4"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.7"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function IconBulb({ className }: IconProps) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" aria-hidden>
-      <path
-        d="M9.2 14.6c.3 1 .9 1.6 1.5 2V18h2.6v-1.4c.6-.4 1.2-1 1.5-2 .8-1.4.7-3.1-.4-4.3A3.8 3.8 0 0 0 8.8 10c-.9 1.1-1.1 2.8-.4 4.2.2.3.5.5.8.4Z"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.7"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M10.2 20h3.6M12 4.5V6"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.7"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-function IconUser({ className }: IconProps) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" aria-hidden>
-      <circle
-        cx="12"
-        cy="8.2"
-        r="3.2"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.7"
-      />
-      <path
-        d="M5.5 19.2c1.2-3 3.4-4.5 6.5-4.5s5.3 1.5 6.5 4.5"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.7"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
 const TABS: {
   id: HomeTab;
   label: string;
-  Icon: (props: IconProps) => ReactElement;
+  icon: string;
   hash?: string;
 }[] = [
-  { id: "hem", label: "Hem", Icon: IconHome },
-  { id: "fangst", label: "Fångst", Icon: IconFish, hash: "catch" },
-  { id: "utmana", label: "Utmana", Icon: IconTrophy },
-  { id: "tips", label: "Tips", Icon: IconBulb },
-  { id: "profil", label: "Profil", Icon: IconUser },
+  { id: "hem", label: "Hem", icon: "/icons/tabs/hem.png" },
+  { id: "fangst", label: "Fångst", icon: "/icons/tabs/fangst.png", hash: "catch" },
+  { id: "utmana", label: "Utmana", icon: "/icons/tabs/utmana.png" },
+  { id: "tips", label: "Tips", icon: "/icons/tabs/tips.png" },
+  { id: "profil", label: "Profil", icon: "/icons/tabs/profil.png" },
 ];
 
 function tabFromHash(hash: string): HomeTab {
@@ -358,7 +272,14 @@ export function HomePage() {
               className={tab === t.id ? "home-tab on" : "home-tab"}
               onClick={() => openTab(t.id)}
             >
-              <t.Icon className="home-tab-icon" />
+              <span
+                className="home-tab-icon"
+                style={{
+                  WebkitMaskImage: `url(${t.icon})`,
+                  maskImage: `url(${t.icon})`,
+                }}
+                aria-hidden
+              />
               <span className="home-tab-label">{t.label}</span>
             </button>
           ))}
