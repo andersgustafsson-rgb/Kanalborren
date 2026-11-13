@@ -1,15 +1,12 @@
+import { isMalmoDarkHours } from "../lib/solarMalmo";
+
 const STORAGE_KEY = "kanalhugget.evening.v1";
 
 export type EveningPref = "auto" | "on" | "off";
 
-/** Rough Malmö dusk window — soft default when pref is auto. */
+/** Auto kväll efter solnedgång / före soluppgång (Malmö). */
 export function isEveningNow(date = new Date()): boolean {
-  const hour = date.getHours();
-  const month = date.getMonth(); // 0–11
-  // Winter nights longer; summer later dusk.
-  const duskHour = month >= 4 && month <= 8 ? 20 : 17;
-  const dawnHour = month >= 4 && month <= 8 ? 5 : 7;
-  return hour >= duskHour || hour < dawnHour;
+  return isMalmoDarkHours(date);
 }
 
 export function loadEveningPref(): EveningPref {

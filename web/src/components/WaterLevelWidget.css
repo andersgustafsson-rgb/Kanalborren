@@ -38,6 +38,33 @@
   text-transform: uppercase;
 }
 
+.wx-sun-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem 0.65rem;
+  margin: -0.35rem 0 0.55rem;
+}
+
+.wx-sun-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.28rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid rgba(184, 224, 20, 0.28);
+  background: rgba(184, 224, 20, 0.08);
+  font-size: 0.72rem;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  color: #cfe0d4;
+}
+
+.wx-sun-chip strong {
+  font-weight: 800;
+  color: #dff56a;
+}
+
 .wx-hero {
   position: relative;
   min-height: 9.5rem;

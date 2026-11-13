@@ -1,4 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import {
+  fmtSunClock,
+  isMalmoDarkHours,
+  isMalmoGoldenHour,
+  malmoSunTimes,
+} from "../lib/solarMalmo";
 import "./WaterLevelWidget.css";
 
 type SkyKind =
@@ -149,21 +155,24 @@ function trendFromSeries(
   return delta > 0 ? "rising" : "falling";
 }
 
-function isSunsetHour(date = new Date()): boolean {
-  const month = date.getMonth();
-  const hour = date.getHours();
-  const summer = month >= 3 && month <= 8;
-  if (summer) return hour >= 19 && hour <= 22;
-  return hour >= 16 && hour <= 20;
-}
-
 function weatherPhoto(sky: SkyKind, at = new Date()): string {
+  const precip =
+    sky === "drizzle" ||
+    sky === "rain" ||
+    sky === "thunder" ||
+    sky === "snow";
+
   if (
     (sky === "sun" || sky === "partly") &&
-    isSunsetHour(at)
+    isMalmoGoldenHour(at)
   ) {
     return "/weather/solnedgang.jpg";
   }
+
+  if (isMalmoDarkHours(at) && !precip) {
+    return "/weather/skymning.jpg";
+  }
+
   switch (sky) {
     case "sun":
     case "partly":
@@ -422,7 +431,6 @@ async function fetchCanalConditions(): Promise<Conditions> {
     });
 
     const stamp = current?.time ? new Date(current.time) : new Date();
-
     return {
       waterCm: lastLevel?.value ?? null,
       waterTrend,
@@ -507,6 +515,13 @@ function WindCompass({ deg }: { deg: number | null }) {
 
 export function WaterLevelWidget() {
   const [data, setData] = useState<Conditions | null>(null);
+  const sunToday = useMemo(() => {
+    const sun = malmoSunTimes();
+    return {
+      rise: fmtSunClock(sun.sunrise),
+      set: fmtSunClock(sun.sunset),
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -524,6 +539,15 @@ export function WaterLevelWidget() {
         <h2>Väder & vatten</h2>
         <span className="wx-place">Malmö</span>
       </header>
+
+      <p className="wx-sun-row" aria-label="Solens uppgång och nedgång">
+        <span className="wx-sun-chip">
+          Sol ↑ <strong>{sunToday.rise}</strong>
+        </span>
+        <span className="wx-sun-chip">
+          Sol ↓ <strong>{sunToday.set}</strong>
+        </span>
+      </p>
 
       {!data && <p className="water-muted">Hämtar…</p>}
       {data?.error && <p className="water-muted">{data.error}</p>}
