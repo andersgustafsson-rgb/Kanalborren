@@ -338,7 +338,7 @@ export function QuickCatch() {
         }}
         onContextMenu={(e) => e.preventDefault()}
       >
-        <img src="/species/abborre.svg" alt="" width={22} height={22} />
+        <img src="/images/fish/abborre.png" alt="" width={22} height={22} />
         <span className="qc-fab-label">Logga fisk</span>
       </button>
 

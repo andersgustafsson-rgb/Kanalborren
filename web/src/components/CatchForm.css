@@ -182,11 +182,11 @@
 }
 
 .catch-board .catch-swatch-img {
-  width: 3.4rem;
-  height: 2rem;
+  width: 3.6rem;
+  height: 2.15rem;
   border-radius: 8px;
   object-fit: contain;
-  padding: 0.15rem;
+  padding: 0.1rem;
   background: rgba(4, 14, 22, 0.85);
   border: 2px solid var(--ch-cyan);
   box-shadow: 0 0 12px rgba(62, 240, 255, 0.25);
@@ -663,12 +663,12 @@ body .catch-species-overlay .catch-species-card {
 }
 
 body .catch-species-overlay .catch-species-card img {
-  width: 92%;
-  max-width: 9.5rem;
-  height: auto;
-  aspect-ratio: 320 / 180;
+  width: 94%;
+  max-width: 10rem;
+  height: 4.2rem;
   object-fit: contain;
-  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.35));
+  object-position: center;
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.45));
 }
 
 body .catch-species-overlay .catch-species-name {
@@ -736,8 +736,8 @@ body .catch-species-overlay .catch-species-other {
 }
 
 body .catch-species-overlay .catch-species-other img {
-  width: 2.6rem;
-  height: 1.45rem;
+  width: 2.4rem;
+  height: 2.4rem;
   object-fit: contain;
 }
 

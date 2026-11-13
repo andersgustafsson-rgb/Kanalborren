@@ -593,7 +593,7 @@ export function CatchForm({ onSubmitted }: Props) {
             className="catch-swatch-img"
             src={
               SPECIES.find((s) => s.id === species)?.img ||
-              "/species/annan.svg"
+              "/images/fish/annan.png"
             }
             alt=""
             width={48}

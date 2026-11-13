@@ -7,11 +7,11 @@ export type SpeciesOption = {
 };
 
 export const SPECIES: SpeciesOption[] = [
-  { id: "Abborre", tone: "perch", img: "/species/abborre.svg" },
-  { id: "Gädda", tone: "pike", img: "/species/gadda.svg" },
-  { id: "Torsk", tone: "cod", img: "/species/torsk.svg" },
-  { id: "Skrubba", tone: "flounder", img: "/species/skrubba.svg" },
-  { id: "Annan", tone: "other", img: "/species/annan.svg" },
+  { id: "Abborre", tone: "perch", img: "/images/fish/abborre.png" },
+  { id: "Gädda", tone: "pike", img: "/images/fish/gadda.png" },
+  { id: "Torsk", tone: "cod", img: "/images/fish/torsk.png" },
+  { id: "Skrubba", tone: "flounder", img: "/images/fish/skrubba.png" },
+  { id: "Annan", tone: "other", img: "/images/fish/annan.png" },
 ];
 
 export const SPECIES_IDS = SPECIES.map((s) => s.id);

@@ -1,5 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180" role="img" aria-labelledby="title">
-<title id="title">Annan fiskart</title>
-<defs><linearGradient id="b" x1="0" y1="0" x2=".2" y2="1"><stop stop-color="#D9F0D8"/><stop offset=".32" stop-color="#69B9B5"/><stop offset=".72" stop-color="#176477"/><stop offset="1" stop-color="#082B3A"/></linearGradient></defs>
-<g stroke="#071F2B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M40 92Q75 52 174 58Q242 64 276 91L306 72 296 99 306 126 276 108Q220 140 145 135Q69 125 40 92Z" fill="url(#b)"/><path d="M105 60L125 34 142 62 159 38 176 64Z" fill="#176477"/><path d="M129 130L145 153 162 134M48 84Q29 77 18 91Q30 105 49 98Z" fill="#9BC8C0"/><circle cx="54" cy="83" r="6" fill="#F4D36A"/><circle cx="55" cy="83" r="2.5" fill="#071F2B"/></g>
-</svg>
