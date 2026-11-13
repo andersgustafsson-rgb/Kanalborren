@@ -322,6 +322,80 @@
   color: #b8e014 !important;
 }
 
+.wx-pressure {
+  margin-top: 0.65rem;
+  padding: 0.7rem 0.75rem;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.wx-pressure-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.wx-pressure-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.wx-pressure-cell strong {
+  font-size: 1rem;
+  line-height: 1.2;
+  color: #b8e014;
+}
+
+.wx-pressure-cell small {
+  font-size: 0.68rem;
+  color: #9bb0a4;
+  line-height: 1.3;
+}
+
+.wx-pressure-trend-rising {
+  color: #ffb08a !important;
+}
+
+.wx-pressure-trend-falling {
+  color: #8febf5 !important;
+}
+
+.wx-pressure-trend-stable {
+  color: #b8e014 !important;
+}
+
+.wx-pressure-impact strong {
+  color: #8febf5;
+}
+
+.wx-info {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 0.95rem;
+  height: 0.95rem;
+  margin-left: 0.25rem;
+  border-radius: 50%;
+  border: 1px solid rgba(143, 235, 245, 0.45);
+  color: #8febf5;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: none;
+  vertical-align: middle;
+  cursor: help;
+}
+
+@media (max-width: 419px) {
+  .wx-pressure-grid {
+    grid-template-columns: 1fr;
+    gap: 0.7rem;
+  }
+}
+
 .wx-fishing {
   margin-top: 0.65rem;
   padding: 0.7rem 0.75rem;

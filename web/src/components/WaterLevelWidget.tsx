@@ -41,6 +41,13 @@ type Conditions = {
   precipMm: number | null;
   pressureHpa: number | null;
   pressureTrend: "rising" | "falling" | "stable" | "unknown";
+  /** hPa change over ~last 6 hours (latest − ~6h ago). */
+  pressureDelta6h: number | null;
+  /**
+   * Rough inverted barometer effect on water level from pressure change:
+   * ≈ −1 cm per +1 hPa over the same window.
+   */
+  pressureWaterImpactCm: number | null;
   sky: SkyKind;
   skyLabel: string;
   photo: string;
@@ -233,6 +240,7 @@ function fishingScore(input: {
   precipMm: number | null;
   sky: SkyKind;
   pressureTrend: Conditions["pressureTrend"];
+  waterTrend: WaterTrend;
 }): FishingScore {
   let score = 6;
   const reasons: string[] = [];
@@ -279,12 +287,20 @@ function fishingScore(input: {
     if (!reasons.includes("nederbörd")) reasons.push("regn");
   }
 
-  if (input.pressureTrend === "rising") {
+  // Angler rule of thumb: falling pressure + rising water often wakes fish up.
+  if (input.pressureTrend === "falling") {
     score += 1;
-    reasons.push("stigande lufttryck");
-  } else if (input.pressureTrend === "falling") {
+    reasons.push("sjunkande lufttryck");
+  } else if (input.pressureTrend === "rising") {
     score -= 1;
-    reasons.push("fallande lufttryck");
+    reasons.push("stigande lufttryck");
+  }
+
+  if (input.waterTrend === "rising") {
+    score += 1;
+    reasons.push("stigande vattennivå");
+  } else if (input.waterTrend === "falling") {
+    reasons.push("sjunkande vattennivå");
   }
 
   score = Math.max(1, Math.min(10, Math.round(score)));
@@ -297,10 +313,40 @@ function fishingScore(input: {
 
   const why =
     reasons.length > 0
-      ? reasons.slice(0, 3).join(" · ")
+      ? reasons.slice(0, 4).join(" · ")
       : "baserat på vind, vatten och tryck";
 
   return { score, label, why };
+}
+
+function deltaAroundHours(
+  series: { value: number; time: string | null }[],
+  hours: number,
+): number | null {
+  if (series.length < 2) return null;
+  const last = series[series.length - 1];
+  const lastMs = last.time ? Date.parse(last.time) : NaN;
+  if (!Number.isFinite(lastMs)) {
+    return last.value - series[0].value;
+  }
+  const target = lastMs - hours * 60 * 60 * 1000;
+  let best = series[0];
+  let bestDelta = Math.abs((best.time ? Date.parse(best.time) : 0) - target);
+  for (const row of series) {
+    if (!row.time) continue;
+    const t = Date.parse(row.time);
+    if (!Number.isFinite(t)) continue;
+    const d = Math.abs(t - target);
+    if (d < bestDelta) {
+      best = row;
+      bestDelta = d;
+    }
+  }
+  const minBackMs = Math.max(90, hours * 60 * 0.45) * 60 * 1000;
+  if (!best.time || lastMs - Date.parse(best.time) < minBackMs) {
+    return null;
+  }
+  return last.value - best.value;
 }
 
 async function fetchCanalConditions(): Promise<Conditions> {
@@ -318,6 +364,8 @@ async function fetchCanalConditions(): Promise<Conditions> {
     precipMm: null,
     pressureHpa: null,
     pressureTrend: "unknown",
+    pressureDelta6h: null,
+    pressureWaterImpactCm: null,
     sky: "cloud",
     skyLabel: "–",
     photo: "/weather/mulet.jpg",
@@ -411,13 +459,28 @@ async function fetchCanalConditions(): Promise<Conditions> {
       skyLabel = "Blåsigt";
     }
 
-    const pressures = series
-      .map((row) => finiteOrNull(row.data?.air_pressure_at_mean_sea_level))
-      .filter((n): n is number => n != null);
+    const pressureSeries = (started.length ? started : series)
+      .map((row) => {
+        const value = finiteOrNull(row.data?.air_pressure_at_mean_sea_level);
+        if (value == null) return null;
+        return { value, time: row.time ?? null };
+      })
+      .filter((row): row is { value: number; time: string | null } => row != null)
+      .sort((a, b) => {
+        const ta = a.time ? Date.parse(a.time) : 0;
+        const tb = b.time ? Date.parse(b.time) : 0;
+        return ta - tb;
+      });
+    const pressures = pressureSeries.map((row) => row.value);
     const pressureTrend = trendFromSeries(
       pressures,
       0.4,
     ) as Conditions["pressureTrend"];
+    const pressureDelta6h = deltaAroundHours(pressureSeries, 6);
+    const pressureWaterImpactCm =
+      pressureDelta6h != null && Number.isFinite(pressureDelta6h)
+        ? -pressureDelta6h
+        : null;
 
     const waterTempC = lastWaterTemp?.value ?? null;
     const precipMm = finiteOrNull(d?.precipitation_amount_mean);
@@ -428,6 +491,7 @@ async function fetchCanalConditions(): Promise<Conditions> {
       precipMm,
       sky,
       pressureTrend,
+      waterTrend,
     });
 
     const stamp = current?.time ? new Date(current.time) : new Date();
@@ -445,6 +509,8 @@ async function fetchCanalConditions(): Promise<Conditions> {
       precipMm,
       pressureHpa: finiteOrNull(d?.air_pressure_at_mean_sea_level),
       pressureTrend,
+      pressureDelta6h,
+      pressureWaterImpactCm,
       sky,
       skyLabel,
       photo: weatherPhoto(sky, stamp),
@@ -477,9 +543,30 @@ function waterChangeLabel(deltaCm: number | null, trend: WaterTrend): string {
     if (trend === "stable") return "Stabilt";
     return "–";
   }
-  if (Math.abs(deltaCm) < 0.5) return "±0 cm / 3 h";
-  const sign = deltaCm > 0 ? "+" : "";
-  return `${sign}${deltaCm.toFixed(1)} cm / 3 h`;
+  if (Math.abs(deltaCm) < 0.5) return "Oförändrat / 3 h";
+  if (deltaCm > 0) return `Stigit ${deltaCm.toFixed(1)} cm / 3 h`;
+  return `Sjunkit ${Math.abs(deltaCm).toFixed(1)} cm / 3 h`;
+}
+
+function pressureTrendLabel(trend: Conditions["pressureTrend"]): string {
+  if (trend === "rising") return "Stigande";
+  if (trend === "falling") return "Sjunkande";
+  if (trend === "stable") return "Stabilt";
+  return "–";
+}
+
+function pressureDeltaLabel(delta: number | null): string {
+  if (delta == null || !Number.isFinite(delta)) return "–";
+  if (Math.abs(delta) < 0.2) return "±0 hPa / 6 h";
+  const sign = delta > 0 ? "+" : "";
+  return `${sign}${delta.toFixed(0)} hPa / 6 h`;
+}
+
+function pressureImpactLabel(cm: number | null): string {
+  if (cm == null || !Number.isFinite(cm)) return "–";
+  if (Math.abs(cm) < 0.5) return "≈ 0 cm";
+  const sign = cm > 0 ? "+" : "";
+  return `≈ ${sign}${cm.toFixed(0)} cm`;
 }
 
 function fishingTone(score: number): "low" | "mid" | "good" | "high" {
@@ -612,10 +699,10 @@ export function WaterLevelWidget() {
 
           <div className="wx-level">
             <div className="wx-level-top">
-              <span className="wx-tile-label">Vattenstånd</span>
+              <span className="wx-tile-label">Vattenstånd · {data.waterStation}</span>
               <strong>
                 {data.waterCm != null
-                  ? `${data.waterCm.toFixed(1)} cm`
+                  ? `${data.waterCm > 0 ? "+" : ""}${data.waterCm.toFixed(1)} cm`
                   : "–"}
               </strong>
             </div>
@@ -633,12 +720,47 @@ export function WaterLevelWidget() {
               />
             </div>
             <div className="wx-level-meta">
-              <small>
-                Öresund · {data.waterStation}
-              </small>
+              <small>Öresund · RH2000</small>
               <small className={`wx-trend wx-trend-${data.waterTrend}`}>
                 {waterChangeLabel(data.waterDelta3hCm, data.waterTrend)}
               </small>
+            </div>
+          </div>
+
+          <div className="wx-pressure" aria-label="Lufttryck">
+            <div className="wx-pressure-grid">
+              <div className="wx-pressure-cell">
+                <span className="wx-tile-label">Lufttryck</span>
+                <strong>
+                  {data.pressureHpa != null
+                    ? `${Math.round(data.pressureHpa)} hPa`
+                    : "–"}
+                </strong>
+              </div>
+              <div className="wx-pressure-cell">
+                <span className="wx-tile-label">Trend</span>
+                <strong
+                  className={`wx-pressure-trend wx-pressure-trend-${data.pressureTrend}`}
+                >
+                  {pressureTrendLabel(data.pressureTrend)}
+                </strong>
+                <small>{pressureDeltaLabel(data.pressureDelta6h)}</small>
+              </div>
+              <div className="wx-pressure-cell wx-pressure-impact">
+                <span className="wx-tile-label">
+                  Påverkan på vattennivå
+                  <span
+                    className="wx-info"
+                    title="Tumregel: ≈ 1 cm vattennivå per 1 hPa tryckförändring, inverterat (sjunkande tryck → stigande vatten)."
+                  >
+                    i
+                  </span>
+                </span>
+                <strong>
+                  {pressureImpactLabel(data.pressureWaterImpactCm)}
+                </strong>
+                <small>i förhållande till tidigare tryck</small>
+              </div>
             </div>
           </div>
 
