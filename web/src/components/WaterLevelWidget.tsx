@@ -540,15 +540,6 @@ export function WaterLevelWidget() {
         <span className="wx-place">Malmö</span>
       </header>
 
-      <p className="wx-sun-row" aria-label="Solens uppgång och nedgång">
-        <span className="wx-sun-chip">
-          Sol ↑ <strong>{sunToday.rise}</strong>
-        </span>
-        <span className="wx-sun-chip">
-          Sol ↓ <strong>{sunToday.set}</strong>
-        </span>
-      </p>
-
       {!data && <p className="water-muted">Hämtar…</p>}
       {data?.error && <p className="water-muted">{data.error}</p>}
 
@@ -562,6 +553,14 @@ export function WaterLevelWidget() {
               loading="lazy"
             />
             <div className="wx-hero-fade" aria-hidden />
+            <p className="wx-sun-row" aria-label="Solens uppgång och nedgång">
+              <span className="wx-sun-chip">
+                Sol ↑ <strong>{sunToday.rise}</strong>
+              </span>
+              <span className="wx-sun-chip">
+                Sol ↓ <strong>{sunToday.set}</strong>
+              </span>
+            </p>
             <div className="wx-hero-copy">
               <p className="wx-temp">
                 {data.tempC != null ? `${data.tempC.toFixed(1)}°` : "–"}
