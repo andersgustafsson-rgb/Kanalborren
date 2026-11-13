@@ -150,18 +150,6 @@ function smhiSeries(json: {
     .filter((row): row is { value: number; time: string | null } => row != null);
 }
 
-function trendFromSeries(
-  values: number[],
-  threshold = 1,
-): WaterTrend | "rising" | "falling" | "stable" | "unknown" {
-  if (values.length < 2) return "unknown";
-  const first = values[0];
-  const last = values[values.length - 1];
-  const delta = last - first;
-  if (Math.abs(delta) < threshold) return "stable";
-  return delta > 0 ? "rising" : "falling";
-}
-
 function weatherPhoto(sky: SkyKind, at = new Date()): string {
   const precip =
     sky === "drizzle" ||
@@ -319,34 +307,45 @@ function fishingScore(input: {
   return { score, label, why };
 }
 
-function deltaAroundHours(
+function nearestSeriesPoint(
   series: { value: number; time: string | null }[],
-  hours: number,
-): number | null {
-  if (series.length < 2) return null;
-  const last = series[series.length - 1];
-  const lastMs = last.time ? Date.parse(last.time) : NaN;
-  if (!Number.isFinite(lastMs)) {
-    return last.value - series[0].value;
-  }
-  const target = lastMs - hours * 60 * 60 * 1000;
-  let best = series[0];
-  let bestDelta = Math.abs((best.time ? Date.parse(best.time) : 0) - target);
+  targetMs: number,
+): { value: number; time: string | null } | null {
+  let best: { value: number; time: string | null } | null = null;
+  let bestDelta = Infinity;
   for (const row of series) {
     if (!row.time) continue;
     const t = Date.parse(row.time);
     if (!Number.isFinite(t)) continue;
-    const d = Math.abs(t - target);
+    const d = Math.abs(t - targetMs);
     if (d < bestDelta) {
       best = row;
       bestDelta = d;
     }
   }
-  const minBackMs = Math.max(90, hours * 60 * 0.45) * 60 * 1000;
-  if (!best.time || lastMs - Date.parse(best.time) < minBackMs) {
-    return null;
-  }
-  return last.value - best.value;
+  return best;
+}
+
+/**
+ * SMHI snow1g only returns forecast hours (little/no history).
+ * Trend = change from "now" hour → ~hours ahead in the forecast.
+ */
+function forecastDeltaHours(
+  series: { value: number; time: string | null }[],
+  fromMs: number,
+  hours: number,
+): number | null {
+  if (series.length < 2) return null;
+  const from = nearestSeriesPoint(series, fromMs);
+  const ahead = nearestSeriesPoint(series, fromMs + hours * 60 * 60 * 1000);
+  if (!from || !ahead || !from.time || !ahead.time) return null;
+  const fromT = Date.parse(from.time);
+  const aheadT = Date.parse(ahead.time);
+  if (!Number.isFinite(fromT) || !Number.isFinite(aheadT)) return null;
+  // Need a real forward window (at least ~2h).
+  if (aheadT - fromT < 2 * 60 * 60 * 1000) return null;
+  if (from.value === ahead.value) return 0;
+  return ahead.value - from.value;
 }
 
 async function fetchCanalConditions(): Promise<Conditions> {
@@ -380,8 +379,10 @@ async function fetchCanalConditions(): Promise<Conditions> {
     const waterTempUrl =
       "https://opendata-download-ocobs.smhi.se/api/version/1.0/parameter/5/station/35152/period/latest-day/data.json";
     // Same SMHI forecast product as smhi.se (SNOW1g — replaced old pmp3g).
+    // timeseries=24 so pressure trend has a real ~6h forecast window
+    // (snow1g returns upcoming hours only — almost no history).
     const meteoUrl =
-      "https://opendata-download-metfcst.smhi.se/api/category/snow1g/version/1/geotype/point/lon/12.995000/lat/55.605000/data.json?timeseries=4&parameters=air_temperature,wind_speed,wind_from_direction,wind_speed_of_gust,precipitation_amount_mean,air_pressure_at_mean_sea_level,symbol_code";
+      "https://opendata-download-metfcst.smhi.se/api/category/snow1g/version/1/geotype/point/lon/12.995000/lat/55.605000/data.json?timeseries=24&parameters=air_temperature,wind_speed,wind_from_direction,wind_speed_of_gust,precipitation_amount_mean,air_pressure_at_mean_sea_level,symbol_code";
 
     const [levelRes, waterTempRes, meteoRes] = await Promise.all([
       fetch(levelUrl),
@@ -459,7 +460,7 @@ async function fetchCanalConditions(): Promise<Conditions> {
       skyLabel = "Blåsigt";
     }
 
-    const pressureSeries = (started.length ? started : series)
+    const pressureSeries = series
       .map((row) => {
         const value = finiteOrNull(row.data?.air_pressure_at_mean_sea_level);
         if (value == null) return null;
@@ -471,9 +472,8 @@ async function fetchCanalConditions(): Promise<Conditions> {
         const tb = b.time ? Date.parse(b.time) : 0;
         return ta - tb;
       });
-    const pressures = pressureSeries.map((row) => row.value);
-    const pressureDelta6h = deltaAroundHours(pressureSeries, 6);
-    // Prefer the same 6h window as the UI label; fall back to whole series.
+    const fromMs = current?.time ? Date.parse(current.time) : Date.now();
+    const pressureDelta6h = forecastDeltaHours(pressureSeries, fromMs, 6);
     const pressureTrend = (
       pressureDelta6h != null
         ? Math.abs(pressureDelta6h) < 0.4
@@ -481,7 +481,7 @@ async function fetchCanalConditions(): Promise<Conditions> {
           : pressureDelta6h > 0
             ? "rising"
             : "falling"
-        : trendFromSeries(pressures, 0.4)
+        : "unknown"
     ) as Conditions["pressureTrend"];
     const pressureWaterImpactCm =
       pressureDelta6h != null && Number.isFinite(pressureDelta6h)
@@ -563,9 +563,9 @@ function pressureTrendLabel(trend: Conditions["pressureTrend"]): string {
 
 function pressureDeltaLabel(delta: number | null): string {
   if (delta == null || !Number.isFinite(delta)) return "–";
-  if (Math.abs(delta) < 0.2) return "±0 hPa / 6 h";
+  if (Math.abs(delta) < 0.2) return "±0 hPa / 6 h (prognos)";
   const sign = delta > 0 ? "+" : "";
-  return `${sign}${delta.toFixed(0)} hPa / 6 h`;
+  return `${sign}${delta.toFixed(0)} hPa / 6 h (prognos)`;
 }
 
 function pressureImpactLabel(cm: number | null): string {
