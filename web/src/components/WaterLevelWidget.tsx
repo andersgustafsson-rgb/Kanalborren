@@ -795,7 +795,7 @@ export function WaterLevelWidget() {
               <div className="wx-pressure-cell wx-pressure-impact">
                 <span className="wx-tile-label">
                   <WxIcon src={WX_ICONS.waterImpact} />
-                  Påverkan på vattennivå
+                  Påverkan
                   <span
                     className="wx-info"
                     title="Tumregel: ≈ 1 cm vattennivå per 1 hPa tryckförändring, inverterat (sjunkande tryck → stigande vatten)."
@@ -806,7 +806,7 @@ export function WaterLevelWidget() {
                 <strong>
                   {pressureImpactLabel(data.pressureWaterImpactCm)}
                 </strong>
-                <small>i förhållande till tidigare tryck</small>
+                <small>på vattennivå</small>
               </div>
             </div>
           </div>

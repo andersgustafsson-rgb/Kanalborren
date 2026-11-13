@@ -332,35 +332,47 @@
 
 .wx-pressure {
   margin-top: 0.65rem;
-  padding: 0.7rem 0.75rem;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  border-radius: 0;
 }
 
 .wx-pressure-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.55rem;
+  gap: 0.4rem;
 }
 
 .wx-pressure-cell {
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
+  gap: 0.12rem;
   min-width: 0;
+  padding: 0.5rem 0.4rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.wx-pressure-cell .wx-tile-label {
+  flex-wrap: wrap;
+  gap: 0.2rem;
+  line-height: 1.15;
 }
 
 .wx-pressure-cell strong {
-  font-size: 1rem;
-  line-height: 1.2;
+  font-size: 0.92rem;
+  line-height: 1.15;
   color: #b8e014;
+  overflow-wrap: anywhere;
 }
 
 .wx-pressure-cell small {
-  font-size: 0.68rem;
+  font-size: 0.65rem;
   color: #9bb0a4;
-  line-height: 1.3;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
 }
 
 .wx-pressure-trend-rising {
@@ -375,6 +387,11 @@
   color: #b8e014 !important;
 }
 
+.wx-pressure-impact {
+  border-color: rgba(94, 220, 232, 0.28);
+  background: rgba(94, 220, 232, 0.06);
+}
+
 .wx-pressure-impact strong {
   color: #8febf5;
 }
@@ -383,13 +400,13 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 0.95rem;
-  height: 0.95rem;
-  margin-left: 0.25rem;
+  width: 0.9rem;
+  height: 0.9rem;
+  margin-left: 0.15rem;
   border-radius: 50%;
   border: 1px solid rgba(143, 235, 245, 0.45);
   color: #8febf5;
-  font-size: 0.58rem;
+  font-size: 0.55rem;
   font-weight: 800;
   letter-spacing: 0;
   text-transform: none;
@@ -397,10 +414,22 @@
   cursor: help;
 }
 
-@media (max-width: 419px) {
+@media (min-width: 420px) {
   .wx-pressure-grid {
-    grid-template-columns: 1fr;
-    gap: 0.7rem;
+    gap: 0.5rem;
+  }
+
+  .wx-pressure-cell {
+    padding: 0.65rem 0.7rem;
+    border-radius: 14px;
+  }
+
+  .wx-pressure-cell strong {
+    font-size: 1.05rem;
+  }
+
+  .wx-pressure-cell small {
+    font-size: 0.72rem;
   }
 }
 
