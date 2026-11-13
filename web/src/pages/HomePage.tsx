@@ -31,53 +31,21 @@ import "./HomePage.css";
 
 type HomeTab = "hem" | "fangst" | "utmana" | "tips" | "profil";
 
-type IconProps = { className?: string };
-
-function IconTarget({ className }: IconProps) {
+function CtaIcon({ src, className }: { src: string; className?: string }) {
   return (
-    <svg className={className} viewBox="0 0 24 24" aria-hidden>
-      <circle
-        cx="12"
-        cy="12"
-        r="8"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.7"
-      />
-      <circle
-        cx="12"
-        cy="12"
-        r="4"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.7"
-      />
-      <circle cx="12" cy="12" r="1.1" fill="currentColor" />
-    </svg>
+    <span
+      className={className ?? "home-cta-icon-mask"}
+      style={{
+        WebkitMaskImage: `url(${src})`,
+        maskImage: `url(${src})`,
+      }}
+      aria-hidden
+    />
   );
 }
 
-function IconPin({ className }: IconProps) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" aria-hidden>
-      <path
-        d="M12 21s6-5.2 6-10.2A6 6 0 0 0 6 10.8C6 15.8 12 21 12 21Z"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.7"
-        strokeLinejoin="round"
-      />
-      <circle
-        cx="12"
-        cy="10.5"
-        r="2.2"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.7"
-      />
-    </svg>
-  );
-}
+const CTA_ICON_TARGET = "/icons/cta/target.svg";
+const CTA_ICON_MAP = "/icons/cta/pin-ring.svg";
 
 const TABS: {
   id: HomeTab;
@@ -236,9 +204,7 @@ export function HomePage() {
           {trip ? (
             <div className="home-cta-row">
               <Link className="home-cta home-cta-map" to="/karta">
-                <span className="home-cta-icon-ring" aria-hidden>
-                  <IconPin className="home-cta-icon" />
-                </span>
+                <CtaIcon src={CTA_ICON_MAP} />
                 <span className="home-cta-label">Till kanalen</span>
               </Link>
               <p className="home-pass-status" role="status">
@@ -254,15 +220,13 @@ export function HomePage() {
                 disabled={tripBusy}
                 onClick={() => void onStartPass()}
               >
-                <IconTarget className="home-cta-icon" />
+                <CtaIcon src={CTA_ICON_TARGET} />
                 <span className="home-cta-label">
                   {tripBusy ? "Startar…" : "Starta fiskepass"}
                 </span>
               </button>
               <Link className="home-cta home-cta-map" to="/karta">
-                <span className="home-cta-icon-ring" aria-hidden>
-                  <IconPin className="home-cta-icon" />
-                </span>
+                <CtaIcon src={CTA_ICON_MAP} />
                 <span className="home-cta-label">Till kanalen</span>
               </Link>
             </div>

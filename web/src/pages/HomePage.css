@@ -81,13 +81,14 @@
   gap: 0.55rem;
   align-items: stretch;
   justify-content: center;
-  width: min(22.5rem, 94vw);
+  width: 100%;
+  align-self: stretch;
 }
 
 .home-cta-pair {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.55rem;
+  gap: 0.2rem;
 }
 
 .home-cta {
@@ -114,27 +115,21 @@
   line-height: 1.15;
 }
 
-.home-cta-icon {
+.home-cta-icon-mask {
   width: 1.3125rem;
   height: 1.3125rem;
   display: block;
   flex: 0 0 auto;
-}
-
-.home-cta-icon-ring {
-  width: 1.3125rem;
-  height: 1.3125rem;
-  flex: 0 0 auto;
-  display: grid;
-  place-items: center;
-  border: 1.5px solid currentColor;
-  border-radius: 50%;
-  opacity: 0.95;
-}
-
-.home-cta-icon-ring .home-cta-icon {
-  width: 0.85rem;
-  height: 0.85rem;
+  background: currentColor;
+  color: inherit;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-mode: alpha;
+  mask-mode: alpha;
 }
 
 .home-cta-start {
@@ -178,6 +173,7 @@
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 0.2rem;
+  width: 100%;
   padding: 0.28rem;
   border-radius: 18px;
   background: rgba(6, 12, 20, 0.82);
