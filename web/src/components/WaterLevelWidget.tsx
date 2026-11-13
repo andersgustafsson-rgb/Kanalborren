@@ -590,6 +590,8 @@ const WX_ICONS = {
   airPressure: "/icons/weather/air-pressure.svg",
   trend: "/icons/weather/trend.svg",
   waterImpact: "/icons/weather/water-level-impact.svg",
+  sunrise: "/icons/weather/sunrise.svg",
+  sunset: "/icons/weather/sunset.svg",
 } as const;
 
 function WxIcon({
@@ -743,10 +745,12 @@ export function WaterLevelWidget() {
             <div className="wx-hero-fade" aria-hidden />
             <p className="wx-sun-row" aria-label="Solens uppgång och nedgång">
               <span className="wx-sun-chip">
-                Sol ↑ <strong>{sunToday.rise}</strong>
+                <WxIcon src={WX_ICONS.sunrise} className="wx-sun-icon" />
+                <strong>{sunToday.rise}</strong>
               </span>
               <span className="wx-sun-chip">
-                Sol ↓ <strong>{sunToday.set}</strong>
+                <WxIcon src={WX_ICONS.sunset} className="wx-sun-icon" />
+                <strong>{sunToday.set}</strong>
               </span>
             </p>
             <div className="wx-hero-copy">
