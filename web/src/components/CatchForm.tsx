@@ -114,15 +114,34 @@ function IconRefresh() {
 
 function IconHook() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden>
-      <path
-        d="M12 3v10a4 4 0 1 0 4 4"
-        fill="none"
+    <svg viewBox="0 0 24 24" aria-hidden fill="none">
+      {/* Classic J-hook: eye, shank, bend, point + barb */}
+      <circle
+        cx="12"
+        cy="3.4"
+        r="1.55"
         stroke="currentColor"
-        strokeWidth="2.2"
+        strokeWidth="1.8"
+      />
+      <path
+        d="M12 5v9.2c0 3.6-2.9 5.6-5.4 4.4-.7-.35-1.2-.95-1.35-1.7"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M5.3 16.8V12.2"
+        stroke="currentColor"
+        strokeWidth="2"
         strokeLinecap="round"
       />
-      <circle cx="12" cy="3.8" r="1.6" fill="currentColor" />
+      <path
+        d="M5.3 14.2 7.4 13"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
@@ -869,16 +888,7 @@ export function CatchForm({ onSubmitted }: Props) {
               <header className="catch-species-head">
                 <h3 id="catch-species-title">
                   <span className="catch-species-hook" aria-hidden>
-                    <svg viewBox="0 0 24 24">
-                      <path
-                        d="M12 3v10.2a3.4 3.4 0 1 0 3.4-3.4"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                      />
-                      <circle cx="12" cy="3.6" r="1.5" fill="currentColor" />
-                    </svg>
+                    <IconHook />
                   </span>
                   VÄLJ <span>ART</span>
                 </h3>
