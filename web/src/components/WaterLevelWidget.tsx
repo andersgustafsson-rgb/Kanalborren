@@ -472,11 +472,17 @@ async function fetchCanalConditions(): Promise<Conditions> {
         return ta - tb;
       });
     const pressures = pressureSeries.map((row) => row.value);
-    const pressureTrend = trendFromSeries(
-      pressures,
-      0.4,
-    ) as Conditions["pressureTrend"];
     const pressureDelta6h = deltaAroundHours(pressureSeries, 6);
+    // Prefer the same 6h window as the UI label; fall back to whole series.
+    const pressureTrend = (
+      pressureDelta6h != null
+        ? Math.abs(pressureDelta6h) < 0.4
+          ? "stable"
+          : pressureDelta6h > 0
+            ? "rising"
+            : "falling"
+        : trendFromSeries(pressures, 0.4)
+    ) as Conditions["pressureTrend"];
     const pressureWaterImpactCm =
       pressureDelta6h != null && Number.isFinite(pressureDelta6h)
         ? -pressureDelta6h
@@ -604,6 +610,71 @@ function WxIcon({
       decoding="async"
     />
   );
+}
+
+function TrendGlyph({
+  trend,
+}: {
+  trend: Conditions["pressureTrend"];
+}) {
+  if (trend === "rising") {
+    return (
+      <svg className="wx-trend-glyph rising" viewBox="0 0 24 24" aria-hidden>
+        <path
+          d="M5 16 11 9l3.2 3.5L19 7"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M14.5 7H19v4.5"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
+  }
+  if (trend === "falling") {
+    return (
+      <svg className="wx-trend-glyph falling" viewBox="0 0 24 24" aria-hidden>
+        <path
+          d="M5 8 11 15l3.2-3.5L19 17"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M14.5 17H19v-4.5"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
+  }
+  if (trend === "stable") {
+    return (
+      <svg className="wx-trend-glyph stable" viewBox="0 0 24 24" aria-hidden>
+        <path
+          d="M5 12h14"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.2"
+          strokeLinecap="round"
+        />
+      </svg>
+    );
+  }
+  return <WxIcon src={WX_ICONS.trend} />;
 }
 
 function WindCompass({ deg }: { deg: number | null }) {
@@ -782,7 +853,7 @@ export function WaterLevelWidget() {
               </div>
               <div className="wx-pressure-cell">
                 <span className="wx-tile-label">
-                  <WxIcon src={WX_ICONS.trend} />
+                  <TrendGlyph trend={data.pressureTrend} />
                   Trend
                 </span>
                 <strong

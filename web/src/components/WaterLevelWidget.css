@@ -375,16 +375,35 @@
   overflow-wrap: anywhere;
 }
 
+.wx-trend-glyph {
+  width: 1.05rem;
+  height: 1.05rem;
+  display: block;
+  flex: 0 0 auto;
+}
+
+.wx-trend-glyph.rising {
+  color: #dff56a;
+}
+
+.wx-trend-glyph.falling {
+  color: #ff8c5a;
+}
+
+.wx-trend-glyph.stable {
+  color: #8febf5;
+}
+
 .wx-pressure-trend-rising {
-  color: #ffb08a !important;
+  color: #dff56a !important;
 }
 
 .wx-pressure-trend-falling {
-  color: #8febf5 !important;
+  color: #ff8c5a !important;
 }
 
 .wx-pressure-trend-stable {
-  color: #b8e014 !important;
+  color: #8febf5 !important;
 }
 
 .wx-pressure-impact {
