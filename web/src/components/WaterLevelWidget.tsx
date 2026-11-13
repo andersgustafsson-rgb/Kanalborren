@@ -576,6 +576,36 @@ function fishingTone(score: number): "low" | "mid" | "good" | "high" {
   return "high";
 }
 
+const WX_ICONS = {
+  wind: "/icons/weather/wind.svg",
+  precip: "/icons/weather/precipitation.svg",
+  waterTemp: "/icons/weather/water-temperature.svg",
+  waterLevel: "/icons/weather/water-level.svg",
+  airPressure: "/icons/weather/air-pressure.svg",
+  trend: "/icons/weather/trend.svg",
+  waterImpact: "/icons/weather/water-level-impact.svg",
+} as const;
+
+function WxIcon({
+  src,
+  className,
+}: {
+  src: string;
+  className?: string;
+}) {
+  return (
+    <img
+      className={className ?? "wx-icon"}
+      src={src}
+      alt=""
+      aria-hidden
+      width={18}
+      height={18}
+      decoding="async"
+    />
+  );
+}
+
 function WindCompass({ deg }: { deg: number | null }) {
   // Meteorological wind_from_direction: arrow points where the wind comes from.
   const rotation = deg != null && Number.isFinite(deg) ? deg : 0;
@@ -664,8 +694,9 @@ export function WaterLevelWidget() {
           <ul className="wx-tiles">
             <li className="wx-tile">
               <span className="wx-tile-label">
-                <WindCompass deg={data.windDir} />
+                <WxIcon src={WX_ICONS.wind} />
                 Vind
+                <WindCompass deg={data.windDir} />
               </span>
               <strong>
                 {data.windMs != null ? `${data.windMs.toFixed(1)} m/s` : "–"}
@@ -678,7 +709,10 @@ export function WaterLevelWidget() {
               </small>
             </li>
             <li className="wx-tile">
-              <span className="wx-tile-label">Nederbörd</span>
+              <span className="wx-tile-label">
+                <WxIcon src={WX_ICONS.precip} />
+                Nederbörd
+              </span>
               <strong>
                 {data.precipMm != null
                   ? `${data.precipMm.toFixed(1)} mm`
@@ -687,7 +721,10 @@ export function WaterLevelWidget() {
               <small>Just nu</small>
             </li>
             <li className="wx-tile wx-tile-water">
-              <span className="wx-tile-label">Vattentemp</span>
+              <span className="wx-tile-label">
+                <WxIcon src={WX_ICONS.waterTemp} />
+                Vattentemp
+              </span>
               <strong>
                 {data.waterTempC != null
                   ? `${data.waterTempC.toFixed(1)} °C`
@@ -699,7 +736,10 @@ export function WaterLevelWidget() {
 
           <div className="wx-level">
             <div className="wx-level-top">
-              <span className="wx-tile-label">Vattenstånd · {data.waterStation}</span>
+              <span className="wx-tile-label">
+                <WxIcon src={WX_ICONS.waterLevel} />
+                Vattenstånd · {data.waterStation}
+              </span>
               <strong>
                 {data.waterCm != null
                   ? `${data.waterCm > 0 ? "+" : ""}${data.waterCm.toFixed(1)} cm`
@@ -730,7 +770,10 @@ export function WaterLevelWidget() {
           <div className="wx-pressure" aria-label="Lufttryck">
             <div className="wx-pressure-grid">
               <div className="wx-pressure-cell">
-                <span className="wx-tile-label">Lufttryck</span>
+                <span className="wx-tile-label">
+                  <WxIcon src={WX_ICONS.airPressure} />
+                  Lufttryck
+                </span>
                 <strong>
                   {data.pressureHpa != null
                     ? `${Math.round(data.pressureHpa)} hPa`
@@ -738,7 +781,10 @@ export function WaterLevelWidget() {
                 </strong>
               </div>
               <div className="wx-pressure-cell">
-                <span className="wx-tile-label">Trend</span>
+                <span className="wx-tile-label">
+                  <WxIcon src={WX_ICONS.trend} />
+                  Trend
+                </span>
                 <strong
                   className={`wx-pressure-trend wx-pressure-trend-${data.pressureTrend}`}
                 >
@@ -748,6 +794,7 @@ export function WaterLevelWidget() {
               </div>
               <div className="wx-pressure-cell wx-pressure-impact">
                 <span className="wx-tile-label">
+                  <WxIcon src={WX_ICONS.waterImpact} />
                   Påverkan på vattennivå
                   <span
                     className="wx-info"

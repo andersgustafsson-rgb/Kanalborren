@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+<title id="title">Trend</title>
+<g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="4">
+<path d="M7 36 22 21l10 9 22-21" stroke="#A3E635"/>
+<path d="M43 9h11v11" stroke="#A3E635"/>
+<path d="m8 48 12-7 9 6 12-9 14 9" stroke="#F87171"/>
+</g></svg>

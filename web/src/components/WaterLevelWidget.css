@@ -179,6 +179,14 @@
   color: #9bb0a4;
 }
 
+.wx-icon {
+  width: 1.05rem;
+  height: 1.05rem;
+  display: block;
+  flex: 0 0 auto;
+  object-fit: contain;
+}
+
 .wx-tile strong {
   font-size: 0.95rem;
   color: #b8e014;

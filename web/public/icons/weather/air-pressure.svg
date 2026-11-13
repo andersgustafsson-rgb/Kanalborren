@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+<title id="title">Lufttryck</title>
+<g fill="none" stroke="#22D3EE" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+<path d="M8 47a24 24 0 1 1 48 0"/>
+<path d="M14 39l4 1M22 22l3 4M32 16v5M42 22l-3 4M50 39l-4 1"/>
+<path d="M32 43l12-14"/>
+</g><circle cx="32" cy="43" r="4" fill="#22D3EE"/><text x="32" y="59" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="700" fill="#E5F7FA">hPa</text></svg>

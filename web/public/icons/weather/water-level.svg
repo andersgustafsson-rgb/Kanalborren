@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+<title id="title">Vattenstånd</title>
+<g fill="none" stroke="#22D3EE" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+<path d="M7 20c5-5 10-5 15 0s10 5 15 0 10-5 15 0 7 5 9 3"/>
+<path d="M7 32c5-5 10-5 15 0s10 5 15 0 10-5 15 0 7 5 9 3"/>
+<path d="M7 44c5-5 10-5 15 0s10 5 15 0 10-5 15 0 7 5 9 3"/>
+<path d="M54 8v48m0-48h5m-5 12h4m-4 12h5m-5 12h4m-4 12h5"/>
+</g></svg>
