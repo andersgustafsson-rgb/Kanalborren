@@ -55,6 +55,30 @@ function IconFish({ className }: IconProps) {
   );
 }
 
+function IconTarget({ className }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" aria-hidden>
+      <circle
+        cx="12"
+        cy="12"
+        r="8"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.7"
+      />
+      <circle
+        cx="12"
+        cy="12"
+        r="4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.7"
+      />
+      <circle cx="12" cy="12" r="1.1" fill="currentColor" />
+    </svg>
+  );
+}
+
 function IconPin({ className }: IconProps) {
   return (
     <svg className={className} viewBox="0 0 24 24" aria-hidden>
@@ -234,8 +258,10 @@ export function HomePage() {
           {trip ? (
             <div className="home-cta-row">
               <Link className="home-cta home-cta-map" to="/karta">
-                <IconPin className="home-cta-icon" />
-                Till kanalen
+                <span className="home-cta-icon-ring" aria-hidden>
+                  <IconPin className="home-cta-icon" />
+                </span>
+                <span className="home-cta-label">Till kanalen</span>
               </Link>
               <p className="home-pass-status" role="status">
                 Pass igång · {formatTripRemaining(trip.expiresAt, nowTick)} kvar ·
@@ -250,12 +276,16 @@ export function HomePage() {
                 disabled={tripBusy}
                 onClick={() => void onStartPass()}
               >
-                <IconFish className="home-cta-icon" />
-                {tripBusy ? "Startar…" : "Starta fiskepass"}
+                <IconTarget className="home-cta-icon" />
+                <span className="home-cta-label">
+                  {tripBusy ? "Startar…" : "Starta fiskepass"}
+                </span>
               </button>
               <Link className="home-cta home-cta-map" to="/karta">
-                <IconPin className="home-cta-icon" />
-                Till kanalen
+                <span className="home-cta-icon-ring" aria-hidden>
+                  <IconPin className="home-cta-icon" />
+                </span>
+                <span className="home-cta-label">Till kanalen</span>
               </Link>
             </div>
           )}
