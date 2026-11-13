@@ -33,28 +33,6 @@ type HomeTab = "hem" | "fangst" | "utmana" | "tips" | "profil";
 
 type IconProps = { className?: string };
 
-function IconFish({ className }: IconProps) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" aria-hidden>
-      <path
-        d="M3.5 12c2.8-3.2 6.2-4.8 10.2-4.8 2.4 0 4.5.7 6.3 2.1L22 12l-2 2.7c-1.8 1.4-3.9 2.1-6.3 2.1-4 0-7.4-1.6-10.2-4.8Z"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.7"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M3.5 12 7 9.6v4.8L3.5 12Z"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.7"
-        strokeLinejoin="round"
-      />
-      <circle cx="15.2" cy="11.2" r="0.9" fill="currentColor" />
-    </svg>
-  );
-}
-
 function IconTarget({ className }: IconProps) {
   return (
     <svg className={className} viewBox="0 0 24 24" aria-hidden>
