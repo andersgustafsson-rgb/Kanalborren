@@ -648,8 +648,8 @@ body .catch-species-overlay .catch-species-card {
   align-items: center;
   justify-content: flex-end;
   gap: 0.35rem;
-  min-height: 7.4rem;
-  padding: 0.55rem 0.45rem 0.55rem;
+  min-height: 7.6rem;
+  padding: 0.7rem 0.45rem 0.55rem;
   border-radius: 12px;
   border: 2px solid rgba(62, 240, 255, 0.42);
   background:
@@ -659,13 +659,13 @@ body .catch-species-overlay .catch-species-card {
   font: inherit;
   cursor: pointer;
   box-shadow: 0 0 12px rgba(62, 240, 255, 0.08);
-  overflow: hidden;
+  overflow: visible;
 }
 
 body .catch-species-overlay .catch-species-card img {
   width: 94%;
   max-width: 10rem;
-  height: 4.2rem;
+  height: 4.55rem;
   object-fit: contain;
   object-position: center;
   filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.45));
