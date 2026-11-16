@@ -470,59 +470,97 @@
 
 .wx-fishing {
   margin-top: 0.65rem;
-  padding: 0.6rem 0.7rem;
-  border-radius: 14px;
-  border: 1px solid rgba(184, 224, 20, 0.28);
-  background: rgba(184, 224, 20, 0.08);
+  padding: 0.7rem 0.75rem 0.65rem;
+  border-radius: 16px;
+  border: 1px solid rgba(94, 220, 232, 0.38);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(12, 28, 36, 0.92) 0%,
+      rgba(8, 22, 30, 0.88) 55%,
+      rgba(10, 34, 42, 0.78) 100%
+    );
+  box-shadow: inset 0 0 0 1px rgba(94, 220, 232, 0.06);
 }
 
 .wx-fishing-low {
-  border-color: rgba(255, 140, 100, 0.35);
-  background: rgba(255, 120, 80, 0.08);
+  border-color: rgba(255, 140, 100, 0.4);
 }
 
 .wx-fishing-mid {
-  border-color: rgba(232, 200, 90, 0.35);
-  background: rgba(232, 200, 90, 0.08);
+  border-color: rgba(232, 200, 90, 0.4);
 }
 
 .wx-fishing-good {
-  border-color: rgba(184, 224, 20, 0.35);
-  background: rgba(184, 224, 20, 0.1);
+  border-color: rgba(184, 224, 20, 0.38);
 }
 
 .wx-fishing-high {
-  border-color: rgba(94, 220, 232, 0.4);
-  background: rgba(94, 220, 232, 0.1);
+  border-color: rgba(94, 220, 232, 0.48);
 }
 
 .wx-fishing-top {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
 }
 
-.wx-fishing-num {
-  font-size: 1.2rem;
-  color: #dff56a;
+.wx-fishing-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8febf5;
 }
 
+.wx-hugg-fish {
+  width: 1.05rem;
+  height: 1.05rem;
+  flex: 0 0 auto;
+  color: #5edce8;
+}
+
+.wx-fishing-num {
+  font-size: 1.35rem;
+  font-weight: 800;
+  font-style: italic;
+  letter-spacing: -0.02em;
+  color: #8febf5;
+  font-variant-numeric: tabular-nums;
+}
+
+.wx-fishing-num span {
+  font-size: 0.78em;
+  font-weight: 700;
+  font-style: italic;
+  opacity: 0.85;
+}
+
+.wx-fishing-low .wx-fishing-label,
+.wx-fishing-low .wx-hugg-fish,
 .wx-fishing-low .wx-fishing-num {
   color: #ffb08a;
 }
 
+.wx-fishing-mid .wx-fishing-label,
+.wx-fishing-mid .wx-hugg-fish,
 .wx-fishing-mid .wx-fishing-num {
   color: #f0d56a;
 }
 
-.wx-fishing-high .wx-fishing-num {
-  color: #8febf5;
+.wx-fishing-good .wx-fishing-label,
+.wx-fishing-good .wx-hugg-fish,
+.wx-fishing-good .wx-fishing-num {
+  color: #dff56a;
 }
 
 .wx-fishing-track {
-  margin-top: 0.5rem;
-  height: 0.5rem;
+  margin-top: 0.55rem;
+  height: 0.55rem;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.08);
   overflow: hidden;
@@ -532,32 +570,46 @@
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: #b8e014;
+  background: linear-gradient(90deg, #2bb8c7, #5edce8 55%, #8febf5);
+  box-shadow: 0 0 10px rgba(94, 220, 232, 0.35);
   transition: width 0.35s ease;
 }
 
 .wx-fishing-low .wx-fishing-fill {
-  background: #ff8c5a;
+  background: linear-gradient(90deg, #e06a3a, #ff8c5a);
+  box-shadow: 0 0 10px rgba(255, 140, 100, 0.28);
 }
 
 .wx-fishing-mid .wx-fishing-fill {
-  background: #e8c85a;
+  background: linear-gradient(90deg, #c9a63a, #e8c85a);
+  box-shadow: 0 0 10px rgba(232, 200, 90, 0.28);
 }
 
-.wx-fishing-high .wx-fishing-fill {
-  background: #5edce8;
+.wx-fishing-good .wx-fishing-fill {
+  background: linear-gradient(90deg, #9ab80f, #b8e014 60%, #dff56a);
+  box-shadow: 0 0 10px rgba(184, 224, 20, 0.28);
 }
 
 .wx-hugg-compact {
-  margin-top: 0.4rem;
+  margin-top: 0.55rem;
   display: grid;
-  gap: 0.35rem;
+  gap: 0.45rem;
 }
 
 .wx-hugg-now-row {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.65rem;
+  padding: 0.45rem 0.5rem;
+  border-radius: 12px;
+  background:
+    linear-gradient(
+      100deg,
+      rgba(8, 20, 28, 0.55) 0%,
+      rgba(8, 20, 28, 0.28) 58%,
+      rgba(94, 220, 232, 0.06) 100%
+    );
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .wx-hugg-now-copy {
@@ -569,27 +621,48 @@
   margin: 0;
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.35rem 0.55rem;
+  align-items: center;
+  gap: 0.35rem 0.5rem;
 }
 
-.wx-fishing-score span {
-  font-size: 0.88rem;
-  font-weight: 650;
-  color: #cfe0d4;
+.wx-fishing-score > span {
+  font-size: 0.95rem;
+  font-weight: 750;
+  color: #e8f2ec;
 }
 
 .wx-fishing-now {
-  font-size: 0.74rem;
-  font-weight: 550;
-  color: #8aa396;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.18rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid rgba(94, 220, 232, 0.35);
+  background: rgba(6, 18, 24, 0.72);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #8febf5;
   font-variant-numeric: tabular-nums;
 }
 
+.wx-fishing-low .wx-fishing-now {
+  border-color: rgba(255, 140, 100, 0.4);
+  color: #ffb08a;
+}
+
+.wx-fishing-mid .wx-fishing-now {
+  border-color: rgba(232, 200, 90, 0.4);
+  color: #f0d56a;
+}
+
+.wx-fishing-good .wx-fishing-now {
+  border-color: rgba(184, 224, 20, 0.4);
+  color: #dff56a;
+}
+
 .wx-hugg-windows-line {
-  margin: 0.15rem 0 0;
-  font-size: 0.76rem;
-  color: #9bb0a4;
+  margin: 0.22rem 0 0;
+  font-size: 0.78rem;
+  color: #b7c9be;
   line-height: 1.35;
   font-variant-numeric: tabular-nums;
 }
@@ -597,6 +670,11 @@
 .wx-hugg-ring {
   flex: 0 0 auto;
   display: block;
+  color: #5edce8;
+}
+
+.wx-hugg-ring-face {
+  stroke: rgba(94, 220, 232, 0.35);
 }
 
 .wx-hugg-ring-track {
@@ -604,39 +682,73 @@
 }
 
 .wx-hugg-ring-fill {
-  stroke: #b8e014;
-}
-
-.wx-fishing-low .wx-hugg-ring-fill {
-  stroke: #ff8c5a;
-}
-
-.wx-fishing-mid .wx-hugg-ring-fill {
-  stroke: #e8c85a;
-}
-
-.wx-fishing-high .wx-hugg-ring-fill {
   stroke: #5edce8;
+}
+
+.wx-hugg-ring-hands {
+  stroke: #8febf5;
 }
 
 .wx-hugg-ring-tick {
   fill: #e6f2ea;
 }
 
+.wx-fishing-low .wx-hugg-ring {
+  color: #ff8c5a;
+}
+
+.wx-fishing-low .wx-hugg-ring-face {
+  stroke: rgba(255, 140, 100, 0.4);
+}
+
+.wx-fishing-low .wx-hugg-ring-fill,
+.wx-fishing-low .wx-hugg-ring-hands {
+  stroke: #ff8c5a;
+}
+
+.wx-fishing-mid .wx-hugg-ring {
+  color: #e8c85a;
+}
+
+.wx-fishing-mid .wx-hugg-ring-face {
+  stroke: rgba(232, 200, 90, 0.4);
+}
+
+.wx-fishing-mid .wx-hugg-ring-fill,
+.wx-fishing-mid .wx-hugg-ring-hands {
+  stroke: #e8c85a;
+}
+
+.wx-fishing-good .wx-hugg-ring {
+  color: #b8e014;
+}
+
+.wx-fishing-good .wx-hugg-ring-face {
+  stroke: rgba(184, 224, 20, 0.4);
+}
+
+.wx-fishing-good .wx-hugg-ring-fill,
+.wx-fishing-good .wx-hugg-ring-hands {
+  stroke: #b8e014;
+}
+
 .wx-hugg-more {
   margin: 0;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(0, 0, 0, 0.12);
+  border-radius: 12px;
+  border: 1px solid rgba(94, 220, 232, 0.22);
+  background: rgba(0, 0, 0, 0.18);
 }
 
 .wx-hugg-more > summary {
   list-style: none;
   cursor: pointer;
-  padding: 0.4rem 0.55rem;
-  font-size: 0.76rem;
-  font-weight: 650;
-  color: #b7c9be;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.6rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #cfe0d4;
   user-select: none;
 }
 
@@ -644,19 +756,27 @@
   display: none;
 }
 
+.wx-hugg-chart-icon {
+  width: 0.95rem;
+  height: 0.95rem;
+  color: #5edce8;
+  flex: 0 0 auto;
+}
+
 .wx-hugg-more > summary::after {
-  content: "▸";
-  float: right;
+  content: "▾";
+  margin-left: auto;
   color: #8aa396;
+  font-size: 0.85em;
   transition: transform 0.15s ease;
 }
 
-.wx-hugg-more[open] > summary::after {
-  transform: rotate(90deg);
+.wx-hugg-more:not([open]) > summary::after {
+  transform: rotate(-90deg);
 }
 
 .wx-hugg-more-body {
-  padding: 0 0.55rem 0.55rem;
+  padding: 0 0.6rem 0.6rem;
   display: grid;
   gap: 0.4rem;
 }
@@ -675,24 +795,130 @@
   line-height: 1.35;
 }
 
+.wx-hugg-chart-hint {
+  margin: 0;
+  font-size: 0.7rem;
+  color: #8aa396;
+}
+
 .wx-hugg-chart {
-  height: 2rem;
   display: flex;
   align-items: flex-end;
   gap: 2px;
   padding: 0.15rem 0 0;
+  min-height: 3.1rem;
+}
+
+.wx-hugg-col {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.2rem;
+  height: 3.1rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.wx-hugg-col.is-selected .wx-hugg-bar {
+  outline: 1px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 0 8px rgba(94, 220, 232, 0.45);
+}
+
+.wx-hugg-col.is-selected .wx-hugg-hour {
+  color: #e6f2ea;
+}
+
+.wx-hugg-hour-detail {
+  padding: 0.45rem 0.55rem;
+  border-radius: 10px;
+  border: 1px solid rgba(94, 220, 232, 0.22);
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.wx-hugg-hour-detail-top {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.25rem 0.6rem;
+}
+
+.wx-hugg-hour-detail-top strong {
+  font-size: 0.88rem;
+  color: #e6f2ea;
+  font-variant-numeric: tabular-nums;
+}
+
+.wx-hugg-hour-detail-top span {
+  font-size: 0.74rem;
+  color: #8febf5;
+}
+
+.wx-hugg-hour-detail ul {
+  list-style: none;
+  margin: 0.35rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.2rem;
+}
+
+.wx-hugg-hour-detail li {
+  font-size: 0.74rem;
+  color: #b7c9be;
+  line-height: 1.35;
+}
+
+.wx-hugg-hour-detail li::before {
+  content: "· ";
+  color: #5edce8;
+}
+
+.wx-hugg-hour-detail > p {
+  margin: 0.35rem 0 0;
+  font-size: 0.74rem;
+  color: #9bb0a4;
+}
+
+.wx-hugg-factors-label {
+  margin: 0.15rem 0 0;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #8aa396;
 }
 
 .wx-hugg-bar {
-  flex: 1 1 0;
-  min-width: 0;
+  width: 100%;
+  max-width: 0.85rem;
+  min-height: 2px;
   border-radius: 2px 2px 0 0;
   background: linear-gradient(
     180deg,
-    rgba(184, 224, 20, 0.85),
-    rgba(184, 224, 20, 0.25)
+    rgba(94, 220, 232, 0.9),
+    rgba(94, 220, 232, 0.22)
   );
-  opacity: 0.9;
+  opacity: 0.95;
+}
+
+.wx-hugg-hour {
+  font-size: 0.58rem;
+  line-height: 1;
+  font-weight: 700;
+  color: #8aa396;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+  white-space: nowrap;
 }
 
 .wx-fishing-low .wx-hugg-bar {
@@ -711,11 +937,11 @@
   );
 }
 
-.wx-fishing-high .wx-hugg-bar {
+.wx-fishing-good .wx-hugg-bar {
   background: linear-gradient(
     180deg,
-    rgba(94, 220, 232, 0.85),
-    rgba(94, 220, 232, 0.25)
+    rgba(184, 224, 20, 0.85),
+    rgba(184, 224, 20, 0.25)
   );
 }
 
@@ -748,7 +974,7 @@
 }
 
 .wx-hugg-factor-up {
-  border-left-color: #b8e014;
+  border-left-color: #5edce8;
 }
 
 .wx-hugg-factor-down {

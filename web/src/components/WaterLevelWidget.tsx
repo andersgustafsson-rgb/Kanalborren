@@ -542,7 +542,36 @@ function fmtWindowsLine(
     .join(" · ");
 }
 
-/** Compact day ring: now-score arc + best-window ticks from real hours. */
+function hourScoreLabelLocal(score: number): string {
+  if (score <= 3.5) return "Svårt";
+  if (score <= 5.5) return "Blandat";
+  if (score <= 7) return "Okej fönster";
+  return "Starkare fönster";
+}
+
+function HuggFishIcon() {
+  return (
+    <svg className="wx-hugg-fish" viewBox="0 0 24 24" aria-hidden>
+      <path
+        d="M3.5 12c3.2-4.2 7.2-6.2 12.2-5.4 1.9.3 3.5 1.1 4.8 2.2-.2.5-.4 1-.5 1.5.9.1 1.7.4 2.5.8-.9 1.1-2.1 1.8-3.5 2.1-.2.7-.6 1.4-1.1 2-1.4 1.1-3.1 1.8-5 2-4.6.5-8.1-1.1-9.4-4.2Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinejoin="round"
+      />
+      <circle cx="8.2" cy="11.2" r="1.05" fill="currentColor" />
+      <path
+        d="M14.2 9.6c1.1.5 1.8 1.4 1.9 2.6"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+/** Compact clock ring: now-score arc + ticks for best windows. */
 function HuggDayRing({
   nowScore,
   windows,
@@ -550,16 +579,15 @@ function HuggDayRing({
   nowScore: number;
   windows: HuggForecast["windows"];
 }) {
-  const size = 34;
+  const size = 40;
   const cx = size / 2;
   const cy = size / 2;
-  const r = 12.5;
+  const r = 14.5;
   const circ = 2 * Math.PI * r;
   const pct = Math.max(0, Math.min(1, nowScore / 10));
   const dash = `${circ * pct} ${circ}`;
   const hourAngle = (d: Date) => {
     const h = d.getHours() + d.getMinutes() / 60;
-    // 0° at 12 o'clock, clockwise.
     return (h / 24) * 360;
   };
 
@@ -572,12 +600,20 @@ function HuggDayRing({
       aria-hidden
     >
       <circle
+        className="wx-hugg-ring-face"
+        cx={cx}
+        cy={cy}
+        r={r - 3.2}
+        fill="none"
+        strokeWidth="1.2"
+      />
+      <circle
         className="wx-hugg-ring-track"
         cx={cx}
         cy={cy}
         r={r}
         fill="none"
-        strokeWidth="3"
+        strokeWidth="2.6"
       />
       <circle
         className="wx-hugg-ring-fill"
@@ -585,10 +621,18 @@ function HuggDayRing({
         cy={cy}
         r={r}
         fill="none"
-        strokeWidth="3"
+        strokeWidth="2.6"
         strokeDasharray={dash}
         strokeLinecap="round"
         transform={`rotate(-90 ${cx} ${cy})`}
+      />
+      <path
+        className="wx-hugg-ring-hands"
+        d={`M${cx} ${cy - 6.5}V${cy}H${cx + 5}`}
+        fill="none"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
       {windows.slice(0, 2).map((w) => {
         const a = hourAngle(w.start);
@@ -601,10 +645,24 @@ function HuggDayRing({
             className="wx-hugg-ring-tick"
             cx={x}
             cy={y}
-            r={2.1}
+            r={2}
           />
         );
       })}
+    </svg>
+  );
+}
+
+function HuggChartIcon() {
+  return (
+    <svg className="wx-hugg-chart-icon" viewBox="0 0 24 24" aria-hidden>
+      <path
+        d="M5 18V11M10 18V7M15 18v-5M20 18V9"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
@@ -732,6 +790,7 @@ function WindCompass({ deg }: { deg: number | null }) {
 
 export function WaterLevelWidget() {
   const [data, setData] = useState<Conditions | null>(null);
+  const [selectedHourIso, setSelectedHourIso] = useState<string | null>(null);
   const sunToday = useMemo(() => {
     const sun = malmoSunTimes();
     return {
@@ -751,6 +810,9 @@ export function WaterLevelWidget() {
   }, []);
 
   const windowsLine = data ? fmtWindowsLine(data.fishing.windows) : null;
+  const selectedHour =
+    data?.fishing.hours.find((h) => h.time.toISOString() === selectedHourIso) ??
+    null;
 
   return (
     <section className="home-board water-widget" aria-label="Väder och vatten">
@@ -920,9 +982,13 @@ export function WaterLevelWidget() {
             aria-label="Huggprognos Malmö kanal"
           >
             <div className="wx-fishing-top">
-              <span className="wx-tile-label">Huggprognos · kanalen</span>
+              <span className="wx-fishing-label">
+                <HuggFishIcon />
+                Huggprognos · kanalen
+              </span>
               <strong className="wx-fishing-num">
-                {data.fishing.dayScore.toFixed(1)}/10
+                {data.fishing.dayScore.toFixed(1)}
+                <span>/10</span>
               </strong>
             </div>
             <div
@@ -954,11 +1020,11 @@ export function WaterLevelWidget() {
                       Nu {data.fishing.nowScore.toFixed(1)}/10
                     </small>
                   </p>
-                  {windowsLine ? (
-                    <p className="wx-hugg-windows-line">Bäst {windowsLine}</p>
-                  ) : (
-                    <p className="wx-hugg-windows-line">Inga tydliga toppar i dag</p>
-                  )}
+                  <p className="wx-hugg-windows-line">
+                    {windowsLine
+                      ? `Bäst: ${windowsLine}`
+                      : "Inga tydliga toppar i dag"}
+                  </p>
                 </div>
               </div>
 
@@ -966,7 +1032,10 @@ export function WaterLevelWidget() {
                 data.fishing.factors.length > 0 ||
                 Boolean(data.fishing.summary)) && (
                 <details className="wx-hugg-more">
-                  <summary>Mer om prognosen</summary>
+                  <summary>
+                    <HuggChartIcon />
+                    Mer om prognosen
+                  </summary>
                   <div className="wx-hugg-more-body">
                     {data.fishing.summary ? (
                       <p className="wx-fishing-summary">
@@ -975,36 +1044,86 @@ export function WaterLevelWidget() {
                     ) : null}
 
                     {data.fishing.hours.length > 0 ? (
-                      <div
-                        className="wx-hugg-chart"
-                        role="img"
-                        aria-label="Timkurva för dagens huggläge"
-                      >
-                        {data.fishing.hours.map((h) => (
-                          <span
-                            key={h.time.toISOString()}
-                            className="wx-hugg-bar"
-                            title={`${fmtWindow(h.time)} · ${h.score.toFixed(1)}`}
-                            style={{
-                              height: `${(h.score / 10) * 100}%`,
-                            }}
-                          />
-                        ))}
-                      </div>
+                      <>
+                        <p className="wx-hugg-chart-hint">
+                          Tryck på en stapel för den timmens förklaring
+                        </p>
+                        <div
+                          className="wx-hugg-chart"
+                          role="listbox"
+                          aria-label="Timkurva för dagens huggläge"
+                        >
+                          {data.fishing.hours.map((h) => {
+                            const iso = h.time.toISOString();
+                            const clock = fmtWindow(h.time);
+                            const hourLabel = h.time.toLocaleTimeString(
+                              "sv-SE",
+                              { hour: "2-digit" },
+                            );
+                            const selected = selectedHourIso === iso;
+                            return (
+                              <button
+                                key={iso}
+                                type="button"
+                                role="option"
+                                aria-selected={selected}
+                                className={`wx-hugg-col${selected ? " is-selected" : ""}`}
+                                title={`${clock} · ${h.score.toFixed(1)}/10`}
+                                onClick={() =>
+                                  setSelectedHourIso((cur) =>
+                                    cur === iso ? null : iso,
+                                  )
+                                }
+                              >
+                                <span
+                                  className="wx-hugg-bar"
+                                  style={{
+                                    height: `${(h.score / 10) * 100}%`,
+                                  }}
+                                />
+                                <span className="wx-hugg-hour">{hourLabel}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                        {selectedHour ? (
+                          <div className="wx-hugg-hour-detail">
+                            <p className="wx-hugg-hour-detail-top">
+                              <strong>{fmtWindow(selectedHour.time)}</strong>
+                              <span>
+                                {selectedHour.score.toFixed(1)}/10 ·{" "}
+                                {hourScoreLabelLocal(selectedHour.score)}
+                              </span>
+                            </p>
+                            {selectedHour.why.length > 0 ? (
+                              <ul>
+                                {selectedHour.why.map((line) => (
+                                  <li key={line}>{line}</li>
+                                ))}
+                              </ul>
+                            ) : (
+                              <p>Inga tydliga faktorer för den timmen.</p>
+                            )}
+                          </div>
+                        ) : null}
+                      </>
                     ) : null}
 
                     {data.fishing.factors.length > 0 ? (
-                      <ul className="wx-hugg-factors">
-                        {data.fishing.factors.map((f) => (
-                          <li
-                            key={f.id}
-                            className={`wx-hugg-factor wx-hugg-factor-${f.tone}`}
-                          >
-                            <strong>{f.label}</strong>
-                            <span>{f.detail}</span>
-                          </li>
-                        ))}
-                      </ul>
+                      <>
+                        <p className="wx-hugg-factors-label">Nu · faktorer</p>
+                        <ul className="wx-hugg-factors">
+                          {data.fishing.factors.map((f) => (
+                            <li
+                              key={f.id}
+                              className={`wx-hugg-factor wx-hugg-factor-${f.tone}`}
+                            >
+                              <strong>{f.label}</strong>
+                              <span>{f.detail}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </>
                     ) : null}
 
                     <p className="wx-fishing-why">

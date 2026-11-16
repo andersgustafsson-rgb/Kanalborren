@@ -28,12 +28,14 @@ export type HuggWindow = {
 export type HuggHourPoint = {
   time: Date;
   score: number;
+  /** Short reasons for this hour (shown when a chart bar is selected). */
+  why: string[];
 };
 
 export type HuggForecast = {
   /** Score for the current / nearest hour (1–10). */
   nowScore: number;
-  /** Mean of today's better daylight hours — used for the headline. */
+  /** Mean of today's better hours (incl. canal night) — used for the headline. */
   dayScore: number;
   label: string;
   summary: string;
@@ -92,8 +94,83 @@ function lightBoost(at: Date): number {
   // Midday often quieter in canal, especially under building high pressure.
   const hour = at.getHours() + at.getMinutes() / 60;
   if (hour >= 10.5 && hour <= 14.5) return -0.6;
-  if (t < dawn.getTime() || t > dusk.getTime()) return -0.4;
+  // Malmö canal night stays productive (street lights) — unlike dark rural water.
+  if (t < dawn.getTime() || t > dusk.getTime()) {
+    // Prime lit evening into late night; deep early morning a bit softer.
+    if (hour >= 18 || hour < 1) return 0.9;
+    return 0.55;
+  }
   return 0.2;
+}
+
+type SolunarKind = "major" | "minor" | null;
+
+type SolunarHit = {
+  kind: Exclude<SolunarKind, null>;
+  label: string;
+  boost: number;
+};
+
+const solunarCache = new Map<string, ReturnType<typeof SunCalc.getMoonTimes>>();
+
+function moonTimesForDay(at: Date) {
+  const key = `${at.getFullYear()}-${at.getMonth()}-${at.getDate()}`;
+  let cached = solunarCache.get(key);
+  if (!cached) {
+    const noon = new Date(at);
+    noon.setHours(12, 0, 0, 0);
+    cached = SunCalc.getMoonTimes(noon, MALMO_LAT, MALMO_LON);
+    solunarCache.set(key, cached);
+  }
+  return cached;
+}
+
+/**
+ * Classic solunar windows from suncalc moon times for Malmö:
+ * major ≈ overhead / underfoot transit, minor ≈ moonrise / moonset.
+ * Kept modest — useful timing hint, not stronger than pressure/light.
+ */
+function solunarAt(at: Date): SolunarHit | null {
+  const times = moonTimesForDay(at);
+  const t = at.getTime();
+  const near = (center: Date | undefined, radiusMin: number) =>
+    center instanceof Date &&
+    Number.isFinite(center.getTime()) &&
+    Math.abs(t - center.getTime()) <= radiusMin * 60_000;
+
+  if (near(times.transit, 55)) {
+    return { kind: "major", label: "Solunar major (månen i zenit)", boost: 0.85 };
+  }
+  if (near(times.lowerTransit, 55)) {
+    return {
+      kind: "major",
+      label: "Solunar major (månen under foten)",
+      boost: 0.85,
+    };
+  }
+  if (near(times.rise, 40)) {
+    return { kind: "minor", label: "Solunar minor (månoppgång)", boost: 0.4 };
+  }
+  if (near(times.set, 40)) {
+    return { kind: "minor", label: "Solunar minor (månnedgång)", boost: 0.4 };
+  }
+  return null;
+}
+
+function fmtHm(d: Date): string {
+  return d.toLocaleTimeString("sv-SE", { hour: "2-digit", minute: "2-digit" });
+}
+
+function solunarDayWindows(at: Date): string {
+  const times = moonTimesForDay(at);
+  const parts: string[] = [];
+  if (times.transit instanceof Date) parts.push(`major ${fmtHm(times.transit)}`);
+  if (times.lowerTransit instanceof Date) {
+    parts.push(`major ${fmtHm(times.lowerTransit)}`);
+  }
+  if (times.rise instanceof Date) parts.push(`minor ${fmtHm(times.rise)}`);
+  if (times.set instanceof Date) parts.push(`minor ${fmtHm(times.set)}`);
+  return parts.length ? parts.join(" · ") : "inga tydliga fönster";
 }
 
 function nearestPressureAt(
@@ -159,26 +236,54 @@ function scoreHour(
   pressureDelta6h: number | null,
   waterTempC: number | null,
   waterRising: boolean,
-): number {
+): { score: number; why: string[] } {
   // Honest baseline — not "already good".
   let score = 4.4;
+  const why: string[] = [];
 
   // Pressure movement is the heaviest weather lever.
   if (pressureDelta6h != null) {
-    if (pressureDelta6h <= -6) score += 1.2; // messy/fast drop
-    else if (pressureDelta6h <= -3) score += 2.2; // classic pre-front feed
-    else if (pressureDelta6h <= -1) score += 1.2;
-    else if (pressureDelta6h >= 5) score -= 2.4; // building high — Saturday case
-    else if (pressureDelta6h >= 2.5) score -= 1.6;
-    else if (pressureDelta6h >= 1) score -= 0.7;
+    const sign = pressureDelta6h > 0 ? "+" : "";
+    if (pressureDelta6h <= -6) {
+      score += 1.2;
+      why.push(`Snabb tryckfall ${pressureDelta6h.toFixed(1)} hPa/6h`);
+    } else if (pressureDelta6h <= -3) {
+      score += 2.2;
+      why.push(`Fallande tryck ${pressureDelta6h.toFixed(1)} hPa/6h — aktiverar`);
+    } else if (pressureDelta6h <= -1) {
+      score += 1.2;
+      why.push(`Lätt fallande tryck ${pressureDelta6h.toFixed(1)} hPa/6h`);
+    } else if (pressureDelta6h >= 5) {
+      score -= 2.4;
+      why.push(`Stark tryckuppgång ${sign}${pressureDelta6h.toFixed(1)} hPa/6h — dämpar`);
+    } else if (pressureDelta6h >= 2.5) {
+      score -= 1.6;
+      why.push(`Stigande tryck ${sign}${pressureDelta6h.toFixed(1)} hPa/6h — dämpar`);
+    } else if (pressureDelta6h >= 1) {
+      score -= 0.7;
+      why.push(`Lätt stigande tryck ${sign}${pressureDelta6h.toFixed(1)} hPa/6h`);
+    } else {
+      why.push(`Stabilt tryck (${sign}${pressureDelta6h.toFixed(1)} hPa/6h)`);
+    }
   }
 
   if (row.windMs != null) {
-    if (row.windMs >= 2 && row.windMs <= 7) score += 1.1;
-    else if (row.windMs > 7 && row.windMs < 11) score += 0.1;
-    else if (row.windMs >= 11 && row.windMs < 14) score -= 1.2;
-    else if (row.windMs >= 14) score -= 2.2;
-    else if (row.windMs < 1) score -= 0.9;
+    if (row.windMs >= 2 && row.windMs <= 7) {
+      score += 1.1;
+      why.push(`Lagom vind ${row.windMs.toFixed(1)} m/s`);
+    } else if (row.windMs > 7 && row.windMs < 11) {
+      score += 0.1;
+      why.push(`Lite blåsigt ${row.windMs.toFixed(1)} m/s`);
+    } else if (row.windMs >= 11 && row.windMs < 14) {
+      score -= 1.2;
+      why.push(`Hård vind ${row.windMs.toFixed(1)} m/s`);
+    } else if (row.windMs >= 14) {
+      score -= 2.2;
+      why.push(`Mycket hård vind ${row.windMs.toFixed(1)} m/s`);
+    } else if (row.windMs < 1) {
+      score -= 0.9;
+      why.push("Stiltje — spegelblank yta");
+    }
   }
 
   if (waterTempC != null) {
@@ -189,11 +294,20 @@ function scoreHour(
   }
 
   const precip = row.precipMm;
-  if (isThunder(row.symbolCode)) score -= 2.2;
-  else if (precip != null) {
-    if (precip > 0.15 && precip <= 1.2) score += 0.45; // light rain can help
-    else if (precip > 1.2 && precip <= 3) score -= 0.4;
-    else if (precip > 3) score -= 1.1;
+  if (isThunder(row.symbolCode)) {
+    score -= 2.2;
+    why.push("Åska — undvik");
+  } else if (precip != null) {
+    if (precip > 0.15 && precip <= 1.2) {
+      score += 0.45;
+      why.push(`Lätt regn ${precip.toFixed(1)} mm`);
+    } else if (precip > 1.2 && precip <= 3) {
+      score -= 0.4;
+      why.push(`Regn ${precip.toFixed(1)} mm`);
+    } else if (precip > 3) {
+      score -= 1.1;
+      why.push(`Kraftigt regn ${precip.toFixed(1)} mm`);
+    }
   } else if (isWet(row.symbolCode, null)) {
     score += 0.2;
   }
@@ -205,6 +319,20 @@ function scoreHour(
   }
 
   let light = lightBoost(row.time);
+  const { dawn, dusk } = malmoSunTimes(row.time);
+  const t = row.time.getTime();
+  const hour = row.time.getHours() + row.time.getMinutes() / 60;
+  if (Math.abs(t - dawn.getTime()) <= 40 * 60_000) why.push("Gryningsfönster");
+  else if (Math.abs(t - dusk.getTime()) <= 40 * 60_000) why.push("Skymningsfönster");
+  else if (hour >= 10.5 && hour <= 14.5) why.push("Mitt på dagen — oftast lugnare");
+  else if (t < dawn.getTime() || t > dusk.getTime()) {
+    why.push(
+      hour >= 18 || hour < 1
+        ? "Natt i kanalen (gatubelysning)"
+        : "Tidig natt/morgon i kanalen",
+    );
+  }
+
   // Under rising pressure, light edges matter more; midday penalty harder.
   if (pressureDelta6h != null && pressureDelta6h >= 2) {
     if (light > 0) light *= 1.25;
@@ -212,13 +340,22 @@ function scoreHour(
   }
   score += light;
 
-  if (waterRising) score += 0.35;
+  if (waterRising) {
+    score += 0.35;
+    why.push("Stigande vattenstånd");
+  }
 
-  // Mild moon effect (major periods approx via illumination extremes).
+  const solunar = solunarAt(row.time);
+  if (solunar) {
+    score += solunar.boost;
+    why.push(solunar.label);
+  }
+
+  // Mild phase effect on top of solunar windows.
   const moon = SunCalc.getMoonIllumination(row.time);
   const illum = moon.fraction;
-  if (illum < 0.12 || illum > 0.88) score += 0.25;
-  else if (illum > 0.4 && illum < 0.6) score -= 0.15;
+  if (illum < 0.12 || illum > 0.88) score += 0.2;
+  else if (illum > 0.4 && illum < 0.6) score -= 0.1;
 
   // November–February: fewer true peak days in Malmö canal.
   const month = row.time.getMonth();
@@ -226,7 +363,7 @@ function scoreHour(
     score = Math.min(score, 7.6);
   }
 
-  return clamp(round1(score), 1, 10);
+  return { score: clamp(round1(score), 1, 10), why: why.slice(0, 5) };
 }
 
 function mergeWindows(hours: HuggHourPoint[]): HuggWindow[] {
@@ -328,12 +465,33 @@ function buildFactors(input: {
     }
   }
 
-  factors.push({
-    id: "light",
-    label: "Ljus",
-    tone: "up",
-    detail: `Sol ${sunrise.toLocaleTimeString("sv-SE", { hour: "2-digit", minute: "2-digit" })}–${sunset.toLocaleTimeString("sv-SE", { hour: "2-digit", minute: "2-digit" })} · gryning/skymning prioriteras`,
-  });
+  {
+    const { dawn, dusk } = malmoSunTimes(input.now);
+    const nowT = input.now.getTime();
+    const isNight = nowT < dawn.getTime() || nowT > dusk.getTime();
+    factors.push({
+      id: "light",
+      label: "Ljus",
+      tone: "up",
+      detail: isNight
+        ? `Natt i kanalen — gatubelysning håller oftast fisken aktiv`
+        : `Sol ${sunrise.toLocaleTimeString("sv-SE", { hour: "2-digit", minute: "2-digit" })}–${sunset.toLocaleTimeString("sv-SE", { hour: "2-digit", minute: "2-digit" })} · gryning/skymning + natt i kanalen`,
+    });
+  }
+
+  {
+    const hit = solunarAt(input.now);
+    const illum = SunCalc.getMoonIllumination(input.now).fraction;
+    const phasePct = Math.round(illum * 100);
+    factors.push({
+      id: "solunar",
+      label: "Solunar",
+      tone: hit ? "up" : "neutral",
+      detail: hit
+        ? `${hit.label} nu · dagens fönster: ${solunarDayWindows(input.now)} · måne ${phasePct}%`
+        : `Dagens fönster: ${solunarDayWindows(input.now)} · måne ${phasePct}%`,
+    });
+  }
 
   if (input.windMs != null) {
     if (input.windMs >= 2 && input.windMs <= 7) {
@@ -450,9 +608,11 @@ export function computeHuggForecast(input: {
 
   const scored: HuggHourPoint[] = sorted.map((row, index) => {
     const dP = pressureDeltaAt(sorted, index, 6);
+    const scoredHour = scoreHour(row, dP, input.waterTempC, waterRising);
     return {
       time: row.time,
-      score: scoreHour(row, dP, input.waterTempC, waterRising),
+      score: scoredHour.score,
+      why: scoredHour.why,
     };
   });
 
@@ -476,12 +636,8 @@ export function computeHuggForecast(input: {
     return hd < bd ? h : best;
   }, scored[0]!);
 
-  const daylight = todayHours.filter((h) => {
-    const { dawn, dusk } = malmoSunTimes(h.time);
-    const t = h.time.getTime();
-    return t >= dawn.getTime() - 30 * 60_000 && t <= dusk.getTime() + 30 * 60_000;
-  });
-  const pool = daylight.length ? daylight : todayHours;
+  // Canal nights count: street lights keep bite windows alive after dusk.
+  const pool = todayHours.length ? todayHours : scored.slice(0, 16);
   const sortedScores = [...pool].map((h) => h.score).sort((a, b) => b - a);
   const topN = sortedScores.slice(0, Math.max(3, Math.ceil(sortedScores.length * 0.35)));
   const dayScore = round1(
