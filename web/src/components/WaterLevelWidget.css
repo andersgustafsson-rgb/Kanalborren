@@ -563,10 +563,139 @@
 }
 
 .wx-fishing-why {
-  margin: 0.2rem 0 0;
-  font-size: 0.78rem;
+  margin: 0.35rem 0 0;
+  font-size: 0.72rem;
   color: #9bb0a4;
   line-height: 1.35;
+}
+
+.wx-fishing-now {
+  font-size: 0.75rem;
+  font-weight: 550;
+  color: #8aa396;
+}
+
+.wx-fishing-summary {
+  margin: 0.35rem 0 0;
+  font-size: 0.82rem;
+  color: #b7c9be;
+  line-height: 1.4;
+}
+
+.wx-hugg-windows {
+  list-style: none;
+  margin: 0.55rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.wx-hugg-windows li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.25rem 0.75rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.wx-hugg-windows strong {
+  font-size: 0.84rem;
+  color: #e6f2ea;
+  font-variant-numeric: tabular-nums;
+}
+
+.wx-hugg-windows span {
+  font-size: 0.75rem;
+  color: #9bb0a4;
+}
+
+.wx-hugg-chart {
+  margin-top: 0.55rem;
+  height: 2.4rem;
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  padding: 0.2rem 0.1rem 0;
+}
+
+.wx-hugg-bar {
+  flex: 1 1 0;
+  min-width: 0;
+  border-radius: 2px 2px 0 0;
+  background: linear-gradient(
+    180deg,
+    rgba(184, 224, 20, 0.85),
+    rgba(184, 224, 20, 0.25)
+  );
+  opacity: 0.9;
+}
+
+.wx-fishing-low .wx-hugg-bar {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 140, 100, 0.85),
+    rgba(255, 140, 100, 0.25)
+  );
+}
+
+.wx-fishing-mid .wx-hugg-bar {
+  background: linear-gradient(
+    180deg,
+    rgba(232, 200, 90, 0.85),
+    rgba(232, 200, 90, 0.25)
+  );
+}
+
+.wx-fishing-high .wx-hugg-bar {
+  background: linear-gradient(
+    180deg,
+    rgba(94, 220, 232, 0.85),
+    rgba(94, 220, 232, 0.25)
+  );
+}
+
+.wx-hugg-factors {
+  list-style: none;
+  margin: 0.55rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.3rem;
+}
+
+.wx-hugg-factor {
+  display: grid;
+  gap: 0.1rem;
+  padding: 0.35rem 0.45rem;
+  border-radius: 8px;
+  border-left: 3px solid rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.wx-hugg-factor strong {
+  font-size: 0.78rem;
+  color: #d5e6db;
+}
+
+.wx-hugg-factor span {
+  font-size: 0.72rem;
+  color: #9bb0a4;
+  line-height: 1.35;
+}
+
+.wx-hugg-factor-up {
+  border-left-color: #b8e014;
+}
+
+.wx-hugg-factor-down {
+  border-left-color: #ff8c5a;
+}
+
+.wx-hugg-factor-neutral {
+  border-left-color: #8aa396;
 }
 
 .conditions-actions {

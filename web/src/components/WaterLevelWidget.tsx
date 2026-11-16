@@ -1,5 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+  computeHuggForecast,
+  type HuggForecast,
+} from "../lib/huggEngine";
+import {
   fmtSunClock,
   isMalmoDarkHours,
   isMalmoGoldenHour,
@@ -19,12 +23,6 @@ type SkyKind =
   | "wind";
 
 type WaterTrend = "rising" | "falling" | "stable" | "unknown";
-
-type FishingScore = {
-  score: number;
-  label: string;
-  why: string;
-};
 
 type Conditions = {
   waterCm: number | null;
@@ -51,7 +49,7 @@ type Conditions = {
   sky: SkyKind;
   skyLabel: string;
   photo: string;
-  fishing: FishingScore;
+  fishing: HuggForecast;
   time: string | null;
   error: string | null;
 };
@@ -222,91 +220,6 @@ function deltaAround3h(
   return last.value - best.value;
 }
 
-function fishingScore(input: {
-  windMs: number | null;
-  waterTempC: number | null;
-  precipMm: number | null;
-  sky: SkyKind;
-  pressureTrend: Conditions["pressureTrend"];
-  waterTrend: WaterTrend;
-}): FishingScore {
-  let score = 6;
-  const reasons: string[] = [];
-
-  if (input.windMs != null) {
-    if (input.windMs >= 2 && input.windMs <= 7) {
-      score += 2;
-      reasons.push("lagom vind");
-    } else if (input.windMs > 7 && input.windMs < 11) {
-      reasons.push("lite blåsigt");
-    } else if (input.windMs >= 11) {
-      score -= 2;
-      reasons.push("hård vind");
-    } else if (input.windMs < 1) {
-      score -= 1;
-      reasons.push("stiltje");
-    }
-  }
-
-  if (input.waterTempC != null) {
-    if (input.waterTempC >= 8 && input.waterTempC <= 18) {
-      score += 2;
-      reasons.push("bra vattentemp");
-    } else if (input.waterTempC >= 5 && input.waterTempC < 8) {
-      score += 1;
-      reasons.push("sval vattentemp");
-    } else if (input.waterTempC > 18 && input.waterTempC <= 22) {
-      reasons.push("varmt vatten");
-    } else {
-      score -= 1;
-      reasons.push("ogynnsam vattentemp");
-    }
-  }
-
-  if (input.precipMm != null && input.precipMm > 0.5) {
-    score -= 1;
-    reasons.push("nederbörd");
-  }
-  if (input.sky === "thunder") {
-    score -= 2;
-    reasons.push("åska");
-  } else if (input.sky === "rain" || input.sky === "drizzle") {
-    score -= 1;
-    if (!reasons.includes("nederbörd")) reasons.push("regn");
-  }
-
-  // Angler rule of thumb: falling pressure + rising water often wakes fish up.
-  if (input.pressureTrend === "falling") {
-    score += 1;
-    reasons.push("sjunkande lufttryck");
-  } else if (input.pressureTrend === "rising") {
-    score -= 1;
-    reasons.push("stigande lufttryck");
-  }
-
-  if (input.waterTrend === "rising") {
-    score += 1;
-    reasons.push("stigande vattennivå");
-  } else if (input.waterTrend === "falling") {
-    reasons.push("sjunkande vattennivå");
-  }
-
-  score = Math.max(1, Math.min(10, Math.round(score)));
-
-  let label = "Okej";
-  if (score <= 3) label = "Svårt";
-  else if (score <= 5) label = "Okej";
-  else if (score <= 7) label = "Intressanta förhållanden";
-  else label = "Lovande";
-
-  const why =
-    reasons.length > 0
-      ? reasons.slice(0, 4).join(" · ")
-      : "baserat på vind, vatten och tryck";
-
-  return { score, label, why };
-}
-
 function nearestSeriesPoint(
   series: { value: number; time: string | null }[],
   targetMs: number,
@@ -368,7 +281,17 @@ async function fetchCanalConditions(): Promise<Conditions> {
     sky: "cloud",
     skyLabel: "–",
     photo: "/weather/mulet.jpg",
-    fishing: { score: 5, label: "Okej", why: "baserat på vind, vatten och tryck" },
+    fishing: {
+      nowScore: 5,
+      dayScore: 5,
+      label: "Otillräcklig data",
+      summary: "Hämtar prognos…",
+      confidence: "low",
+      factors: [],
+      hours: [],
+      windows: [],
+      why: "väntar på SMHI",
+    },
     time: null,
     error: null,
   };
@@ -379,10 +302,10 @@ async function fetchCanalConditions(): Promise<Conditions> {
     const waterTempUrl =
       "https://opendata-download-ocobs.smhi.se/api/version/1.0/parameter/5/station/35152/period/latest-day/data.json";
     // Same SMHI forecast product as smhi.se (SNOW1g — replaced old pmp3g).
-    // timeseries=24 so pressure trend has a real ~6h forecast window
+    // timeseries=36 so pressure trend + hugg curve have a real multi-hour window
     // (snow1g returns upcoming hours only — almost no history).
     const meteoUrl =
-      "https://opendata-download-metfcst.smhi.se/api/category/snow1g/version/1/geotype/point/lon/12.995000/lat/55.605000/data.json?timeseries=24&parameters=air_temperature,wind_speed,wind_from_direction,wind_speed_of_gust,precipitation_amount_mean,air_pressure_at_mean_sea_level,symbol_code";
+      "https://opendata-download-metfcst.smhi.se/api/category/snow1g/version/1/geotype/point/lon/12.995000/lat/55.605000/data.json?timeseries=36&parameters=air_temperature,wind_speed,wind_from_direction,wind_speed_of_gust,precipitation_amount_mean,air_pressure_at_mean_sea_level,symbol_code";
 
     const [levelRes, waterTempRes, meteoRes] = await Promise.all([
       fetch(levelUrl),
@@ -491,13 +414,34 @@ async function fetchCanalConditions(): Promise<Conditions> {
     const waterTempC = lastWaterTemp?.value ?? null;
     const precipMm = finiteOrNull(d?.precipitation_amount_mean);
     const tempC = finiteOrNull(d?.air_temperature);
-    const fishing = fishingScore({
-      windMs,
+    const huggSeries = series
+      .map((row) => {
+        if (!row.time) return null;
+        const t = Date.parse(row.time);
+        if (!Number.isFinite(t)) return null;
+        return {
+          time: new Date(t),
+          windMs: finiteOrNull(row.data?.wind_speed),
+          precipMm: finiteOrNull(row.data?.precipitation_amount_mean),
+          pressureHpa: finiteOrNull(row.data?.air_pressure_at_mean_sea_level),
+          symbolCode: finiteOrNull(row.data?.symbol_code),
+        };
+      })
+      .filter(
+        (
+          row,
+        ): row is {
+          time: Date;
+          windMs: number | null;
+          precipMm: number | null;
+          pressureHpa: number | null;
+          symbolCode: number | null;
+        } => row != null,
+      );
+    const fishing = computeHuggForecast({
+      series: huggSeries,
       waterTempC,
-      precipMm,
-      sky,
-      pressureTrend,
-      waterTrend,
+      waterRising: waterTrend === "rising",
     });
 
     const stamp = current?.time ? new Date(current.time) : new Date();
@@ -576,10 +520,17 @@ function pressureImpactLabel(cm: number | null): string {
 }
 
 function fishingTone(score: number): "low" | "mid" | "good" | "high" {
-  if (score <= 3) return "low";
-  if (score <= 5) return "mid";
-  if (score <= 7) return "good";
+  if (score <= 3.5) return "low";
+  if (score <= 5.2) return "mid";
+  if (score <= 6.8) return "good";
   return "high";
+}
+
+function fmtWindow(d: Date): string {
+  return d.toLocaleTimeString("sv-SE", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 const WX_ICONS = {
@@ -887,13 +838,13 @@ export function WaterLevelWidget() {
           </div>
 
           <div
-            className={`wx-fishing wx-fishing-${fishingTone(data.fishing.score)}`}
-            aria-label="Fiskeförhållanden"
+            className={`wx-fishing wx-fishing-${fishingTone(data.fishing.dayScore)}`}
+            aria-label="Huggprognos Malmö kanal"
           >
             <div className="wx-fishing-top">
-              <span className="wx-tile-label">Fiskeförhållanden</span>
+              <span className="wx-tile-label">Huggprognos · kanalen</span>
               <strong className="wx-fishing-num">
-                {data.fishing.score}/10
+                {data.fishing.dayScore.toFixed(1)}/10
               </strong>
             </div>
             <div
@@ -901,19 +852,76 @@ export function WaterLevelWidget() {
               role="meter"
               aria-valuemin={1}
               aria-valuemax={10}
-              aria-valuenow={data.fishing.score}
-              aria-label="Fiskebetyg"
+              aria-valuenow={data.fishing.dayScore}
+              aria-label="Dagbetyg för fiskeförutsättningar"
             >
               <span
                 className="wx-fishing-fill"
-                style={{ width: `${(data.fishing.score / 10) * 100}%` }}
+                style={{
+                  width: `${(data.fishing.dayScore / 10) * 100}%`,
+                }}
               />
             </div>
             <p className="wx-fishing-score">
               <span>{data.fishing.label}</span>
+              <small className="wx-fishing-now">
+                Nu ~{data.fishing.nowScore.toFixed(1)}/10
+              </small>
             </p>
+            <p className="wx-fishing-summary">{data.fishing.summary}</p>
+
+            {data.fishing.windows.length > 0 ? (
+              <ul className="wx-hugg-windows">
+                {data.fishing.windows.map((w) => (
+                  <li key={w.start.toISOString()}>
+                    <strong>
+                      {fmtWindow(w.start)}–{fmtWindow(w.end)}
+                    </strong>
+                    <span>
+                      {w.label} · {w.score.toFixed(1)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+
+            {data.fishing.hours.length > 0 ? (
+              <div
+                className="wx-hugg-chart"
+                role="img"
+                aria-label="Timkurva för dagens huggläge"
+              >
+                {data.fishing.hours.map((h) => (
+                  <span
+                    key={h.time.toISOString()}
+                    className="wx-hugg-bar"
+                    title={`${fmtWindow(h.time)} · ${h.score.toFixed(1)}`}
+                    style={{ height: `${(h.score / 10) * 100}%` }}
+                  />
+                ))}
+              </div>
+            ) : null}
+
+            {data.fishing.factors.length > 0 ? (
+              <ul className="wx-hugg-factors">
+                {data.fishing.factors.map((f) => (
+                  <li
+                    key={f.id}
+                    className={`wx-hugg-factor wx-hugg-factor-${f.tone}`}
+                  >
+                    <strong>{f.label}</strong>
+                    <span>{f.detail}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+
             <p className="wx-fishing-why">
-              Därför: {data.fishing.why}
+              Bygger på SMHI + sol/måne · {data.fishing.confidence === "high"
+                ? "god datatäckning"
+                : data.fishing.confidence === "medium"
+                  ? "medel datatäckning"
+                  : "tunn datatäckning"}
             </p>
           </div>
 
