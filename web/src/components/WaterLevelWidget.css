@@ -470,7 +470,7 @@
 
 .wx-fishing {
   margin-top: 0.65rem;
-  padding: 0.7rem 0.75rem;
+  padding: 0.6rem 0.7rem;
   border-radius: 14px;
   border: 1px solid rgba(184, 224, 20, 0.28);
   background: rgba(184, 224, 20, 0.08);
@@ -548,78 +548,139 @@
   background: #5edce8;
 }
 
-.wx-fishing-score {
-  margin: 0.4rem 0 0;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.45rem 0.7rem;
-}
-
-.wx-fishing-score span {
-  font-size: 0.92rem;
-  font-weight: 650;
-  color: #cfe0d4;
-}
-
-.wx-fishing-why {
-  margin: 0.35rem 0 0;
-  font-size: 0.72rem;
-  color: #9bb0a4;
-  line-height: 1.35;
-}
-
-.wx-fishing-now {
-  font-size: 0.75rem;
-  font-weight: 550;
-  color: #8aa396;
-}
-
-.wx-fishing-summary {
-  margin: 0.35rem 0 0;
-  font-size: 0.82rem;
-  color: #b7c9be;
-  line-height: 1.4;
-}
-
-.wx-hugg-windows {
-  list-style: none;
-  margin: 0.55rem 0 0;
-  padding: 0;
+.wx-hugg-compact {
+  margin-top: 0.4rem;
   display: grid;
   gap: 0.35rem;
 }
 
-.wx-hugg-windows li {
+.wx-hugg-now-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.wx-hugg-now-copy {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.wx-fishing-score {
+  margin: 0;
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  justify-content: space-between;
-  gap: 0.25rem 0.75rem;
-  padding: 0.4rem 0.5rem;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  gap: 0.35rem 0.55rem;
 }
 
-.wx-hugg-windows strong {
-  font-size: 0.84rem;
-  color: #e6f2ea;
+.wx-fishing-score span {
+  font-size: 0.88rem;
+  font-weight: 650;
+  color: #cfe0d4;
+}
+
+.wx-fishing-now {
+  font-size: 0.74rem;
+  font-weight: 550;
+  color: #8aa396;
   font-variant-numeric: tabular-nums;
 }
 
-.wx-hugg-windows span {
-  font-size: 0.75rem;
+.wx-hugg-windows-line {
+  margin: 0.15rem 0 0;
+  font-size: 0.76rem;
   color: #9bb0a4;
+  line-height: 1.35;
+  font-variant-numeric: tabular-nums;
+}
+
+.wx-hugg-ring {
+  flex: 0 0 auto;
+  display: block;
+}
+
+.wx-hugg-ring-track {
+  stroke: rgba(255, 255, 255, 0.12);
+}
+
+.wx-hugg-ring-fill {
+  stroke: #b8e014;
+}
+
+.wx-fishing-low .wx-hugg-ring-fill {
+  stroke: #ff8c5a;
+}
+
+.wx-fishing-mid .wx-hugg-ring-fill {
+  stroke: #e8c85a;
+}
+
+.wx-fishing-high .wx-hugg-ring-fill {
+  stroke: #5edce8;
+}
+
+.wx-hugg-ring-tick {
+  fill: #e6f2ea;
+}
+
+.wx-hugg-more {
+  margin: 0;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.wx-hugg-more > summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 0.4rem 0.55rem;
+  font-size: 0.76rem;
+  font-weight: 650;
+  color: #b7c9be;
+  user-select: none;
+}
+
+.wx-hugg-more > summary::-webkit-details-marker {
+  display: none;
+}
+
+.wx-hugg-more > summary::after {
+  content: "▸";
+  float: right;
+  color: #8aa396;
+  transition: transform 0.15s ease;
+}
+
+.wx-hugg-more[open] > summary::after {
+  transform: rotate(90deg);
+}
+
+.wx-hugg-more-body {
+  padding: 0 0.55rem 0.55rem;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.wx-fishing-summary {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #b7c9be;
+  line-height: 1.4;
+}
+
+.wx-fishing-why {
+  margin: 0;
+  font-size: 0.7rem;
+  color: #9bb0a4;
+  line-height: 1.35;
 }
 
 .wx-hugg-chart {
-  margin-top: 0.55rem;
-  height: 2.4rem;
+  height: 2rem;
   display: flex;
   align-items: flex-end;
   gap: 2px;
-  padding: 0.2rem 0.1rem 0;
+  padding: 0.15rem 0 0;
 }
 
 .wx-hugg-bar {
@@ -660,28 +721,28 @@
 
 .wx-hugg-factors {
   list-style: none;
-  margin: 0.55rem 0 0;
+  margin: 0;
   padding: 0;
   display: grid;
-  gap: 0.3rem;
+  gap: 0.25rem;
 }
 
 .wx-hugg-factor {
   display: grid;
-  gap: 0.1rem;
-  padding: 0.35rem 0.45rem;
+  gap: 0.08rem;
+  padding: 0.3rem 0.4rem;
   border-radius: 8px;
   border-left: 3px solid rgba(255, 255, 255, 0.2);
   background: rgba(0, 0, 0, 0.12);
 }
 
 .wx-hugg-factor strong {
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   color: #d5e6db;
 }
 
 .wx-hugg-factor span {
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   color: #9bb0a4;
   line-height: 1.35;
 }

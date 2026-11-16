@@ -533,6 +533,82 @@ function fmtWindow(d: Date): string {
   });
 }
 
+function fmtWindowsLine(
+  windows: HuggForecast["windows"],
+): string | null {
+  if (!windows.length) return null;
+  return windows
+    .map((w) => `${fmtWindow(w.start)}–${fmtWindow(w.end)}`)
+    .join(" · ");
+}
+
+/** Compact day ring: now-score arc + best-window ticks from real hours. */
+function HuggDayRing({
+  nowScore,
+  windows,
+}: {
+  nowScore: number;
+  windows: HuggForecast["windows"];
+}) {
+  const size = 34;
+  const cx = size / 2;
+  const cy = size / 2;
+  const r = 12.5;
+  const circ = 2 * Math.PI * r;
+  const pct = Math.max(0, Math.min(1, nowScore / 10));
+  const dash = `${circ * pct} ${circ}`;
+  const hourAngle = (d: Date) => {
+    const h = d.getHours() + d.getMinutes() / 60;
+    // 0° at 12 o'clock, clockwise.
+    return (h / 24) * 360;
+  };
+
+  return (
+    <svg
+      className="wx-hugg-ring"
+      viewBox={`0 0 ${size} ${size}`}
+      width={size}
+      height={size}
+      aria-hidden
+    >
+      <circle
+        className="wx-hugg-ring-track"
+        cx={cx}
+        cy={cy}
+        r={r}
+        fill="none"
+        strokeWidth="3"
+      />
+      <circle
+        className="wx-hugg-ring-fill"
+        cx={cx}
+        cy={cy}
+        r={r}
+        fill="none"
+        strokeWidth="3"
+        strokeDasharray={dash}
+        strokeLinecap="round"
+        transform={`rotate(-90 ${cx} ${cy})`}
+      />
+      {windows.slice(0, 2).map((w) => {
+        const a = hourAngle(w.start);
+        const rad = ((a - 90) * Math.PI) / 180;
+        const x = cx + Math.cos(rad) * r;
+        const y = cy + Math.sin(rad) * r;
+        return (
+          <circle
+            key={w.start.toISOString()}
+            className="wx-hugg-ring-tick"
+            cx={x}
+            cy={y}
+            r={2.1}
+          />
+        );
+      })}
+    </svg>
+  );
+}
+
 const WX_ICONS = {
   wind: "/icons/weather/wind.svg",
   precip: "/icons/weather/precipitation.svg",
@@ -673,6 +749,8 @@ export function WaterLevelWidget() {
       cancelled = true;
     };
   }, []);
+
+  const windowsLine = data ? fmtWindowsLine(data.fishing.windows) : null;
 
   return (
     <section className="home-board water-widget" aria-label="Väder och vatten">
@@ -862,67 +940,85 @@ export function WaterLevelWidget() {
                 }}
               />
             </div>
-            <p className="wx-fishing-score">
-              <span>{data.fishing.label}</span>
-              <small className="wx-fishing-now">
-                Nu ~{data.fishing.nowScore.toFixed(1)}/10
-              </small>
-            </p>
-            <p className="wx-fishing-summary">{data.fishing.summary}</p>
 
-            {data.fishing.windows.length > 0 ? (
-              <ul className="wx-hugg-windows">
-                {data.fishing.windows.map((w) => (
-                  <li key={w.start.toISOString()}>
-                    <strong>
-                      {fmtWindow(w.start)}–{fmtWindow(w.end)}
-                    </strong>
-                    <span>
-                      {w.label} · {w.score.toFixed(1)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-
-            {data.fishing.hours.length > 0 ? (
-              <div
-                className="wx-hugg-chart"
-                role="img"
-                aria-label="Timkurva för dagens huggläge"
-              >
-                {data.fishing.hours.map((h) => (
-                  <span
-                    key={h.time.toISOString()}
-                    className="wx-hugg-bar"
-                    title={`${fmtWindow(h.time)} · ${h.score.toFixed(1)}`}
-                    style={{ height: `${(h.score / 10) * 100}%` }}
-                  />
-                ))}
+            <div className="wx-hugg-compact">
+              <div className="wx-hugg-now-row">
+                <HuggDayRing
+                  nowScore={data.fishing.nowScore}
+                  windows={data.fishing.windows}
+                />
+                <div className="wx-hugg-now-copy">
+                  <p className="wx-fishing-score">
+                    <span>{data.fishing.label}</span>
+                    <small className="wx-fishing-now">
+                      Nu {data.fishing.nowScore.toFixed(1)}/10
+                    </small>
+                  </p>
+                  {windowsLine ? (
+                    <p className="wx-hugg-windows-line">Bäst {windowsLine}</p>
+                  ) : (
+                    <p className="wx-hugg-windows-line">Inga tydliga toppar i dag</p>
+                  )}
+                </div>
               </div>
-            ) : null}
 
-            {data.fishing.factors.length > 0 ? (
-              <ul className="wx-hugg-factors">
-                {data.fishing.factors.map((f) => (
-                  <li
-                    key={f.id}
-                    className={`wx-hugg-factor wx-hugg-factor-${f.tone}`}
-                  >
-                    <strong>{f.label}</strong>
-                    <span>{f.detail}</span>
-                  </li>
-                ))}
-              </ul>
-            ) : null}
+              {(data.fishing.hours.length > 0 ||
+                data.fishing.factors.length > 0 ||
+                Boolean(data.fishing.summary)) && (
+                <details className="wx-hugg-more">
+                  <summary>Mer om prognosen</summary>
+                  <div className="wx-hugg-more-body">
+                    {data.fishing.summary ? (
+                      <p className="wx-fishing-summary">
+                        {data.fishing.summary}
+                      </p>
+                    ) : null}
 
-            <p className="wx-fishing-why">
-              Bygger på SMHI + sol/måne · {data.fishing.confidence === "high"
-                ? "god datatäckning"
-                : data.fishing.confidence === "medium"
-                  ? "medel datatäckning"
-                  : "tunn datatäckning"}
-            </p>
+                    {data.fishing.hours.length > 0 ? (
+                      <div
+                        className="wx-hugg-chart"
+                        role="img"
+                        aria-label="Timkurva för dagens huggläge"
+                      >
+                        {data.fishing.hours.map((h) => (
+                          <span
+                            key={h.time.toISOString()}
+                            className="wx-hugg-bar"
+                            title={`${fmtWindow(h.time)} · ${h.score.toFixed(1)}`}
+                            style={{
+                              height: `${(h.score / 10) * 100}%`,
+                            }}
+                          />
+                        ))}
+                      </div>
+                    ) : null}
+
+                    {data.fishing.factors.length > 0 ? (
+                      <ul className="wx-hugg-factors">
+                        {data.fishing.factors.map((f) => (
+                          <li
+                            key={f.id}
+                            className={`wx-hugg-factor wx-hugg-factor-${f.tone}`}
+                          >
+                            <strong>{f.label}</strong>
+                            <span>{f.detail}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
+
+                    <p className="wx-fishing-why">
+                      Bygger på SMHI + sol/måne ·{" "}
+                      {data.fishing.confidence === "high"
+                        ? "god datatäckning"
+                        : data.fishing.confidence === "medium"
+                          ? "medel datatäckning"
+                          : "tunn datatäckning"}
+                    </p>
+                  </div>
+                </details>
+              )}
+            </div>
           </div>
 
           <div className="conditions-actions">
