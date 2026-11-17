@@ -18,7 +18,7 @@ const SECTIONS = [
     body: [
       "Tryck Starta fiskepass på startsidan när du går ut. Du stannar kvar på Hem — inget tvingar dig till kartan.",
       "Ett pass varar i 4 timmar och avslutas automatiskt efter det.",
-      "Med pass igång räcker det att trycka Jag är vid kanalen på kartan — då checkas du in direkt enligt ditt val under Vad andra ser.",
+      "Starta fiskepass från startsidan checkar också in dig (med GPS) enligt ditt val under Vad andra ser. På kartan kan du fortfarande justera plats eller trycka Jag är vid kanalen.",
       "Avsluta passet i kartmenyn längst ner (Fiskepass → Avsluta pass). Då checkas du också ut och syns inte längre som ute.",
     ],
   },

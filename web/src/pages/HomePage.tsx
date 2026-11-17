@@ -11,9 +11,9 @@ import {
   fetchActiveTrip,
   formatTripRemaining,
   isTripExpired,
-  startFishingTrip,
   type FishingTrip,
 } from "../lib/fishingTrips";
+import { startFishingPassWithCheckIn } from "../lib/startFishingPass";
 import {
   fetchHighscores,
   type HighscorePeriod,
@@ -170,14 +170,28 @@ export function HomePage() {
       return;
     }
     setTripBusy(true);
-    const { trip: next, error } = await startFishingTrip();
+    const result = await startFishingPassWithCheckIn({
+      userId: auth.user.id,
+      displayName: auth.displayName || "Fiskare",
+    });
     setTripBusy(false);
-    if (error || !next) {
-      setTripMsg(error || "Kunde inte starta fiskepass");
+    if (result.error || !result.trip) {
+      setTripMsg(result.error || "Kunde inte starta fiskepass");
       return;
     }
-    setTrip(next);
+    setTrip(result.trip);
     setNowTick(Date.now());
+    if (result.checkedIn) {
+      if (result.visibility === "ghost") {
+        setTripMsg("Pass igång · dold för andra (ghost)");
+      } else if (result.zoneName) {
+        setTripMsg(`Pass igång · synlig i ${result.zoneName}`);
+      } else {
+        setTripMsg("Pass igång · checkad in");
+      }
+    } else if (result.hint) {
+      setTripMsg(result.hint);
+    }
   }
 
   return (
