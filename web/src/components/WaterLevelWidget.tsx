@@ -422,6 +422,7 @@ async function fetchCanalConditions(): Promise<Conditions> {
         return {
           time: new Date(t),
           windMs: finiteOrNull(row.data?.wind_speed),
+          windDirDeg: finiteOrNull(row.data?.wind_from_direction),
           precipMm: finiteOrNull(row.data?.precipitation_amount_mean),
           pressureHpa: finiteOrNull(row.data?.air_pressure_at_mean_sea_level),
           symbolCode: finiteOrNull(row.data?.symbol_code),
@@ -433,6 +434,7 @@ async function fetchCanalConditions(): Promise<Conditions> {
         ): row is {
           time: Date;
           windMs: number | null;
+          windDirDeg: number | null;
           precipMm: number | null;
           pressureHpa: number | null;
           symbolCode: number | null;
@@ -442,6 +444,7 @@ async function fetchCanalConditions(): Promise<Conditions> {
       series: huggSeries,
       waterTempC,
       waterRising: waterTrend === "rising",
+      waterAbsDelta3hCm: waterDelta3hCm,
     });
 
     const stamp = current?.time ? new Date(current.time) : new Date();

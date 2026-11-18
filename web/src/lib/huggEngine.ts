@@ -4,10 +4,19 @@ import { MALMO_LAT, MALMO_LON, malmoSunTimes } from "./solarMalmo";
 export type HuggHourInput = {
   time: Date;
   windMs: number | null;
+  /** Meteorological wind_from_direction (degrees), when available */
+  windDirDeg: number | null;
   precipMm: number | null;
   pressureHpa: number | null;
   /** SMHI symbol_code when available */
   symbolCode: number | null;
+};
+
+/** 0 = crystal clear, 10 = very murky (proxy, not measured Secchi). */
+export type TurbidityEstimate = {
+  index: number;
+  label: "klart" | "måttligt" | "grumligt";
+  detail: string;
 };
 
 export type HuggFactor = {
@@ -231,14 +240,91 @@ function pressureDeltaAt(
   return fwd.hpa - cur.pressureHpa;
 }
 
+/**
+ * Canal turbidity proxy from wind mixing, rain runoff and water-level swing.
+ * Not a lab measurement — tuned for Malmö canal fishing heuristics.
+ */
+function estimateTurbidity(
+  series: HuggHourInput[],
+  index: number,
+  waterAbsDelta3hCm: number | null,
+): TurbidityEstimate {
+  const cur = series[index];
+  if (!cur) {
+    return { index: 5, label: "måttligt", detail: "Otillräcklig data för siktproxy" };
+  }
+
+  const windowStart = cur.time.getTime() - 12 * 3600_000;
+  let windSum = 0;
+  let windN = 0;
+  let gustyHours = 0;
+  let precipSum = 0;
+  let westishBoost = 0;
+
+  for (let i = 0; i <= index; i++) {
+    const row = series[i];
+    if (!row || row.time.getTime() < windowStart) continue;
+    if (row.windMs != null) {
+      windSum += row.windMs;
+      windN += 1;
+      if (row.windMs >= 8) gustyHours += 1;
+      // W–NW–N sector often drives Öresund/Malmö level & exchange.
+      if (
+        row.windDirDeg != null &&
+        row.windMs >= 5 &&
+        ((row.windDirDeg >= 240 && row.windDirDeg <= 360) ||
+          row.windDirDeg <= 20)
+      ) {
+        westishBoost = Math.max(westishBoost, 0.7);
+      }
+    }
+    if (row.precipMm != null && row.precipMm > 0) precipSum += row.precipMm;
+  }
+
+  const avgWind = windN ? windSum / windN : 0;
+  let turb = 2.2; // neutral-ish canal baseline
+  turb += clamp(avgWind * 0.5, 0, 4.2);
+  turb += clamp(gustyHours * 0.35, 0, 1.4);
+  turb += clamp(precipSum * 1.1, 0, 3.2);
+  turb += westishBoost;
+  if (waterAbsDelta3hCm != null) {
+    // Fast level change ⇒ exchange/current ⇒ more suspended matter.
+    turb += clamp(Math.abs(waterAbsDelta3hCm) / 5, 0, 2.2);
+  }
+  // Settling after calm + dry.
+  if (avgWind < 2.2 && precipSum < 0.25) turb -= 1.6;
+  if (avgWind < 1.2 && precipSum < 0.1) turb -= 0.8;
+
+  const index10 = clamp(round1(turb), 0, 10);
+  let label: TurbidityEstimate["label"] = "måttligt";
+  if (index10 <= 3.2) label = "klart";
+  else if (index10 >= 6) label = "grumligt";
+
+  const bits: string[] = [];
+  if (avgWind >= 6) bits.push(`blåst ~${avgWind.toFixed(1)} m/s`);
+  else if (avgWind < 2.2) bits.push("lugnt");
+  if (precipSum >= 0.5) bits.push(`regn ${precipSum.toFixed(1)} mm/12h`);
+  if (waterAbsDelta3hCm != null && Math.abs(waterAbsDelta3hCm) >= 4) {
+    bits.push(`nivå ±${Math.abs(waterAbsDelta3hCm).toFixed(0)} cm`);
+  }
+  if (westishBoost > 0) bits.push("västlig pålandsvind");
+  const detail =
+    bits.length > 0
+      ? `Siktproxy: ${label} (${bits.join(" · ")})`
+      : `Siktproxy: ${label}`;
+
+  return { index: index10, label, detail };
+}
+
 function scoreHour(
   row: HuggHourInput,
   pressureDelta6h: number | null,
   waterTempC: number | null,
   waterRising: boolean,
+  turbidity: TurbidityEstimate,
 ): { score: number; why: string[] } {
   // Honest baseline — not "already good".
-  let score = 4.4;
+  let score = 4.0;
   const why: string[] = [];
 
   // Pressure movement is the heaviest weather lever.
@@ -269,10 +355,10 @@ function scoreHour(
 
   if (row.windMs != null) {
     if (row.windMs >= 2 && row.windMs <= 7) {
-      score += 1.1;
+      score += 0.75;
       why.push(`Lagom vind ${row.windMs.toFixed(1)} m/s`);
     } else if (row.windMs > 7 && row.windMs < 11) {
-      score += 0.1;
+      score += 0.05;
       why.push(`Lite blåsigt ${row.windMs.toFixed(1)} m/s`);
     } else if (row.windMs >= 11 && row.windMs < 14) {
       score -= 1.2;
@@ -287,8 +373,8 @@ function scoreHour(
   }
 
   if (waterTempC != null) {
-    if (waterTempC >= 8 && waterTempC <= 16) score += 0.9;
-    else if (waterTempC >= 5 && waterTempC < 8) score += 0.25;
+    if (waterTempC >= 8 && waterTempC <= 16) score += 0.55;
+    else if (waterTempC >= 5 && waterTempC < 8) score += 0.2;
     else if (waterTempC < 4) score -= 0.8;
     else if (waterTempC > 18) score -= 0.4;
   }
@@ -312,10 +398,24 @@ function scoreHour(
     score += 0.2;
   }
 
-  if (isCloudy(row.symbolCode)) score += 0.35;
+  if (isCloudy(row.symbolCode)) score += 0.25;
   else if (row.symbolCode === 1 || row.symbolCode === 2) {
     // Bright high-pressure midday is often harder in the canal.
     if (pressureDelta6h != null && pressureDelta6h > 1.5) score -= 0.35;
+    // Clear water + bright sun stacks — fish get a better look at the lure.
+    if (turbidity.label === "klart") score -= 0.45;
+  }
+
+  // Clear water → harder; stirred/murky → often better canal fishing.
+  if (turbidity.label === "grumligt") {
+    score += 0.85;
+    why.push("Grumligt vatten (proxy) — oftast bättre");
+  } else if (turbidity.index >= 4.5) {
+    score += 0.35;
+    why.push("Måttligt grumligt (proxy)");
+  } else if (turbidity.label === "klart") {
+    score -= 0.95;
+    why.push("Klart vatten (proxy) — fisken ser bättre");
   }
 
   let light = lightBoost(row.time);
@@ -357,13 +457,35 @@ function scoreHour(
   if (illum < 0.12 || illum > 0.88) score += 0.2;
   else if (illum > 0.4 && illum < 0.6) score -= 0.1;
 
-  // November–February: fewer true peak days in Malmö canal.
+  // Malmö canal abborre: move in autumn, stay through spring — reverse of
+  // "dead winter canal". Summer is often quieter in the canal itself.
   const month = row.time.getMonth();
-  if (month === 10 || month === 11 || month <= 1) {
-    score = Math.min(score, 7.6);
+  if (isCanalAbborrePeak(month)) {
+    score += 0.35;
+    why.push("Kanalsäsong — abborre inne (höst–vår)");
+  } else if (isCanalAbborreShoulder(month)) {
+    score += 0.15;
+  } else if (isCanalAbborreQuiet(month)) {
+    score -= 0.45;
+    why.push("Sommar i kanalen — abborre oftast mer ute");
   }
 
   return { score: clamp(round1(score), 1, 10), why: why.slice(0, 5) };
+}
+
+/** Oct–Mar: core canal perch season. */
+function isCanalAbborrePeak(month: number): boolean {
+  return month === 9 || month === 10 || month === 11 || month <= 2;
+}
+
+/** Sep + Apr: fish moving in / starting to leave. */
+function isCanalAbborreShoulder(month: number): boolean {
+  return month === 8 || month === 3;
+}
+
+/** May–Aug: canal often quieter for abborre. */
+function isCanalAbborreQuiet(month: number): boolean {
+  return month >= 4 && month <= 7;
 }
 
 function mergeWindows(hours: HuggHourPoint[]): HuggWindow[] {
@@ -433,6 +555,7 @@ function buildFactors(input: {
   waterTempC: number | null;
   symbolCode: number | null;
   waterRising: boolean;
+  turbidity: TurbidityEstimate | null;
   now: Date;
 }): HuggFactor[] {
   const factors: HuggFactor[] = [];
@@ -563,14 +686,47 @@ function buildFactors(input: {
     });
   }
 
-  const month = input.now.getMonth();
-  if (month === 10 || month === 11 || month <= 1) {
+  if (input.turbidity) {
+    const t = input.turbidity;
     factors.push({
-      id: "season",
-      label: "Säsong",
-      tone: "down",
-      detail: "Nov–feb: färre riktiga toppdagar i kanalen — var försiktig med höga betyg",
+      id: "turbidity",
+      label: "Sikt / grumlighet",
+      tone:
+        t.label === "grumligt" ? "up" : t.label === "klart" ? "down" : "neutral",
+      detail:
+        t.label === "grumligt"
+          ? `${t.detail} — oftast bättre fiske`
+          : t.label === "klart"
+            ? `${t.detail} — oftast svårare fiske`
+            : t.detail,
     });
+  }
+
+  {
+    const month = input.now.getMonth();
+    if (isCanalAbborrePeak(month)) {
+      factors.push({
+        id: "season",
+        label: "Säsong",
+        tone: "up",
+        detail:
+          "Abborre går in i kanalen på hösten och stannar till våren — säsongen är stark nu",
+      });
+    } else if (isCanalAbborreShoulder(month)) {
+      factors.push({
+        id: "season",
+        label: "Säsong",
+        tone: "up",
+        detail: "Övergångstid — abborre på väg in i / ut ur kanalen",
+      });
+    } else if (isCanalAbborreQuiet(month)) {
+      factors.push({
+        id: "season",
+        label: "Säsong",
+        tone: "down",
+        detail: "Sommar — abborre håller oftast mer ute än i kanalen",
+      });
+    }
   }
 
   return factors;
@@ -585,9 +741,15 @@ export function computeHuggForecast(input: {
   now?: Date;
   waterTempC: number | null;
   waterRising?: boolean;
+  /** Absolute water-level change over ~3 h (cm), from SMHI ocobs. */
+  waterAbsDelta3hCm?: number | null;
 }): HuggForecast {
   const now = input.now ?? new Date();
   const waterRising = Boolean(input.waterRising);
+  const waterAbsDelta3hCm =
+    input.waterAbsDelta3hCm != null && Number.isFinite(input.waterAbsDelta3hCm)
+      ? Math.abs(input.waterAbsDelta3hCm)
+      : null;
   const sorted = [...input.series].sort(
     (a, b) => a.time.getTime() - b.time.getTime(),
   );
@@ -608,7 +770,14 @@ export function computeHuggForecast(input: {
 
   const scored: HuggHourPoint[] = sorted.map((row, index) => {
     const dP = pressureDeltaAt(sorted, index, 6);
-    const scoredHour = scoreHour(row, dP, input.waterTempC, waterRising);
+    const turbidity = estimateTurbidity(sorted, index, waterAbsDelta3hCm);
+    const scoredHour = scoreHour(
+      row,
+      dP,
+      input.waterTempC,
+      waterRising,
+      turbidity,
+    );
     return {
       time: row.time,
       score: scoredHour.score,
@@ -636,22 +805,30 @@ export function computeHuggForecast(input: {
     return hd < bd ? h : best;
   }, scored[0]!);
 
-  // Canal nights count: street lights keep bite windows alive after dusk.
+  // Honest day score: mean of all hours, lightly pulled toward the better ones.
   const pool = todayHours.length ? todayHours : scored.slice(0, 16);
+  const meanAll =
+    pool.reduce((s, h) => s + h.score, 0) / Math.max(1, pool.length);
   const sortedScores = [...pool].map((h) => h.score).sort((a, b) => b - a);
-  const topN = sortedScores.slice(0, Math.max(3, Math.ceil(sortedScores.length * 0.35)));
-  const dayScore = round1(
-    topN.reduce((s, n) => s + n, 0) / Math.max(1, topN.length),
+  const topN = sortedScores.slice(
+    0,
+    Math.max(2, Math.ceil(sortedScores.length * 0.25)),
   );
+  const meanTop =
+    topN.reduce((s, n) => s + n, 0) / Math.max(1, topN.length);
+  const dayScore = round1(meanAll * 0.65 + meanTop * 0.35);
 
   const windows = mergeWindows(todayHours.length ? todayHours : scored.slice(0, 16));
-  const current = sorted.find(
-    (r) => Math.abs(r.time.getTime() - nearest.time.getTime()) < 60_000,
+  const nearestIndex = Math.max(
+    0,
+    sorted.findIndex((r) => r.time.getTime() === nearest.time.getTime()),
   );
-  const pressureDelta6h = pressureDeltaAt(
+  const current = sorted[nearestIndex];
+  const pressureDelta6h = pressureDeltaAt(sorted, nearestIndex, 6);
+  const turbidityNow = estimateTurbidity(
     sorted,
-    Math.max(0, sorted.findIndex((r) => r.time.getTime() === nearest.time.getTime())),
-    6,
+    nearestIndex,
+    waterAbsDelta3hCm,
   );
 
   const factors = buildFactors({
@@ -661,6 +838,7 @@ export function computeHuggForecast(input: {
     waterTempC: input.waterTempC,
     symbolCode: current?.symbolCode ?? null,
     waterRising,
+    turbidity: turbidityNow,
     now,
   });
 
@@ -688,7 +866,11 @@ export function computeHuggForecast(input: {
       : "inga tydliga toppar";
 
   let summary: string;
-  if (pressureDelta6h != null && pressureDelta6h >= 2.5) {
+  if (turbidityNow.label === "klart") {
+    summary = `Klart vatten (proxy) gör ofta fisket svårare. Bästa fönster: ${windowText}.`;
+  } else if (turbidityNow.label === "grumligt") {
+    summary = `Grumligare vatten (proxy efter vind/regn/nivå) talar för bättre förutsättningar. Bästa fönster: ${windowText}.`;
+  } else if (pressureDelta6h != null && pressureDelta6h >= 2.5) {
     summary = `Stigande lufttryck dämpar oftast hugget mitt på dagen. Sikta på ${windowText} — inte “hela dagen”.`;
   } else if (pressureDelta6h != null && pressureDelta6h <= -2.5) {
     summary = `Fallande tryck talar för mer aktivitet. Bästa fönster: ${windowText}.`;
