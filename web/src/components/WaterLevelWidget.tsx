@@ -1032,7 +1032,6 @@ export function WaterLevelWidget() {
               </div>
 
               {(data.fishing.hours.length > 0 ||
-                data.fishing.factors.length > 0 ||
                 Boolean(data.fishing.summary)) && (
                 <details className="wx-hugg-more">
                   <summary>
@@ -1109,23 +1108,6 @@ export function WaterLevelWidget() {
                             )}
                           </div>
                         ) : null}
-                      </>
-                    ) : null}
-
-                    {data.fishing.factors.length > 0 ? (
-                      <>
-                        <p className="wx-hugg-factors-label">Nu · faktorer</p>
-                        <ul className="wx-hugg-factors">
-                          {data.fishing.factors.map((f) => (
-                            <li
-                              key={f.id}
-                              className={`wx-hugg-factor wx-hugg-factor-${f.tone}`}
-                            >
-                              <strong>{f.label}</strong>
-                              <span>{f.detail}</span>
-                            </li>
-                          ))}
-                        </ul>
                       </>
                     ) : null}
 
